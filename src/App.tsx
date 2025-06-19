@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
-import { FileIcon, LayoutDashboard, FileText, LogOut, Menu, X } from 'lucide-react';
+import { FileIcon, LayoutDashboard, FileText, LogOut, Menu, X, Settings } from 'lucide-react';
 import Header from './components/Header';
 import Sidebar from './components/Sidebar';
 import DocumentUpload from './components/DocumentUpload';
 import DocumentList from './components/DocumentList';
 import ChatInterface from './components/ChatInterface';
 import AuditDashboard from './components/AuditDashboard';
+import ApiConfiguration from './components/ApiConfiguration';
 import Auth from './pages/Auth';
 import { useAuth } from './contexts/AuthContext';
 import { AuthProvider } from './contexts/AuthContext';
@@ -66,6 +67,12 @@ const AppContent = () => {
     setIsSidebarOpen(!isSidebarOpen);
   };
 
+  // Check if user has admin role for configuration access
+  const hasAdminAccess = () => {
+    if (isPublicMode) return true; // Allow access in public mode for demo
+    return currentUser?.user_metadata?.role === 'admin' || currentUser?.role === 'admin';
+  };
+
   // In public mode, always show the app. Otherwise, check for authenticated user
   if (!isPublicMode && !user) {
     return <Auth />;
@@ -82,6 +89,7 @@ const AppContent = () => {
           setActiveTab={setActiveTab}
           onLogout={isPublicMode ? () => {} : signOut}
           isPublicMode={isPublicMode}
+          hasAdminAccess={hasAdminAccess()}
         />
         
         <main className={`flex-1 overflow-y-auto transition-all duration-300 p-4 md:p-6`}>
@@ -110,6 +118,20 @@ const AppContent = () => {
 
           {activeTab === 'chat' && (
             <ChatInterface selectedFolderId={selectedFolderId} />
+          )}
+
+          {activeTab === 'settings' && hasAdminAccess() && (
+            <ApiConfiguration />
+          )}
+
+          {activeTab === 'settings' && !hasAdminAccess() && (
+            <div className="bg-white rounded-lg shadow p-6">
+              <div className="text-center py-8">
+                <Settings className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">غير مصرح</h3>
+                <p className="text-gray-500">تحتاج إلى صلاحيات المدير للوصول إلى الإعدادات</p>
+              </div>
+            </div>
           )}
         </main>
       </div>

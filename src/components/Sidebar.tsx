@@ -1,4 +1,4 @@
-import { LayoutDashboard, FileText, MessageCircle, LogOut } from 'lucide-react';
+import { LayoutDashboard, FileText, MessageCircle, LogOut, Settings } from 'lucide-react';
 import FolderTree from './FolderTree';
 import { useState } from 'react';
 
@@ -8,9 +8,17 @@ interface SidebarProps {
   setActiveTab: (tab: string) => void;
   onLogout: () => void;
   isPublicMode?: boolean;
+  hasAdminAccess?: boolean;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ isOpen, activeTab, setActiveTab, onLogout, isPublicMode = false }) => {
+const Sidebar: React.FC<SidebarProps> = ({ 
+  isOpen, 
+  activeTab, 
+  setActiveTab, 
+  onLogout, 
+  isPublicMode = false,
+  hasAdminAccess = false
+}) => {
   const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
 
   return (
@@ -44,6 +52,15 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, activeTab, setActiveTab, onLo
                 onClick={() => setActiveTab('chat')}
                 isCollapsed={!isOpen}
               />
+              {hasAdminAccess && (
+                <SidebarItem
+                  icon={<Settings className="h-5 w-5" />}
+                  text="الإعدادات"
+                  isActive={activeTab === 'settings'}
+                  onClick={() => setActiveTab('settings')}
+                  isCollapsed={!isOpen}
+                />
+              )}
             </div>
           </nav>
           
