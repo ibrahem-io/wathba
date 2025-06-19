@@ -24,17 +24,17 @@ const ApiConfiguration = () => {
   const [testingConfig, setTestingConfig] = useState<string | null>(null);
   const { isPublicMode, user } = useAuth();
 
-  // Mock data for public mode
+  // Mock data for public mode with the default OpenAI configuration
   const mockConfigs: ApiConfig[] = [
     {
-      id: '1',
+      id: 'default-openai',
       service_name: 'OpenAI GPT-4',
       service_type: 'ai_chat',
       endpoint_url: 'https://api.openai.com/v1/chat/completions',
-      api_key: 'sk-proj-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
+      api_key: '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',
       auth_type: 'bearer_token',
       headers: { 'Content-Type': 'application/json' },
-      parameters: { model: 'gpt-4', temperature: 0.7, max_tokens: 2000 },
+      parameters: { model: 'gpt-4o-mini', temperature: 0.7, max_tokens: 2000 },
       is_active: true,
       created_at: '2024-01-15T10:00:00Z'
     },
@@ -148,11 +148,35 @@ const ApiConfiguration = () => {
   const handleTestConfig = async (config: ApiConfig) => {
     setTestingConfig(config.id);
     try {
-      // Mock test for demo
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      alert('تم اختبار الاتصال بنجاح!');
+      if (config.service_type === 'ai_chat') {
+        // Test OpenAI API
+        const response = await fetch(config.endpoint_url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${config.api_key}`
+          },
+          body: JSON.stringify({
+            model: config.parameters?.model || 'gpt-4o-mini',
+            messages: [{ role: 'user', content: 'Test message' }],
+            max_tokens: 10
+          })
+        });
+        
+        if (response.ok) {
+          alert('✅ تم اختبار الاتصال بنجاح!');
+        } else {
+          const error = await response.json();
+          alert(`❌ فشل الاختبار: ${error.error?.message || response.statusText}`);
+        }
+      } else {
+        // Mock test for other services
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        alert('✅ تم اختبار الاتصال بنجاح!');
+      }
     } catch (error) {
-      alert('فشل في اختبار الاتصال');
+      console.error('Test error:', error);
+      alert('❌ فشل في اختبار الاتصال');
     } finally {
       setTestingConfig(null);
     }
@@ -221,7 +245,7 @@ const ApiConfiguration = () => {
         {isPublicMode && (
           <div className="mb-6 p-4 bg-blue-50 rounded-lg">
             <p className="text-blue-700 text-sm">
-              🔧 في الوضع العام، التغييرات محفوظة محلياً فقط
+              🔧 في الوضع العام، التغييرات محفوظة محلياً فقط. تم تكوين OpenAI بالمفتاح المقدم.
             </p>
           </div>
         )}
@@ -242,6 +266,11 @@ const ApiConfiguration = () => {
                   <span className="mr-2 px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
                     {getServiceTypeLabel(config.service_type)}
                   </span>
+                  {config.id === 'default-openai' && (
+                    <span className="mr-2 px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
+                      افتراضي
+                    </span>
+                  )}
                 </div>
                 <div className="flex items-center gap-2">
                   <button
@@ -263,13 +292,15 @@ const ApiConfiguration = () => {
                   >
                     <Edit className="h-4 w-4" />
                   </button>
-                  <button
-                    onClick={() => handleDeleteConfig(config.id)}
-                    className="p-2 text-gray-500 hover:text-red-600"
-                    title="حذف"
-                  >
-                    <Trash className="h-4 w-4" />
-                  </button>
+                  {config.id !== 'default-openai' && (
+                    <button
+                      onClick={() => handleDeleteConfig(config.id)}
+                      className="p-2 text-gray-500 hover:text-red-600"
+                      title="حذف"
+                    >
+                      <Trash className="h-4 w-4" />
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -340,11 +371,11 @@ const ApiConfigForm: React.FC<ApiConfigFormProps> = ({ config, onSave, onCancel 
   const [formData, setFormData] = useState({
     service_name: config?.service_name || '',
     service_type: config?.service_type || 'ai_chat',
-    endpoint_url: config?.endpoint_url || '',
+    endpoint_url: config?.endpoint_url || 'https://api.openai.com/v1/chat/completions',
     api_key: config?.api_key || '',
-    auth_type: config?.auth_type || 'api_key',
-    headers: JSON.stringify(config?.headers || {}, null, 2),
-    parameters: JSON.stringify(config?.parameters || {}, null, 2),
+    auth_type: config?.auth_type || 'bearer_token',
+    headers: JSON.stringify(config?.headers || { 'Content-Type': 'application/json' }, null, 2),
+    parameters: JSON.stringify(config?.parameters || { model: 'gpt-4o-mini', temperature: 0.7, max_tokens: 2000 }, null, 2),
     is_active: config?.is_active ?? true
   });
 
