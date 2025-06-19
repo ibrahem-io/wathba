@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="100" viewBox="0 0 200 100">
+  <g transform="translate(0,0)">
+    <text x="100" y="80" font-family="Arial, sans-serif" font-size="12" text-anchor="middle" fill="#0c5997">
+      <tspan x="100" y="80" font-weight="bold">الديوان العام للمحاسبة</tspan>
+      <tspan x="100" y="95">GENERAL COURT OF AUDIT</tspan>
+    </text>
+  </g>
+</svg>
