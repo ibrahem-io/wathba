@@ -8,7 +8,12 @@ import {
   Users,
   Activity,
   Zap,
-  ArrowRight
+  ArrowLeft,
+  BarChart3,
+  Shield,
+  MessageSquare,
+  FileText,
+  Globe
 } from 'lucide-react';
 
 interface DashboardProps {
@@ -22,16 +27,18 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
       value: '127',
       change: '+23%',
       trend: 'up',
-      icon: TrendingUp,
-      color: 'green'
+      icon: MessageSquare,
+      color: 'cst-blue-primary',
+      bgColor: 'cst-blue-light'
     },
     {
       title: 'قضايا التراخيص النشطة',
       value: '43',
       change: '15 تحتاج انتباه',
       trend: 'neutral',
-      icon: Clock,
-      color: 'yellow'
+      icon: FileText,
+      color: 'cst-accent',
+      bgColor: 'yellow-50'
     },
     {
       title: 'تنبيهات الشبكة',
@@ -39,23 +46,26 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
       change: '2 حرجة',
       trend: 'down',
       icon: AlertTriangle,
-      color: 'red'
+      color: 'status-error',
+      bgColor: 'red-50'
     },
     {
       title: 'قضايا الامتثال',
       value: '12',
       change: '3 أولوية عالية',
       trend: 'neutral',
-      icon: CheckCircle,
-      color: 'blue'
+      icon: Shield,
+      color: 'cst-primary',
+      bgColor: 'cst-light'
     },
     {
       title: 'التحليلات الاجتماعية',
       value: '2,847',
       change: '+5.2% إيجابية',
       trend: 'up',
-      icon: Users,
-      color: 'purple'
+      icon: BarChart3,
+      color: 'purple-600',
+      bgColor: 'purple-50'
     }
   ];
 
@@ -63,47 +73,57 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
     {
       id: 'resolve-ai',
       title: 'محرك ResolveAI',
-      description: 'معالجة ذكية للشكاوى والاستفسارات',
+      description: 'معالجة ذكية للشكاوى والاستفسارات مع تحليل متقدم للمحتوى',
       status: 'نشط',
       activity: 'آخر معالجة: منذ دقيقتين',
       progress: 94,
-      color: 'green'
+      color: 'blue',
+      icon: MessageSquare,
+      stats: { processed: '127', avgTime: '18 دقيقة', satisfaction: '94%' }
     },
     {
       id: 'case-manager',
       title: 'مساعد إدارة القضايا',
-      description: 'إدارة تراخيص الاتصالات والتقنية',
+      description: 'إدارة تراخيص الاتصالات والتقنية مع تحليل السوابق',
       status: 'نشط',
       activity: 'قضية جديدة: منذ 15 دقيقة',
       progress: 87,
-      color: 'blue'
+      color: 'green',
+      icon: FileText,
+      stats: { active: '43', pending: '15', avgDays: '28 يوم' }
     },
     {
       id: 'network-forecasting',
       title: 'توقعات الطلب على الشبكة',
-      description: 'تحليل وتوقع احتياجات البنية التحتية',
+      description: 'تحليل وتوقع احتياجات البنية التحتية للاتصالات',
       status: 'معالجة',
       activity: 'تحليل منطقة الرياض جاري',
       progress: 76,
-      color: 'orange'
+      color: 'orange',
+      icon: TrendingUp,
+      stats: { regions: '5', alerts: '8', accuracy: '91%' }
     },
     {
       id: 'compliance-hub',
       title: 'مركز الامتثال',
-      description: 'مراقبة وإنفاذ اللوائح التنظيمية',
+      description: 'مراقبة وإنفاذ اللوائح التنظيمية للقطاع',
       status: 'تنبيه',
       activity: 'مخالفة جديدة تحتاج مراجعة',
       progress: 91,
-      color: 'red'
+      color: 'red',
+      icon: Shield,
+      stats: { compliance: '87%', violations: '12', investigations: '3' }
     },
     {
       id: 'sentiment-analyzer',
       title: 'محلل المشاعر العامة',
-      description: 'تحليل الرأي العام ووسائل التواصل',
+      description: 'تحليل الرأي العام ووسائل التواصل الاجتماعي',
       status: 'نشط',
       activity: 'تحليل 2,847 منشور اليوم',
       progress: 98,
-      color: 'purple'
+      color: 'purple',
+      icon: BarChart3,
+      stats: { mentions: '2.8K', sentiment: '+5.2%', platforms: '5' }
     }
   ];
 
@@ -113,92 +133,120 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
       title: 'شكوى جديدة - ضعف الشبكة في الرياض',
       time: 'منذ 3 دقائق',
       priority: 'عالية',
-      status: 'قيد المعالجة'
+      status: 'قيد المعالجة',
+      icon: MessageSquare,
+      color: 'blue'
     },
     {
       type: 'license',
       title: 'طلب ترخيص مشغل اتصالات جديد',
       time: 'منذ 15 دقيقة',
       priority: 'متوسطة',
-      status: 'مراجعة أولية'
+      status: 'مراجعة أولية',
+      icon: FileText,
+      color: 'green'
     },
     {
       type: 'compliance',
       title: 'مخالفة امتثال - تأخير في التقارير',
       time: 'منذ 25 دقيقة',
       priority: 'عالية',
-      status: 'تحقيق'
+      status: 'تحقيق',
+      icon: Shield,
+      color: 'red'
     },
     {
       type: 'network',
       title: 'تنبيه شبكة - زيادة الحمولة في جدة',
       time: 'منذ 45 دقيقة',
       priority: 'متوسطة',
-      status: 'مراقبة'
+      status: 'مراقبة',
+      icon: TrendingUp,
+      color: 'orange'
     },
     {
-      type: 'sentiment',
+      type:  'sentiment',
       title: 'اتجاه إيجابي في المشاعر العامة',
       time: 'منذ ساعة',
       priority: 'منخفضة',
-      status: 'مكتمل'
+      status: 'مكتمل',
+      icon: BarChart3,
+      color: 'purple'
     }
   ];
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'نشط': return 'text-green-600 bg-green-100';
-      case 'معالجة': return 'text-orange-600 bg-orange-100';
-      case 'تنبيه': return 'text-red-600 bg-red-100';
-      default: return 'text-gray-600 bg-gray-100';
+      case 'نشط': return 'status-success';
+      case 'معالجة': return 'status-warning';
+      case 'تنبيه': return 'status-error';
+      default: return 'status-info';
     }
   };
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case 'عالية': return 'text-red-600 bg-red-100';
-      case 'متوسطة': return 'text-yellow-600 bg-yellow-100';
-      case 'منخفضة': return 'text-green-600 bg-green-100';
-      default: return 'text-gray-600 bg-gray-100';
+      case 'عالية': return 'status-error';
+      case 'متوسطة': return 'status-warning';
+      case 'منخفضة': return 'status-success';
+      default: return 'status-info';
     }
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-government animate-fade-in">
       {/* Welcome Section */}
-      <div className="bg-gradient-to-r from-green-600 to-green-700 rounded-xl p-6 text-white">
-        <h1 className="text-2xl font-bold mb-2">مرحباً بك في منصة الحلول الذكية</h1>
-        <p className="text-green-100 mb-4">
-          لوحة تحكم شاملة لإدارة ومراقبة جميع حلول الذكاء الاصطناعي للجنة الفضاء والاتصالات والتقنية
-        </p>
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <Activity className="h-5 w-5" />
-            <span className="text-sm">جميع الأنظمة تعمل بكفاءة</span>
+      <div className="card-government-elevated bg-gradient-to-l from-cst-primary to-cst-secondary text-white p-8">
+        <div className="flex items-center justify-between">
+          <div className="flex-1">
+            <h1 className="text-hierarchy-h1 text-white mb-3">
+              مرحباً بك في منصة الحلول الذكية
+            </h1>
+            <p className="text-lg text-white/90 mb-6 max-w-3xl">
+              لوحة تحكم شاملة لإدارة ومراقبة جميع حلول الذكاء الاصطناعي للجنة الاتصالات والفضاء والتقنية
+            </p>
+            <div className="flex items-center gap-6">
+              <div className="flex items-center gap-2">
+                <Activity className="h-5 w-5 text-white/80" />
+                <span className="text-white/90">جميع الأنظمة تعمل بكفاءة</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Zap className="h-5 w-5 text-cst-accent" />
+                <span className="text-white/90">معدل الاستجابة: 99.7%</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Globe className="h-5 w-5 text-white/80" />
+                <span className="text-white/90">متصل بـ 5 منصات</span>
+              </div>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Zap className="h-5 w-5" />
-            <span className="text-sm">معدل الاستجابة: 99.7%</span>
+          <div className="hidden lg:block">
+            <img 
+              src="/src/assets/cst-logo.svg" 
+              alt="CST Logo" 
+              className="h-24 w-auto opacity-20"
+            />
           </div>
         </div>
       </div>
 
       {/* Key Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+      <div className="grid-government-lg">
         {metrics.map((metric, index) => (
-          <div key={index} className="bg-white rounded-lg shadow-sm p-6 border border-gray-100">
+          <div key={index} className="card-government p-6 animate-slide-up" style={{ animationDelay: `${index * 100}ms` }}>
             <div className="flex items-center justify-between mb-4">
-              <div className={`p-2 rounded-lg bg-${metric.color}-100`}>
-                <metric.icon className={`h-6 w-6 text-${metric.color}-600`} />
+              <div className={`p-3 rounded-government-lg bg-${metric.bgColor}`}>
+                <metric.icon className={`h-6 w-6 text-${metric.color}`} />
               </div>
-              {metric.trend === 'up' && <TrendingUp className="h-4 w-4 text-green-500" />}
-              {metric.trend === 'down' && <TrendingDown className="h-4 w-4 text-red-500" />}
+              {metric.trend === 'up' && <TrendingUp className="h-4 w-4 text-status-success" />}
+              {metric.trend === 'down' && <TrendingDown className="h-4 w-4 text-status-error" />}
+              {metric.trend === 'neutral' && <Clock className="h-4 w-4 text-cst-gray-400" />}
             </div>
-            <h3 className="text-2xl font-bold text-gray-900 mb-1">{metric.value}</h3>
-            <p className="text-sm text-gray-600 mb-2">{metric.title}</p>
+            <h3 className="text-3xl font-bold text-cst-dark mb-2">{metric.value}</h3>
+            <p className="text-sm text-cst-gray-600 mb-2 font-medium">{metric.title}</p>
             <p className={`text-xs font-medium ${
-              metric.trend === 'up' ? 'text-green-600' : 
-              metric.trend === 'down' ? 'text-red-600' : 'text-gray-600'
+              metric.trend === 'up' ? 'text-status-success' : 
+              metric.trend === 'down' ? 'text-status-error' : 'text-cst-gray-600'
             }`}>
               {metric.change}
             </p>
@@ -207,65 +255,114 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
       </div>
 
       {/* AI Solutions Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-        {solutions.map((solution) => (
+      <div className="grid-government-md">
+        {solutions.map((solution, index) => (
           <div 
             key={solution.id}
-            className="bg-white rounded-lg shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow cursor-pointer"
+            className="card-government p-6 hover:shadow-government-lg transition-all duration-300 cursor-pointer group animate-slide-up"
+            style={{ animationDelay: `${(index + 5) * 100}ms` }}
             onClick={() => onNavigate(solution.id)}
           >
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">{solution.title}</h3>
-              <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(solution.status)}`}>
+              <div className="flex items-center gap-3">
+                <div className={`p-2 rounded-government bg-${solution.color}-50`}>
+                  <solution.icon className={`h-5 w-5 text-${solution.color}-600`} />
+                </div>
+                <h3 className="text-lg font-semibold text-cst-dark group-hover:text-cst-primary transition-colors">
+                  {solution.title}
+                </h3>
+              </div>
+              <span className={`badge-government px-3 py-1 text-xs font-medium ${getStatusColor(solution.status)}`}>
                 {solution.status}
               </span>
             </div>
             
-            <p className="text-gray-600 text-sm mb-4">{solution.description}</p>
+            <p className="text-cst-gray-600 text-sm mb-4 leading-relaxed">{solution.description}</p>
             
+            {/* Progress Bar */}
             <div className="mb-4">
               <div className="flex items-center justify-between text-sm mb-2">
-                <span className="text-gray-500">الأداء</span>
-                <span className="font-medium">{solution.progress}%</span>
+                <span className="text-cst-gray-600">الأداء</span>
+                <span className="font-semibold text-cst-dark">{solution.progress}%</span>
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
+              <div className="progress-bar h-2">
                 <div 
-                  className={`bg-${solution.color}-500 h-2 rounded-full transition-all duration-300`}
+                  className={`progress-fill bg-${solution.color}-500`}
                   style={{ width: `${solution.progress}%` }}
                 ></div>
               </div>
             </div>
+
+            {/* Stats */}
+            <div className="grid grid-cols-3 gap-3 mb-4">
+              {Object.entries(solution.stats).map(([key, value], idx) => (
+                <div key={idx} className="text-center">
+                  <p className="text-sm font-semibold text-cst-dark">{value}</p>
+                  <p className="text-xs text-cst-gray-500">
+                    {key === 'processed' ? 'معالج' :
+                     key === 'avgTime' ? 'متوسط الوقت' :
+                     key === 'satisfaction' ? 'الرضا' :
+                     key === 'active' ? 'نشط' :
+                     key === 'pending' ? 'معلق' :
+                     key === 'avgDays' ? 'متوسط الأيام' :
+                     key === 'regions' ? 'المناطق' :
+                     key === 'alerts' ? 'التنبيهات' :
+                     key === 'accuracy' ? 'الدقة' :
+                     key === 'compliance' ? 'الامتثال' :
+                     key === 'violations' ? 'المخالفات' :
+                     key === 'investigations' ? 'التحقيقات' :
+                     key === 'mentions' ? 'الإشارات' :
+                     key === 'sentiment' ? 'المشاعر' :
+                     key === 'platforms' ? 'المنصات' : key}
+                  </p>
+                </div>
+              ))}
+            </div>
             
             <div className="flex items-center justify-between">
-              <p className="text-xs text-gray-500">{solution.activity}</p>
-              <ArrowRight className="h-4 w-4 text-gray-400" />
+              <p className="text-xs text-cst-gray-500">{solution.activity}</p>
+              <ArrowLeft className="h-4 w-4 text-cst-gray-400 group-hover:text-cst-primary transition-colors" />
             </div>
           </div>
         ))}
       </div>
 
       {/* Recent Activity */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-100">
-        <div className="p-6 border-b border-gray-100">
-          <h2 className="text-xl font-semibold text-gray-900">النشاط الأخير</h2>
-          <p className="text-gray-600 text-sm">آخر التحديثات عبر جميع الأنظمة</p>
+      <div className="card-government animate-slide-up" style={{ animationDelay: '800ms' }}>
+        <div className="p-6 border-b border-cst-gray-200">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-hierarchy-h3">النشاط الأخير</h2>
+              <p className="text-hierarchy-caption mt-1">آخر التحديثات عبر جميع الأنظمة</p>
+            </div>
+            <button className="btn-government-secondary text-sm px-4 py-2">
+              عرض الكل
+            </button>
+          </div>
         </div>
         
-        <div className="divide-y divide-gray-100">
+        <div className="divide-y divide-cst-gray-100">
           {recentActivity.map((activity, index) => (
-            <div key={index} className="p-6 hover:bg-gray-50 transition-colors">
+            <div key={index} className="p-6 hover:bg-cst-gray-50 transition-colors cursor-pointer group">
               <div className="flex items-center justify-between">
-                <div className="flex-1">
-                  <h4 className="font-medium text-gray-900 mb-1">{activity.title}</h4>
-                  <div className="flex items-center gap-4 text-sm">
-                    <span className="text-gray-500">{activity.time}</span>
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(activity.priority)}`}>
-                      {activity.priority}
-                    </span>
-                    <span className="text-gray-600">{activity.status}</span>
+                <div className="flex items-center gap-4 flex-1">
+                  <div className={`p-2 rounded-government bg-${activity.color}-50 group-hover:bg-${activity.color}-100 transition-colors`}>
+                    <activity.icon className={`h-4 w-4 text-${activity.color}-600`} />
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="font-medium text-cst-dark group-hover:text-cst-primary transition-colors">
+                      {activity.title}
+                    </h4>
+                    <div className="flex items-center gap-4 mt-1">
+                      <span className="text-sm text-cst-gray-500">{activity.time}</span>
+                      <span className={`badge-government text-xs ${getPriorityColor(activity.priority)}`}>
+                        {activity.priority}
+                      </span>
+                      <span className="text-sm text-cst-gray-600">{activity.status}</span>
+                    </div>
                   </div>
                 </div>
-                <ArrowRight className="h-4 w-4 text-gray-400" />
+                <ArrowLeft className="h-4 w-4 text-cst-gray-400 group-hover:text-cst-primary transition-colors" />
               </div>
             </div>
           ))}
