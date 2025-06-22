@@ -14,7 +14,6 @@ import {
   MessageSquare,
   FileText,
   Globe,
-  Sparkles,
   Target,
   Cpu
 } from 'lucide-react';
@@ -183,6 +182,37 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
     }
   ];
 
+  const systemStats = [
+    {
+      label: 'حالة النظام',
+      value: 'ممتاز',
+      icon: Activity,
+      color: 'text-emerald-600',
+      bgColor: 'bg-emerald-50'
+    },
+    {
+      label: 'معدل الاستجابة',
+      value: '99.7%',
+      icon: Zap,
+      color: 'text-saudi-primary',
+      bgColor: 'bg-saudi-light'
+    },
+    {
+      label: 'المنصات المتصلة',
+      value: '5',
+      icon: Globe,
+      color: 'text-violet-600',
+      bgColor: 'bg-violet-50'
+    },
+    {
+      label: 'المعالجات النشطة',
+      value: '12',
+      icon: Cpu,
+      color: 'text-amber-600',
+      bgColor: 'bg-amber-50'
+    }
+  ];
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'نشط': return 'status-success';
@@ -203,72 +233,35 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
 
   return (
     <div className="space-section animate-fade-in">
-      {/* Welcome Section */}
-      <div className="card-elevated bg-gradient-to-l from-saudi-primary via-saudi-secondary to-saudi-accent text-white p-8 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-black/10 to-transparent"></div>
-        <div className="relative z-10">
-          <div className="flex items-center justify-between">
-            <div className="flex-1">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
-                  <Sparkles className="h-8 w-8 text-white" />
-                </div>
-                <div>
-                  <h1 className="text-display text-white mb-2">
-                    مرحباً بك في منصة الحلول الذكية
-                  </h1>
-                  <p className="text-lg text-white/90 max-w-3xl leading-relaxed">
-                    لوحة تحكم شاملة لإدارة ومراقبة جميع حلول الذكاء الاصطناعي للجنة الاتصالات والفضاء والتقنية
-                  </p>
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
-                <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
-                  <div className="flex items-center gap-3">
-                    <Activity className="h-6 w-6 text-white/80" />
-                    <div>
-                      <p className="text-white font-semibold">جميع الأنظمة تعمل بكفاءة</p>
-                      <p className="text-white/70 text-sm">حالة النظام: ممتازة</p>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
-                  <div className="flex items-center gap-3">
-                    <Zap className="h-6 w-6 text-saudi-gold" />
-                    <div>
-                      <p className="text-white font-semibold">معدل الاستجابة: 99.7%</p>
-                      <p className="text-white/70 text-sm">أداء متميز</p>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
-                  <div className="flex items-center gap-3">
-                    <Globe className="h-6 w-6 text-white/80" />
-                    <div>
-                      <p className="text-white font-semibold">متصل بـ 5 منصات</p>
-                      <p className="text-white/70 text-sm">تكامل شامل</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            <div className="hidden lg:block">
-              <img 
-                src="/src/assets/cst-logo.svg" 
-                alt="CST Logo" 
-                className="h-32 w-auto opacity-20"
-              />
-            </div>
+      {/* Page Header */}
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h1 className="text-display mb-2">لوحة التحكم الرئيسية</h1>
+          <p className="text-body">نظرة شاملة على جميع حلول الذكاء الاصطناعي والأنظمة المتصلة</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 px-4 py-2 bg-emerald-50 rounded-xl border border-emerald-200">
+            <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+            <span className="text-sm font-medium text-emerald-700">جميع الأنظمة تعمل</span>
           </div>
         </div>
       </div>
 
+      {/* System Status Overview */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        {systemStats.map((stat, index) => (
+          <div key={index} className="card p-4 text-center">
+            <div className={`inline-flex p-3 rounded-xl ${stat.bgColor} mb-3`}>
+              <stat.icon className={`h-5 w-5 ${stat.color}`} />
+            </div>
+            <p className="text-sm text-slate-600 mb-1">{stat.label}</p>
+            <p className={`text-lg font-bold ${stat.color}`}>{stat.value}</p>
+          </div>
+        ))}
+      </div>
+
       {/* Key Metrics */}
-      <div className="grid-modern grid-metrics">
+      <div className="grid-modern grid-metrics mb-8">
         {metrics.map((metric, index) => (
           <div key={index} className="card-interactive p-6 animate-slide-up" style={{ animationDelay: `${index * 100}ms` }}>
             <div className="flex items-center justify-between mb-4">
@@ -298,78 +291,90 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
       </div>
 
       {/* AI Solutions Grid */}
-      <div className="grid-modern grid-responsive">
-        {solutions.map((solution, index) => (
-          <div 
-            key={solution.id}
-            className="card-interactive p-6 group animate-slide-up"
-            style={{ animationDelay: `${(index + 5) * 100}ms` }}
-            onClick={() => onNavigate(solution.id)}
-          >
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <div className={`p-3 rounded-xl bg-gradient-to-r ${solution.gradient} shadow-soft`}>
-                  <solution.icon className="h-6 w-6 text-white" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-slate-800 group-hover:text-saudi-primary transition-colors">
-                    {solution.title}
-                  </h3>
-                </div>
-              </div>
-              <span className={`badge text-xs font-medium ${getStatusColor(solution.status)}`}>
-                {solution.status}
-              </span>
-            </div>
-            
-            <p className="text-slate-600 text-sm mb-6 leading-relaxed">{solution.description}</p>
-            
-            {/* Progress Bar */}
-            <div className="mb-6">
-              <div className="flex items-center justify-between text-sm mb-3">
-                <span className="text-slate-600 font-medium">الأداء</span>
-                <span className="font-bold text-slate-800">{solution.progress}%</span>
-              </div>
-              <div className="progress-container h-2">
-                <div 
-                  className={`progress-bar bg-gradient-to-r ${solution.gradient}`}
-                  style={{ width: `${solution.progress}%` }}
-                ></div>
-              </div>
-            </div>
-
-            {/* Stats */}
-            <div className="grid grid-cols-3 gap-4 mb-4">
-              {Object.entries(solution.stats).map(([key, value], idx) => (
-                <div key={idx} className="text-center p-3 bg-slate-50 rounded-xl">
-                  <p className="text-sm font-bold text-slate-800">{value}</p>
-                  <p className="text-xs text-slate-500 mt-1">
-                    {key === 'processed' ? 'معالج' :
-                     key === 'avgTime' ? 'متوسط الوقت' :
-                     key === 'satisfaction' ? 'الرضا' :
-                     key === 'active' ? 'نشط' :
-                     key === 'pending' ? 'معلق' :
-                     key === 'avgDays' ? 'متوسط الأيام' :
-                     key === 'regions' ? 'المناطق' :
-                     key === 'alerts' ? 'التنبيهات' :
-                     key === 'accuracy' ? 'الدقة' :
-                     key === 'compliance' ? 'الامتثال' :
-                     key === 'violations' ? 'المخالفات' :
-                     key === 'investigations' ? 'التحقيقات' :
-                     key === 'mentions' ? 'الإشارات' :
-                     key === 'sentiment' ? 'المشاعر' :
-                     key === 'platforms' ? 'المنصات' : key}
-                  </p>
-                </div>
-              ))}
-            </div>
-            
-            <div className="flex items-center justify-between pt-4 border-t border-slate-100">
-              <p className="text-xs text-slate-500">{solution.activity}</p>
-              <ArrowLeft className="h-4 w-4 text-slate-400 group-hover:text-saudi-primary transition-colors" />
-            </div>
+      <div className="mb-8">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h2 className="text-heading mb-1">حلول الذكاء الاصطناعي</h2>
+            <p className="text-caption">الأنظمة والخدمات المتاحة</p>
           </div>
-        ))}
+          <button className="btn-secondary text-sm px-4 py-2">
+            إدارة الحلول
+          </button>
+        </div>
+
+        <div className="grid-modern grid-responsive">
+          {solutions.map((solution, index) => (
+            <div 
+              key={solution.id}
+              className="card-interactive p-6 group animate-slide-up"
+              style={{ animationDelay: `${(index + 5) * 100}ms` }}
+              onClick={() => onNavigate(solution.id)}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div className={`p-3 rounded-xl bg-gradient-to-r ${solution.gradient} shadow-soft`}>
+                    <solution.icon className="h-6 w-6 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-slate-800 group-hover:text-saudi-primary transition-colors">
+                      {solution.title}
+                    </h3>
+                  </div>
+                </div>
+                <span className={`badge text-xs font-medium ${getStatusColor(solution.status)}`}>
+                  {solution.status}
+                </span>
+              </div>
+              
+              <p className="text-slate-600 text-sm mb-6 leading-relaxed">{solution.description}</p>
+              
+              {/* Progress Bar */}
+              <div className="mb-6">
+                <div className="flex items-center justify-between text-sm mb-3">
+                  <span className="text-slate-600 font-medium">الأداء</span>
+                  <span className="font-bold text-slate-800">{solution.progress}%</span>
+                </div>
+                <div className="progress-container h-2">
+                  <div 
+                    className={`progress-bar bg-gradient-to-r ${solution.gradient}`}
+                    style={{ width: `${solution.progress}%` }}
+                  ></div>
+                </div>
+              </div>
+
+              {/* Stats */}
+              <div className="grid grid-cols-3 gap-4 mb-4">
+                {Object.entries(solution.stats).map(([key, value], idx) => (
+                  <div key={idx} className="text-center p-3 bg-slate-50 rounded-xl">
+                    <p className="text-sm font-bold text-slate-800">{value}</p>
+                    <p className="text-xs text-slate-500 mt-1">
+                      {key === 'processed' ? 'معالج' :
+                       key === 'avgTime' ? 'متوسط الوقت' :
+                       key === 'satisfaction' ? 'الرضا' :
+                       key === 'active' ? 'نشط' :
+                       key === 'pending' ? 'معلق' :
+                       key === 'avgDays' ? 'متوسط الأيام' :
+                       key === 'regions' ? 'المناطق' :
+                       key === 'alerts' ? 'التنبيهات' :
+                       key === 'accuracy' ? 'الدقة' :
+                       key === 'compliance' ? 'الامتثال' :
+                       key === 'violations' ? 'المخالفات' :
+                       key === 'investigations' ? 'التحقيقات' :
+                       key === 'mentions' ? 'الإشارات' :
+                       key === 'sentiment' ? 'المشاعر' :
+                       key === 'platforms' ? 'المنصات' : key}
+                    </p>
+                  </div>
+                ))}
+              </div>
+              
+              <div className="flex items-center justify-between pt-4 border-t border-slate-100">
+                <p className="text-xs text-slate-500">{solution.activity}</p>
+                <ArrowLeft className="h-4 w-4 text-slate-400 group-hover:text-saudi-primary transition-colors" />
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Recent Activity */}
