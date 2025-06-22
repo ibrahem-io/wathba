@@ -13,7 +13,10 @@ import {
   Shield,
   MessageSquare,
   FileText,
-  Globe
+  Globe,
+  Sparkles,
+  Target,
+  Cpu
 } from 'lucide-react';
 
 interface DashboardProps {
@@ -28,8 +31,9 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
       change: '+23%',
       trend: 'up',
       icon: MessageSquare,
-      color: 'cst-blue-primary',
-      bgColor: 'cst-blue-light'
+      color: 'from-blue-500 to-blue-600',
+      bgColor: 'bg-blue-50',
+      textColor: 'text-blue-600'
     },
     {
       title: 'قضايا التراخيص النشطة',
@@ -37,8 +41,9 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
       change: '15 تحتاج انتباه',
       trend: 'neutral',
       icon: FileText,
-      color: 'cst-accent',
-      bgColor: 'yellow-50'
+      color: 'from-violet-500 to-violet-600',
+      bgColor: 'bg-violet-50',
+      textColor: 'text-violet-600'
     },
     {
       title: 'تنبيهات الشبكة',
@@ -46,8 +51,9 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
       change: '2 حرجة',
       trend: 'down',
       icon: AlertTriangle,
-      color: 'status-error',
-      bgColor: 'red-50'
+      color: 'from-rose-500 to-rose-600',
+      bgColor: 'bg-rose-50',
+      textColor: 'text-rose-600'
     },
     {
       title: 'قضايا الامتثال',
@@ -55,8 +61,9 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
       change: '3 أولوية عالية',
       trend: 'neutral',
       icon: Shield,
-      color: 'cst-primary',
-      bgColor: 'cst-light'
+      color: 'from-saudi-primary to-saudi-secondary',
+      bgColor: 'bg-saudi-light',
+      textColor: 'text-saudi-primary'
     },
     {
       title: 'التحليلات الاجتماعية',
@@ -64,8 +71,9 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
       change: '+5.2% إيجابية',
       trend: 'up',
       icon: BarChart3,
-      color: 'purple-600',
-      bgColor: 'purple-50'
+      color: 'from-emerald-500 to-emerald-600',
+      bgColor: 'bg-emerald-50',
+      textColor: 'text-emerald-600'
     }
   ];
 
@@ -73,55 +81,55 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
     {
       id: 'resolve-ai',
       title: 'محرك ResolveAI',
-      description: 'معالجة ذكية للشكاوى والاستفسارات مع تحليل متقدم للمحتوى',
+      description: 'معالجة ذكية للشكاوى والاستفسارات مع تحليل متقدم للمحتوى والاستجابة التلقائية',
       status: 'نشط',
       activity: 'آخر معالجة: منذ دقيقتين',
       progress: 94,
-      color: 'blue',
+      gradient: 'from-blue-500 to-blue-600',
       icon: MessageSquare,
       stats: { processed: '127', avgTime: '18 دقيقة', satisfaction: '94%' }
     },
     {
       id: 'case-manager',
       title: 'مساعد إدارة القضايا',
-      description: 'إدارة تراخيص الاتصالات والتقنية مع تحليل السوابق',
+      description: 'إدارة تراخيص الاتصالات والتقنية مع تحليل السوابق والتوصيات الذكية',
       status: 'نشط',
       activity: 'قضية جديدة: منذ 15 دقيقة',
       progress: 87,
-      color: 'green',
+      gradient: 'from-violet-500 to-violet-600',
       icon: FileText,
       stats: { active: '43', pending: '15', avgDays: '28 يوم' }
     },
     {
       id: 'network-forecasting',
       title: 'توقعات الطلب على الشبكة',
-      description: 'تحليل وتوقع احتياجات البنية التحتية للاتصالات',
+      description: 'تحليل وتوقع احتياجات البنية التحتية للاتصالات باستخدام الذكاء الاصطناعي',
       status: 'معالجة',
       activity: 'تحليل منطقة الرياض جاري',
       progress: 76,
-      color: 'orange',
+      gradient: 'from-amber-500 to-orange-600',
       icon: TrendingUp,
       stats: { regions: '5', alerts: '8', accuracy: '91%' }
     },
     {
       id: 'compliance-hub',
       title: 'مركز الامتثال',
-      description: 'مراقبة وإنفاذ اللوائح التنظيمية للقطاع',
+      description: 'مراقبة وإنفاذ اللوائح التنظيمية للقطاع مع التحليل التلقائي للمخالفات',
       status: 'تنبيه',
       activity: 'مخالفة جديدة تحتاج مراجعة',
       progress: 91,
-      color: 'red',
+      gradient: 'from-rose-500 to-rose-600',
       icon: Shield,
       stats: { compliance: '87%', violations: '12', investigations: '3' }
     },
     {
       id: 'sentiment-analyzer',
       title: 'محلل المشاعر العامة',
-      description: 'تحليل الرأي العام ووسائل التواصل الاجتماعي',
+      description: 'تحليل الرأي العام ووسائل التواصل الاجتماعي لقياس رضا المواطنين',
       status: 'نشط',
       activity: 'تحليل 2,847 منشور اليوم',
       progress: 98,
-      color: 'purple',
+      gradient: 'from-emerald-500 to-emerald-600',
       icon: BarChart3,
       stats: { mentions: '2.8K', sentiment: '+5.2%', platforms: '5' }
     }
@@ -135,7 +143,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
       priority: 'عالية',
       status: 'قيد المعالجة',
       icon: MessageSquare,
-      color: 'blue'
+      gradient: 'from-blue-500 to-blue-600'
     },
     {
       type: 'license',
@@ -144,7 +152,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
       priority: 'متوسطة',
       status: 'مراجعة أولية',
       icon: FileText,
-      color: 'green'
+      gradient: 'from-violet-500 to-violet-600'
     },
     {
       type: 'compliance',
@@ -153,7 +161,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
       priority: 'عالية',
       status: 'تحقيق',
       icon: Shield,
-      color: 'red'
+      gradient: 'from-rose-500 to-rose-600'
     },
     {
       type: 'network',
@@ -162,16 +170,16 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
       priority: 'متوسطة',
       status: 'مراقبة',
       icon: TrendingUp,
-      color: 'orange'
+      gradient: 'from-amber-500 to-orange-600'
     },
     {
-      type:  'sentiment',
+      type: 'sentiment',
       title: 'اتجاه إيجابي في المشاعر العامة',
       time: 'منذ ساعة',
       priority: 'منخفضة',
       status: 'مكتمل',
       icon: BarChart3,
-      color: 'purple'
+      gradient: 'from-emerald-500 to-emerald-600'
     }
   ];
 
@@ -194,111 +202,148 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
   };
 
   return (
-    <div className="space-government animate-fade-in">
+    <div className="space-section animate-fade-in">
       {/* Welcome Section */}
-      <div className="card-government-elevated bg-gradient-to-l from-cst-primary to-cst-secondary text-white p-8">
-        <div className="flex items-center justify-between">
-          <div className="flex-1">
-            <h1 className="text-hierarchy-h1 text-white mb-3">
-              مرحباً بك في منصة الحلول الذكية
-            </h1>
-            <p className="text-lg text-white/90 mb-6 max-w-3xl">
-              لوحة تحكم شاملة لإدارة ومراقبة جميع حلول الذكاء الاصطناعي للجنة الاتصالات والفضاء والتقنية
-            </p>
-            <div className="flex items-center gap-6">
-              <div className="flex items-center gap-2">
-                <Activity className="h-5 w-5 text-white/80" />
-                <span className="text-white/90">جميع الأنظمة تعمل بكفاءة</span>
+      <div className="card-elevated bg-gradient-to-l from-saudi-primary via-saudi-secondary to-saudi-accent text-white p-8 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-black/10 to-transparent"></div>
+        <div className="relative z-10">
+          <div className="flex items-center justify-between">
+            <div className="flex-1">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
+                  <Sparkles className="h-8 w-8 text-white" />
+                </div>
+                <div>
+                  <h1 className="text-display text-white mb-2">
+                    مرحباً بك في منصة الحلول الذكية
+                  </h1>
+                  <p className="text-lg text-white/90 max-w-3xl leading-relaxed">
+                    لوحة تحكم شاملة لإدارة ومراقبة جميع حلول الذكاء الاصطناعي للجنة الاتصالات والفضاء والتقنية
+                  </p>
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                <Zap className="h-5 w-5 text-cst-accent" />
-                <span className="text-white/90">معدل الاستجابة: 99.7%</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Globe className="h-5 w-5 text-white/80" />
-                <span className="text-white/90">متصل بـ 5 منصات</span>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+                <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
+                  <div className="flex items-center gap-3">
+                    <Activity className="h-6 w-6 text-white/80" />
+                    <div>
+                      <p className="text-white font-semibold">جميع الأنظمة تعمل بكفاءة</p>
+                      <p className="text-white/70 text-sm">حالة النظام: ممتازة</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
+                  <div className="flex items-center gap-3">
+                    <Zap className="h-6 w-6 text-saudi-gold" />
+                    <div>
+                      <p className="text-white font-semibold">معدل الاستجابة: 99.7%</p>
+                      <p className="text-white/70 text-sm">أداء متميز</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
+                  <div className="flex items-center gap-3">
+                    <Globe className="h-6 w-6 text-white/80" />
+                    <div>
+                      <p className="text-white font-semibold">متصل بـ 5 منصات</p>
+                      <p className="text-white/70 text-sm">تكامل شامل</p>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-          <div className="hidden lg:block">
-            <img 
-              src="/src/assets/cst-logo.svg" 
-              alt="CST Logo" 
-              className="h-24 w-auto opacity-20"
-            />
+            
+            <div className="hidden lg:block">
+              <img 
+                src="/src/assets/cst-logo.svg" 
+                alt="CST Logo" 
+                className="h-32 w-auto opacity-20"
+              />
+            </div>
           </div>
         </div>
       </div>
 
       {/* Key Metrics */}
-      <div className="grid-government-lg">
+      <div className="grid-modern grid-metrics">
         {metrics.map((metric, index) => (
-          <div key={index} className="card-government p-6 animate-slide-up" style={{ animationDelay: `${index * 100}ms` }}>
+          <div key={index} className="card-interactive p-6 animate-slide-up" style={{ animationDelay: `${index * 100}ms` }}>
             <div className="flex items-center justify-between mb-4">
-              <div className={`p-3 rounded-government-lg bg-${metric.bgColor}`}>
-                <metric.icon className={`h-6 w-6 text-${metric.color}`} />
+              <div className={`p-3 rounded-xl ${metric.bgColor}`}>
+                <metric.icon className={`h-6 w-6 ${metric.textColor}`} />
               </div>
-              {metric.trend === 'up' && <TrendingUp className="h-4 w-4 text-status-success" />}
-              {metric.trend === 'down' && <TrendingDown className="h-4 w-4 text-status-error" />}
-              {metric.trend === 'neutral' && <Clock className="h-4 w-4 text-cst-gray-400" />}
+              <div className="flex items-center gap-1">
+                {metric.trend === 'up' && <TrendingUp className="h-4 w-4 text-emerald-500" />}
+                {metric.trend === 'down' && <TrendingDown className="h-4 w-4 text-rose-500" />}
+                {metric.trend === 'neutral' && <Clock className="h-4 w-4 text-slate-400" />}
+              </div>
             </div>
-            <h3 className="text-3xl font-bold text-cst-dark mb-2">{metric.value}</h3>
-            <p className="text-sm text-cst-gray-600 mb-2 font-medium">{metric.title}</p>
-            <p className={`text-xs font-medium ${
-              metric.trend === 'up' ? 'text-status-success' : 
-              metric.trend === 'down' ? 'text-status-error' : 'text-cst-gray-600'
-            }`}>
-              {metric.change}
-            </p>
+            
+            <h3 className="text-3xl font-bold text-slate-800 mb-2">{metric.value}</h3>
+            <p className="text-sm text-slate-600 mb-3 font-medium leading-relaxed">{metric.title}</p>
+            
+            <div className="flex items-center gap-2">
+              <span className={`text-xs font-semibold px-2 py-1 rounded-lg ${
+                metric.trend === 'up' ? 'text-emerald-700 bg-emerald-100' : 
+                metric.trend === 'down' ? 'text-rose-700 bg-rose-100' : 'text-slate-600 bg-slate-100'
+              }`}>
+                {metric.change}
+              </span>
+            </div>
           </div>
         ))}
       </div>
 
       {/* AI Solutions Grid */}
-      <div className="grid-government-md">
+      <div className="grid-modern grid-responsive">
         {solutions.map((solution, index) => (
           <div 
             key={solution.id}
-            className="card-government p-6 hover:shadow-government-lg transition-all duration-300 cursor-pointer group animate-slide-up"
+            className="card-interactive p-6 group animate-slide-up"
             style={{ animationDelay: `${(index + 5) * 100}ms` }}
             onClick={() => onNavigate(solution.id)}
           >
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
-                <div className={`p-2 rounded-government bg-${solution.color}-50`}>
-                  <solution.icon className={`h-5 w-5 text-${solution.color}-600`} />
+                <div className={`p-3 rounded-xl bg-gradient-to-r ${solution.gradient} shadow-soft`}>
+                  <solution.icon className="h-6 w-6 text-white" />
                 </div>
-                <h3 className="text-lg font-semibold text-cst-dark group-hover:text-cst-primary transition-colors">
-                  {solution.title}
-                </h3>
+                <div>
+                  <h3 className="text-lg font-semibold text-slate-800 group-hover:text-saudi-primary transition-colors">
+                    {solution.title}
+                  </h3>
+                </div>
               </div>
-              <span className={`badge-government px-3 py-1 text-xs font-medium ${getStatusColor(solution.status)}`}>
+              <span className={`badge text-xs font-medium ${getStatusColor(solution.status)}`}>
                 {solution.status}
               </span>
             </div>
             
-            <p className="text-cst-gray-600 text-sm mb-4 leading-relaxed">{solution.description}</p>
+            <p className="text-slate-600 text-sm mb-6 leading-relaxed">{solution.description}</p>
             
             {/* Progress Bar */}
-            <div className="mb-4">
-              <div className="flex items-center justify-between text-sm mb-2">
-                <span className="text-cst-gray-600">الأداء</span>
-                <span className="font-semibold text-cst-dark">{solution.progress}%</span>
+            <div className="mb-6">
+              <div className="flex items-center justify-between text-sm mb-3">
+                <span className="text-slate-600 font-medium">الأداء</span>
+                <span className="font-bold text-slate-800">{solution.progress}%</span>
               </div>
-              <div className="progress-bar h-2">
+              <div className="progress-container h-2">
                 <div 
-                  className={`progress-fill bg-${solution.color}-500`}
+                  className={`progress-bar bg-gradient-to-r ${solution.gradient}`}
                   style={{ width: `${solution.progress}%` }}
                 ></div>
               </div>
             </div>
 
             {/* Stats */}
-            <div className="grid grid-cols-3 gap-3 mb-4">
+            <div className="grid grid-cols-3 gap-4 mb-4">
               {Object.entries(solution.stats).map(([key, value], idx) => (
-                <div key={idx} className="text-center">
-                  <p className="text-sm font-semibold text-cst-dark">{value}</p>
-                  <p className="text-xs text-cst-gray-500">
+                <div key={idx} className="text-center p-3 bg-slate-50 rounded-xl">
+                  <p className="text-sm font-bold text-slate-800">{value}</p>
+                  <p className="text-xs text-slate-500 mt-1">
                     {key === 'processed' ? 'معالج' :
                      key === 'avgTime' ? 'متوسط الوقت' :
                      key === 'satisfaction' ? 'الرضا' :
@@ -319,50 +364,55 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
               ))}
             </div>
             
-            <div className="flex items-center justify-between">
-              <p className="text-xs text-cst-gray-500">{solution.activity}</p>
-              <ArrowLeft className="h-4 w-4 text-cst-gray-400 group-hover:text-cst-primary transition-colors" />
+            <div className="flex items-center justify-between pt-4 border-t border-slate-100">
+              <p className="text-xs text-slate-500">{solution.activity}</p>
+              <ArrowLeft className="h-4 w-4 text-slate-400 group-hover:text-saudi-primary transition-colors" />
             </div>
           </div>
         ))}
       </div>
 
       {/* Recent Activity */}
-      <div className="card-government animate-slide-up" style={{ animationDelay: '800ms' }}>
-        <div className="p-6 border-b border-cst-gray-200">
+      <div className="card-elevated animate-slide-up" style={{ animationDelay: '800ms' }}>
+        <div className="p-6 border-b border-slate-100">
           <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-hierarchy-h3">النشاط الأخير</h2>
-              <p className="text-hierarchy-caption mt-1">آخر التحديثات عبر جميع الأنظمة</p>
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-gradient-to-r from-saudi-primary to-saudi-secondary rounded-lg">
+                <Target className="h-5 w-5 text-white" />
+              </div>
+              <div>
+                <h2 className="text-heading">النشاط الأخير</h2>
+                <p className="text-caption mt-1">آخر التحديثات عبر جميع الأنظمة</p>
+              </div>
             </div>
-            <button className="btn-government-secondary text-sm px-4 py-2">
+            <button className="btn-secondary text-sm px-4 py-2">
               عرض الكل
             </button>
           </div>
         </div>
         
-        <div className="divide-y divide-cst-gray-100">
+        <div className="divide-y divide-slate-100">
           {recentActivity.map((activity, index) => (
-            <div key={index} className="p-6 hover:bg-cst-gray-50 transition-colors cursor-pointer group">
+            <div key={index} className="p-6 hover:bg-slate-50 transition-colors cursor-pointer group">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4 flex-1">
-                  <div className={`p-2 rounded-government bg-${activity.color}-50 group-hover:bg-${activity.color}-100 transition-colors`}>
-                    <activity.icon className={`h-4 w-4 text-${activity.color}-600`} />
+                  <div className={`p-3 rounded-xl bg-gradient-to-r ${activity.gradient} shadow-soft`}>
+                    <activity.icon className="h-5 w-5 text-white" />
                   </div>
                   <div className="flex-1">
-                    <h4 className="font-medium text-cst-dark group-hover:text-cst-primary transition-colors">
+                    <h4 className="font-semibold text-slate-800 group-hover:text-saudi-primary transition-colors mb-1">
                       {activity.title}
                     </h4>
-                    <div className="flex items-center gap-4 mt-1">
-                      <span className="text-sm text-cst-gray-500">{activity.time}</span>
-                      <span className={`badge-government text-xs ${getPriorityColor(activity.priority)}`}>
+                    <div className="flex items-center gap-4">
+                      <span className="text-sm text-slate-500">{activity.time}</span>
+                      <span className={`badge text-xs ${getPriorityColor(activity.priority)}`}>
                         {activity.priority}
                       </span>
-                      <span className="text-sm text-cst-gray-600">{activity.status}</span>
+                      <span className="text-sm text-slate-600 font-medium">{activity.status}</span>
                     </div>
                   </div>
                 </div>
-                <ArrowLeft className="h-4 w-4 text-cst-gray-400 group-hover:text-cst-primary transition-colors" />
+                <ArrowLeft className="h-5 w-5 text-slate-400 group-hover:text-saudi-primary transition-colors" />
               </div>
             </div>
           ))}

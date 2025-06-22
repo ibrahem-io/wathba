@@ -2,21 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;600;700;800;900&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;600;700;800&display=swap');
 
-/* Government Design System Base Styles */
-:root {
-  --cst-primary: #1a5f3f;
-  --cst-secondary: #2d7a5a;
-  --cst-accent: #c9a961;
-  --cst-light: #e8f5f0;
-  --cst-dark: #0f3d2a;
-  --cst-blue-primary: #1e3a8a;
-  --cst-blue-secondary: #3b82f6;
-  --cst-blue-light: #eff6ff;
-}
-
+/* Modern Design System */
 html {
   direction: rtl;
   scroll-behavior: smooth;
@@ -24,154 +13,247 @@ html {
 
 body {
   font-family: 'Tajawal', 'Inter', system-ui, sans-serif;
-  background-color: #f9fafb;
-  color: #1f2937;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  color: #1e293b;
   line-height: 1.6;
   letter-spacing: -0.025em;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Typography Hierarchy */
-.text-hierarchy-h1 {
-  @apply text-3xl md:text-4xl font-bold text-cst-dark leading-tight;
+/* Typography System */
+.text-display {
+  @apply text-4xl md:text-5xl font-bold text-slate-900 leading-tight tracking-tight;
 }
 
-.text-hierarchy-h2 {
-  @apply text-2xl md:text-3xl font-semibold text-cst-dark leading-tight;
+.text-heading {
+  @apply text-2xl md:text-3xl font-semibold text-slate-800 leading-tight;
 }
 
-.text-hierarchy-h3 {
-  @apply text-xl md:text-2xl font-semibold text-cst-dark leading-snug;
+.text-subheading {
+  @apply text-xl md:text-2xl font-medium text-slate-700 leading-snug;
 }
 
-.text-hierarchy-body {
-  @apply text-base text-cst-gray-700 leading-relaxed;
+.text-body {
+  @apply text-base text-slate-600 leading-relaxed;
 }
 
-.text-hierarchy-caption {
-  @apply text-sm text-cst-gray-600 leading-normal;
+.text-caption {
+  @apply text-sm text-slate-500 leading-normal;
 }
 
-/* Government Component Styles */
-.btn-government-primary {
-  @apply bg-cst-primary text-white px-6 py-3 rounded-government font-medium 
-         hover:bg-cst-secondary focus:ring-4 focus:ring-cst-light 
-         transition-all duration-200 shadow-government;
+/* Modern Button System */
+.btn-primary {
+  @apply bg-gradient-to-r from-saudi-primary to-saudi-secondary text-white px-6 py-3 
+         rounded-xl font-medium hover:shadow-medium focus:ring-4 focus:ring-saudi-light 
+         transition-all duration-300 transform hover:scale-105;
 }
 
-.btn-government-secondary {
-  @apply bg-white text-cst-primary border-2 border-cst-primary px-6 py-3 
-         rounded-government font-medium hover:bg-cst-light 
-         focus:ring-4 focus:ring-cst-light transition-all duration-200;
+.btn-secondary {
+  @apply bg-white text-saudi-primary border-2 border-saudi-primary/20 px-6 py-3 
+         rounded-xl font-medium hover:bg-saudi-light hover:border-saudi-primary/40
+         focus:ring-4 focus:ring-saudi-light transition-all duration-300;
 }
 
-.btn-government-accent {
-  @apply bg-cst-accent text-white px-6 py-3 rounded-government font-medium 
-         hover:bg-opacity-90 focus:ring-4 focus:ring-yellow-200 
-         transition-all duration-200 shadow-government;
+.btn-accent {
+  @apply bg-gradient-to-r from-saudi-accent to-emerald-600 text-white px-6 py-3 
+         rounded-xl font-medium hover:shadow-medium focus:ring-4 focus:ring-emerald-200 
+         transition-all duration-300 transform hover:scale-105;
 }
 
-.card-government {
-  @apply bg-white rounded-government-lg shadow-government border border-cst-gray-200 
-         hover:shadow-government-lg transition-all duration-300;
+.btn-ghost {
+  @apply text-slate-600 hover:text-saudi-primary hover:bg-slate-100 px-4 py-2 
+         rounded-lg transition-all duration-200;
 }
 
-.card-government-elevated {
-  @apply bg-white rounded-government-lg shadow-government-lg border border-cst-gray-100 
-         hover:shadow-government-xl transition-all duration-300;
+/* Modern Card System */
+.card {
+  @apply bg-white/80 backdrop-blur-sm rounded-2xl shadow-soft border border-white/50 
+         hover:shadow-medium transition-all duration-300;
 }
 
-/* Status Indicators */
+.card-elevated {
+  @apply bg-white rounded-2xl shadow-medium border border-slate-100 
+         hover:shadow-strong transition-all duration-300;
+}
+
+.card-interactive {
+  @apply bg-white rounded-2xl shadow-soft border border-slate-100 
+         hover:shadow-medium hover:scale-[1.02] transition-all duration-300 cursor-pointer;
+}
+
+/* Status System */
 .status-success {
-  @apply bg-green-50 text-green-800 border border-green-200;
+  @apply bg-emerald-50 text-emerald-700 border border-emerald-200;
 }
 
 .status-warning {
-  @apply bg-yellow-50 text-yellow-800 border border-yellow-200;
+  @apply bg-amber-50 text-amber-700 border border-amber-200;
 }
 
 .status-error {
-  @apply bg-red-50 text-red-800 border border-red-200;
+  @apply bg-rose-50 text-rose-700 border border-rose-200;
 }
 
 .status-info {
-  @apply bg-blue-50 text-blue-800 border border-blue-200;
+  @apply bg-saudi-light text-saudi-primary border border-saudi-primary/20;
 }
 
 /* Form Elements */
-.input-government {
-  @apply w-full px-4 py-3 border border-cst-gray-300 rounded-government 
-         focus:ring-4 focus:ring-cst-light focus:border-cst-primary 
-         transition-all duration-200 bg-white;
+.input-modern {
+  @apply w-full px-4 py-3 bg-white/80 border border-slate-200 rounded-xl 
+         focus:ring-4 focus:ring-saudi-light focus:border-saudi-primary 
+         transition-all duration-200 placeholder:text-slate-400;
 }
 
-.select-government {
-  @apply w-full px-4 py-3 border border-cst-gray-300 rounded-government 
-         focus:ring-4 focus:ring-cst-light focus:border-cst-primary 
-         transition-all duration-200 bg-white;
+.select-modern {
+  @apply w-full px-4 py-3 bg-white/80 border border-slate-200 rounded-xl 
+         focus:ring-4 focus:ring-saudi-light focus:border-saudi-primary 
+         transition-all duration-200;
 }
 
-/* Navigation Styles */
-.nav-government {
-  @apply bg-white shadow-government border-b border-cst-gray-200;
+/* Navigation */
+.nav-modern {
+  @apply bg-white/90 backdrop-blur-md shadow-soft border-b border-slate-200/50;
 }
 
-.nav-item-government {
-  @apply px-4 py-3 text-cst-gray-700 hover:text-cst-primary 
-         hover:bg-cst-light transition-all duration-200 rounded-government;
+.nav-item {
+  @apply px-4 py-3 text-slate-600 hover:text-saudi-primary 
+         hover:bg-slate-50 transition-all duration-200 rounded-lg;
 }
 
 .nav-item-active {
-  @apply bg-cst-primary text-white shadow-government;
+  @apply bg-gradient-to-r from-saudi-primary to-saudi-secondary text-white shadow-soft;
 }
 
-/* Progress Indicators */
+/* Progress System */
+.progress-container {
+  @apply bg-slate-200 rounded-full overflow-hidden;
+}
+
 .progress-bar {
-  @apply bg-cst-gray-200 rounded-full overflow-hidden;
+  @apply bg-gradient-to-r from-saudi-primary to-saudi-secondary h-full 
+         transition-all duration-700 ease-out rounded-full;
 }
 
-.progress-fill {
-  @apply bg-gradient-to-r from-cst-primary to-cst-secondary h-full 
-         transition-all duration-500 ease-out;
+/* Badge System */
+.badge {
+  @apply inline-flex items-center px-3 py-1 rounded-full text-sm font-medium;
+}
+
+.badge-primary {
+  @apply bg-saudi-primary text-white;
+}
+
+.badge-secondary {
+  @apply bg-slate-100 text-slate-700;
+}
+
+.badge-accent {
+  @apply bg-saudi-accent text-white;
+}
+
+/* Grid System */
+.grid-modern {
+  @apply grid gap-6;
+}
+
+.grid-responsive {
+  @apply grid-cols-1 md:grid-cols-2 lg:grid-cols-3;
+}
+
+.grid-metrics {
+  @apply grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5;
 }
 
 /* Animations */
 .animate-fade-in {
-  animation: fadeIn 0.5s ease-in-out;
+  animation: fadeIn 0.6s ease-out;
 }
 
 .animate-slide-up {
-  animation: slideUp 0.3s ease-out;
+  animation: slideUp 0.4s ease-out;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.3s ease-out;
 }
 
 /* Loading States */
 .loading-spinner {
-  @apply w-6 h-6 border-2 border-cst-primary border-t-transparent 
+  @apply w-6 h-6 border-2 border-saudi-primary border-t-transparent 
          rounded-full animate-spin;
 }
 
-.loading-pulse {
-  @apply animate-pulse bg-cst-gray-200 rounded-government;
+.loading-skeleton {
+  @apply animate-pulse bg-slate-200 rounded-xl;
 }
 
-/* Accessibility Improvements */
+/* Accessibility */
 .focus-visible:focus {
-  @apply outline-none ring-4 ring-cst-light ring-offset-2;
+  @apply outline-none ring-4 ring-saudi-light ring-offset-2;
 }
 
-/* High Contrast Mode Support */
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-slate-100;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-slate-300 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-slate-400;
+}
+
+/* Utility Classes */
+.text-gradient {
+  @apply bg-gradient-to-r from-saudi-primary to-saudi-secondary bg-clip-text text-transparent;
+}
+
+.bg-gradient-primary {
+  @apply bg-gradient-to-r from-saudi-primary to-saudi-secondary;
+}
+
+.bg-gradient-accent {
+  @apply bg-gradient-to-r from-saudi-accent to-emerald-600;
+}
+
+.backdrop-blur-glass {
+  @apply backdrop-blur-md bg-white/80;
+}
+
+/* Spacing */
+.space-section {
+  @apply space-y-8;
+}
+
+.space-content {
+  @apply space-y-6;
+}
+
+.space-items {
+  @apply space-y-4;
+}
+
+/* High Contrast Mode */
 @media (prefers-contrast: high) {
-  .btn-government-primary {
-    @apply border-2 border-cst-dark;
+  .btn-primary {
+    @apply border-2 border-slate-900;
   }
   
-  .card-government {
-    @apply border-2 border-cst-gray-400;
+  .card {
+    @apply border-2 border-slate-300;
   }
 }
 
-/* Reduced Motion Support */
+/* Reduced Motion */
 @media (prefers-reduced-motion: reduce) {
   * {
     animation-duration: 0.01ms !important;
@@ -186,94 +268,7 @@ body {
     display: none !important;
   }
   
-  .card-government {
-    @apply shadow-none border border-gray-400;
+  .card {
+    @apply shadow-none border border-slate-400;
   }
-}
-
-/* Custom Scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-::-webkit-scrollbar-track {
-  @apply bg-cst-gray-100;
-}
-
-::-webkit-scrollbar-thumb {
-  @apply bg-cst-gray-400 rounded-full;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  @apply bg-cst-gray-500;
-}
-
-/* Utility Classes */
-.text-balance {
-  text-wrap: balance;
-}
-
-.text-pretty {
-  text-wrap: pretty;
-}
-
-/* Government Badge Styles */
-.badge-government {
-  @apply inline-flex items-center px-3 py-1 rounded-full text-sm font-medium;
-}
-
-.badge-primary {
-  @apply bg-cst-primary text-white;
-}
-
-.badge-secondary {
-  @apply bg-cst-gray-100 text-cst-gray-800;
-}
-
-.badge-accent {
-  @apply bg-cst-accent text-white;
-}
-
-/* Responsive Grid System */
-.grid-government {
-  @apply grid gap-6;
-}
-
-.grid-government-sm {
-  @apply grid-cols-1 sm:grid-cols-2;
-}
-
-.grid-government-md {
-  @apply grid-cols-1 md:grid-cols-2 lg:grid-cols-3;
-}
-
-.grid-government-lg {
-  @apply grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4;
-}
-
-/* Spacing System */
-.space-government {
-  @apply space-y-6;
-}
-
-.space-government-sm {
-  @apply space-y-4;
-}
-
-.space-government-lg {
-  @apply space-y-8;
-}
-
-/* Border Styles */
-.border-government {
-  @apply border border-cst-gray-200;
-}
-
-.border-government-accent {
-  @apply border-2 border-cst-accent;
-}
-
-.border-government-primary {
-  @apply border-2 border-cst-primary;
 }
