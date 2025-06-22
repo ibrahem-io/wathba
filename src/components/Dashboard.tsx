@@ -8,14 +8,7 @@ import {
   Users,
   Activity,
   Zap,
-  ArrowLeft,
-  BarChart3,
-  Shield,
-  MessageSquare,
-  FileText,
-  Globe,
-  Target,
-  Cpu
+  ArrowRight
 } from 'lucide-react';
 
 interface DashboardProps {
@@ -29,20 +22,16 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
       value: '127',
       change: '+23%',
       trend: 'up',
-      icon: MessageSquare,
-      color: 'from-blue-500 to-blue-600',
-      bgColor: 'bg-blue-50',
-      textColor: 'text-blue-600'
+      icon: TrendingUp,
+      color: 'green'
     },
     {
       title: 'قضايا التراخيص النشطة',
       value: '43',
       change: '15 تحتاج انتباه',
       trend: 'neutral',
-      icon: FileText,
-      color: 'from-violet-500 to-violet-600',
-      bgColor: 'bg-violet-50',
-      textColor: 'text-violet-600'
+      icon: Clock,
+      color: 'yellow'
     },
     {
       title: 'تنبيهات الشبكة',
@@ -50,29 +39,23 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
       change: '2 حرجة',
       trend: 'down',
       icon: AlertTriangle,
-      color: 'from-rose-500 to-rose-600',
-      bgColor: 'bg-rose-50',
-      textColor: 'text-rose-600'
+      color: 'red'
     },
     {
       title: 'قضايا الامتثال',
       value: '12',
       change: '3 أولوية عالية',
       trend: 'neutral',
-      icon: Shield,
-      color: 'from-saudi-primary to-saudi-secondary',
-      bgColor: 'bg-saudi-light',
-      textColor: 'text-saudi-primary'
+      icon: CheckCircle,
+      color: 'blue'
     },
     {
       title: 'التحليلات الاجتماعية',
       value: '2,847',
       change: '+5.2% إيجابية',
       trend: 'up',
-      icon: BarChart3,
-      color: 'from-emerald-500 to-emerald-600',
-      bgColor: 'bg-emerald-50',
-      textColor: 'text-emerald-600'
+      icon: Users,
+      color: 'purple'
     }
   ];
 
@@ -80,57 +63,47 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
     {
       id: 'resolve-ai',
       title: 'محرك ResolveAI',
-      description: 'معالجة ذكية للشكاوى والاستفسارات مع تحليل متقدم للمحتوى والاستجابة التلقائية',
+      description: 'معالجة ذكية للشكاوى والاستفسارات',
       status: 'نشط',
       activity: 'آخر معالجة: منذ دقيقتين',
       progress: 94,
-      gradient: 'from-blue-500 to-blue-600',
-      icon: MessageSquare,
-      stats: { processed: '127', avgTime: '18 دقيقة', satisfaction: '94%' }
+      color: 'green'
     },
     {
       id: 'case-manager',
       title: 'مساعد إدارة القضايا',
-      description: 'إدارة تراخيص الاتصالات والتقنية مع تحليل السوابق والتوصيات الذكية',
+      description: 'إدارة تراخيص الاتصالات والتقنية',
       status: 'نشط',
       activity: 'قضية جديدة: منذ 15 دقيقة',
       progress: 87,
-      gradient: 'from-violet-500 to-violet-600',
-      icon: FileText,
-      stats: { active: '43', pending: '15', avgDays: '28 يوم' }
+      color: 'blue'
     },
     {
       id: 'network-forecasting',
       title: 'توقعات الطلب على الشبكة',
-      description: 'تحليل وتوقع احتياجات البنية التحتية للاتصالات باستخدام الذكاء الاصطناعي',
+      description: 'تحليل وتوقع احتياجات البنية التحتية',
       status: 'معالجة',
       activity: 'تحليل منطقة الرياض جاري',
       progress: 76,
-      gradient: 'from-amber-500 to-orange-600',
-      icon: TrendingUp,
-      stats: { regions: '5', alerts: '8', accuracy: '91%' }
+      color: 'orange'
     },
     {
       id: 'compliance-hub',
       title: 'مركز الامتثال',
-      description: 'مراقبة وإنفاذ اللوائح التنظيمية للقطاع مع التحليل التلقائي للمخالفات',
+      description: 'مراقبة وإنفاذ اللوائح التنظيمية',
       status: 'تنبيه',
       activity: 'مخالفة جديدة تحتاج مراجعة',
       progress: 91,
-      gradient: 'from-rose-500 to-rose-600',
-      icon: Shield,
-      stats: { compliance: '87%', violations: '12', investigations: '3' }
+      color: 'red'
     },
     {
       id: 'sentiment-analyzer',
       title: 'محلل المشاعر العامة',
-      description: 'تحليل الرأي العام ووسائل التواصل الاجتماعي لقياس رضا المواطنين',
+      description: 'تحليل الرأي العام ووسائل التواصل',
       status: 'نشط',
       activity: 'تحليل 2,847 منشور اليوم',
       progress: 98,
-      gradient: 'from-emerald-500 to-emerald-600',
-      icon: BarChart3,
-      stats: { mentions: '2.8K', sentiment: '+5.2%', platforms: '5' }
+      color: 'purple'
     }
   ];
 
@@ -140,284 +113,159 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
       title: 'شكوى جديدة - ضعف الشبكة في الرياض',
       time: 'منذ 3 دقائق',
       priority: 'عالية',
-      status: 'قيد المعالجة',
-      icon: MessageSquare,
-      gradient: 'from-blue-500 to-blue-600'
+      status: 'قيد المعالجة'
     },
     {
       type: 'license',
       title: 'طلب ترخيص مشغل اتصالات جديد',
       time: 'منذ 15 دقيقة',
       priority: 'متوسطة',
-      status: 'مراجعة أولية',
-      icon: FileText,
-      gradient: 'from-violet-500 to-violet-600'
+      status: 'مراجعة أولية'
     },
     {
       type: 'compliance',
       title: 'مخالفة امتثال - تأخير في التقارير',
       time: 'منذ 25 دقيقة',
       priority: 'عالية',
-      status: 'تحقيق',
-      icon: Shield,
-      gradient: 'from-rose-500 to-rose-600'
+      status: 'تحقيق'
     },
     {
       type: 'network',
       title: 'تنبيه شبكة - زيادة الحمولة في جدة',
       time: 'منذ 45 دقيقة',
       priority: 'متوسطة',
-      status: 'مراقبة',
-      icon: TrendingUp,
-      gradient: 'from-amber-500 to-orange-600'
+      status: 'مراقبة'
     },
     {
       type: 'sentiment',
       title: 'اتجاه إيجابي في المشاعر العامة',
       time: 'منذ ساعة',
       priority: 'منخفضة',
-      status: 'مكتمل',
-      icon: BarChart3,
-      gradient: 'from-emerald-500 to-emerald-600'
-    }
-  ];
-
-  const systemStats = [
-    {
-      label: 'حالة النظام',
-      value: 'ممتاز',
-      icon: Activity,
-      color: 'text-emerald-600',
-      bgColor: 'bg-emerald-50'
-    },
-    {
-      label: 'معدل الاستجابة',
-      value: '99.7%',
-      icon: Zap,
-      color: 'text-saudi-primary',
-      bgColor: 'bg-saudi-light'
-    },
-    {
-      label: 'المنصات المتصلة',
-      value: '5',
-      icon: Globe,
-      color: 'text-violet-600',
-      bgColor: 'bg-violet-50'
-    },
-    {
-      label: 'المعالجات النشطة',
-      value: '12',
-      icon: Cpu,
-      color: 'text-amber-600',
-      bgColor: 'bg-amber-50'
+      status: 'مكتمل'
     }
   ];
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'نشط': return 'status-success';
-      case 'معالجة': return 'status-warning';
-      case 'تنبيه': return 'status-error';
-      default: return 'status-info';
+      case 'نشط': return 'text-green-600 bg-green-100';
+      case 'معالجة': return 'text-orange-600 bg-orange-100';
+      case 'تنبيه': return 'text-red-600 bg-red-100';
+      default: return 'text-gray-600 bg-gray-100';
     }
   };
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case 'عالية': return 'status-error';
-      case 'متوسطة': return 'status-warning';
-      case 'منخفضة': return 'status-success';
-      default: return 'status-info';
+      case 'عالية': return 'text-red-600 bg-red-100';
+      case 'متوسطة': return 'text-yellow-600 bg-yellow-100';
+      case 'منخفضة': return 'text-green-600 bg-green-100';
+      default: return 'text-gray-600 bg-gray-100';
     }
   };
 
   return (
-    <div className="space-section animate-fade-in">
-      {/* Page Header */}
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-display mb-2">لوحة التحكم الرئيسية</h1>
-          <p className="text-body">نظرة شاملة على جميع حلول الذكاء الاصطناعي والأنظمة المتصلة</p>
-        </div>
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 px-4 py-2 bg-emerald-50 rounded-xl border border-emerald-200">
-            <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
-            <span className="text-sm font-medium text-emerald-700">جميع الأنظمة تعمل</span>
+    <div className="space-y-6">
+      {/* Welcome Section */}
+      <div className="bg-gradient-to-r from-green-600 to-green-700 rounded-xl p-6 text-white">
+        <h1 className="text-2xl font-bold mb-2">مرحباً بك في منصة الحلول الذكية</h1>
+        <p className="text-green-100 mb-4">
+          لوحة تحكم شاملة لإدارة ومراقبة جميع حلول الذكاء الاصطناعي للجنة الفضاء والاتصالات والتقنية
+        </p>
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <Activity className="h-5 w-5" />
+            <span className="text-sm">جميع الأنظمة تعمل بكفاءة</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Zap className="h-5 w-5" />
+            <span className="text-sm">معدل الاستجابة: 99.7%</span>
           </div>
         </div>
-      </div>
-
-      {/* System Status Overview */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        {systemStats.map((stat, index) => (
-          <div key={index} className="card p-4 text-center">
-            <div className={`inline-flex p-3 rounded-xl ${stat.bgColor} mb-3`}>
-              <stat.icon className={`h-5 w-5 ${stat.color}`} />
-            </div>
-            <p className="text-sm text-slate-600 mb-1">{stat.label}</p>
-            <p className={`text-lg font-bold ${stat.color}`}>{stat.value}</p>
-          </div>
-        ))}
       </div>
 
       {/* Key Metrics */}
-      <div className="grid-modern grid-metrics mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
         {metrics.map((metric, index) => (
-          <div key={index} className="card-interactive p-6 animate-slide-up" style={{ animationDelay: `${index * 100}ms` }}>
+          <div key={index} className="bg-white rounded-lg shadow-sm p-6 border border-gray-100">
             <div className="flex items-center justify-between mb-4">
-              <div className={`p-3 rounded-xl ${metric.bgColor}`}>
-                <metric.icon className={`h-6 w-6 ${metric.textColor}`} />
+              <div className={`p-2 rounded-lg bg-${metric.color}-100`}>
+                <metric.icon className={`h-6 w-6 text-${metric.color}-600`} />
               </div>
-              <div className="flex items-center gap-1">
-                {metric.trend === 'up' && <TrendingUp className="h-4 w-4 text-emerald-500" />}
-                {metric.trend === 'down' && <TrendingDown className="h-4 w-4 text-rose-500" />}
-                {metric.trend === 'neutral' && <Clock className="h-4 w-4 text-slate-400" />}
-              </div>
+              {metric.trend === 'up' && <TrendingUp className="h-4 w-4 text-green-500" />}
+              {metric.trend === 'down' && <TrendingDown className="h-4 w-4 text-red-500" />}
             </div>
-            
-            <h3 className="text-3xl font-bold text-slate-800 mb-2">{metric.value}</h3>
-            <p className="text-sm text-slate-600 mb-3 font-medium leading-relaxed">{metric.title}</p>
-            
-            <div className="flex items-center gap-2">
-              <span className={`text-xs font-semibold px-2 py-1 rounded-lg ${
-                metric.trend === 'up' ? 'text-emerald-700 bg-emerald-100' : 
-                metric.trend === 'down' ? 'text-rose-700 bg-rose-100' : 'text-slate-600 bg-slate-100'
-              }`}>
-                {metric.change}
-              </span>
-            </div>
+            <h3 className="text-2xl font-bold text-gray-900 mb-1">{metric.value}</h3>
+            <p className="text-sm text-gray-600 mb-2">{metric.title}</p>
+            <p className={`text-xs font-medium ${
+              metric.trend === 'up' ? 'text-green-600' : 
+              metric.trend === 'down' ? 'text-red-600' : 'text-gray-600'
+            }`}>
+              {metric.change}
+            </p>
           </div>
         ))}
       </div>
 
       {/* AI Solutions Grid */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h2 className="text-heading mb-1">حلول الذكاء الاصطناعي</h2>
-            <p className="text-caption">الأنظمة والخدمات المتاحة</p>
-          </div>
-          <button className="btn-secondary text-sm px-4 py-2">
-            إدارة الحلول
-          </button>
-        </div>
-
-        <div className="grid-modern grid-responsive">
-          {solutions.map((solution, index) => (
-            <div 
-              key={solution.id}
-              className="card-interactive p-6 group animate-slide-up"
-              style={{ animationDelay: `${(index + 5) * 100}ms` }}
-              onClick={() => onNavigate(solution.id)}
-            >
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <div className={`p-3 rounded-xl bg-gradient-to-r ${solution.gradient} shadow-soft`}>
-                    <solution.icon className="h-6 w-6 text-white" />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-semibold text-slate-800 group-hover:text-saudi-primary transition-colors">
-                      {solution.title}
-                    </h3>
-                  </div>
-                </div>
-                <span className={`badge text-xs font-medium ${getStatusColor(solution.status)}`}>
-                  {solution.status}
-                </span>
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+        {solutions.map((solution) => (
+          <div 
+            key={solution.id}
+            className="bg-white rounded-lg shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow cursor-pointer"
+            onClick={() => onNavigate(solution.id)}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">{solution.title}</h3>
+              <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(solution.status)}`}>
+                {solution.status}
+              </span>
+            </div>
+            
+            <p className="text-gray-600 text-sm mb-4">{solution.description}</p>
+            
+            <div className="mb-4">
+              <div className="flex items-center justify-between text-sm mb-2">
+                <span className="text-gray-500">الأداء</span>
+                <span className="font-medium">{solution.progress}%</span>
               </div>
-              
-              <p className="text-slate-600 text-sm mb-6 leading-relaxed">{solution.description}</p>
-              
-              {/* Progress Bar */}
-              <div className="mb-6">
-                <div className="flex items-center justify-between text-sm mb-3">
-                  <span className="text-slate-600 font-medium">الأداء</span>
-                  <span className="font-bold text-slate-800">{solution.progress}%</span>
-                </div>
-                <div className="progress-container h-2">
-                  <div 
-                    className={`progress-bar bg-gradient-to-r ${solution.gradient}`}
-                    style={{ width: `${solution.progress}%` }}
-                  ></div>
-                </div>
-              </div>
-
-              {/* Stats */}
-              <div className="grid grid-cols-3 gap-4 mb-4">
-                {Object.entries(solution.stats).map(([key, value], idx) => (
-                  <div key={idx} className="text-center p-3 bg-slate-50 rounded-xl">
-                    <p className="text-sm font-bold text-slate-800">{value}</p>
-                    <p className="text-xs text-slate-500 mt-1">
-                      {key === 'processed' ? 'معالج' :
-                       key === 'avgTime' ? 'متوسط الوقت' :
-                       key === 'satisfaction' ? 'الرضا' :
-                       key === 'active' ? 'نشط' :
-                       key === 'pending' ? 'معلق' :
-                       key === 'avgDays' ? 'متوسط الأيام' :
-                       key === 'regions' ? 'المناطق' :
-                       key === 'alerts' ? 'التنبيهات' :
-                       key === 'accuracy' ? 'الدقة' :
-                       key === 'compliance' ? 'الامتثال' :
-                       key === 'violations' ? 'المخالفات' :
-                       key === 'investigations' ? 'التحقيقات' :
-                       key === 'mentions' ? 'الإشارات' :
-                       key === 'sentiment' ? 'المشاعر' :
-                       key === 'platforms' ? 'المنصات' : key}
-                    </p>
-                  </div>
-                ))}
-              </div>
-              
-              <div className="flex items-center justify-between pt-4 border-t border-slate-100">
-                <p className="text-xs text-slate-500">{solution.activity}</p>
-                <ArrowLeft className="h-4 w-4 text-slate-400 group-hover:text-saudi-primary transition-colors" />
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div 
+                  className={`bg-${solution.color}-500 h-2 rounded-full transition-all duration-300`}
+                  style={{ width: `${solution.progress}%` }}
+                ></div>
               </div>
             </div>
-          ))}
-        </div>
+            
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-gray-500">{solution.activity}</p>
+              <ArrowRight className="h-4 w-4 text-gray-400" />
+            </div>
+          </div>
+        ))}
       </div>
 
       {/* Recent Activity */}
-      <div className="card-elevated animate-slide-up" style={{ animationDelay: '800ms' }}>
-        <div className="p-6 border-b border-slate-100">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-gradient-to-r from-saudi-primary to-saudi-secondary rounded-lg">
-                <Target className="h-5 w-5 text-white" />
-              </div>
-              <div>
-                <h2 className="text-heading">النشاط الأخير</h2>
-                <p className="text-caption mt-1">آخر التحديثات عبر جميع الأنظمة</p>
-              </div>
-            </div>
-            <button className="btn-secondary text-sm px-4 py-2">
-              عرض الكل
-            </button>
-          </div>
+      <div className="bg-white rounded-lg shadow-sm border border-gray-100">
+        <div className="p-6 border-b border-gray-100">
+          <h2 className="text-xl font-semibold text-gray-900">النشاط الأخير</h2>
+          <p className="text-gray-600 text-sm">آخر التحديثات عبر جميع الأنظمة</p>
         </div>
         
-        <div className="divide-y divide-slate-100">
+        <div className="divide-y divide-gray-100">
           {recentActivity.map((activity, index) => (
-            <div key={index} className="p-6 hover:bg-slate-50 transition-colors cursor-pointer group">
+            <div key={index} className="p-6 hover:bg-gray-50 transition-colors">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4 flex-1">
-                  <div className={`p-3 rounded-xl bg-gradient-to-r ${activity.gradient} shadow-soft`}>
-                    <activity.icon className="h-5 w-5 text-white" />
-                  </div>
-                  <div className="flex-1">
-                    <h4 className="font-semibold text-slate-800 group-hover:text-saudi-primary transition-colors mb-1">
-                      {activity.title}
-                    </h4>
-                    <div className="flex items-center gap-4">
-                      <span className="text-sm text-slate-500">{activity.time}</span>
-                      <span className={`badge text-xs ${getPriorityColor(activity.priority)}`}>
-                        {activity.priority}
-                      </span>
-                      <span className="text-sm text-slate-600 font-medium">{activity.status}</span>
-                    </div>
+                <div className="flex-1">
+                  <h4 className="font-medium text-gray-900 mb-1">{activity.title}</h4>
+                  <div className="flex items-center gap-4 text-sm">
+                    <span className="text-gray-500">{activity.time}</span>
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(activity.priority)}`}>
+                      {activity.priority}
+                    </span>
+                    <span className="text-gray-600">{activity.status}</span>
                   </div>
                 </div>
-                <ArrowLeft className="h-5 w-5 text-slate-400 group-hover:text-saudi-primary transition-colors" />
+                <ArrowRight className="h-4 w-4 text-gray-400" />
               </div>
             </div>
           ))}
