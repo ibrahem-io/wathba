@@ -74,13 +74,13 @@ export default function HeroBanner() {
           {/* AI Badge */}
           <div className="inline-flex items-center bg-white bg-opacity-20 backdrop-blur-sm rounded-full px-6 py-3 mb-8">
             <Sparkles className="h-5 w-5 text-yellow-300 mr-2" />
-            <span className="text-white font-medium">مدعوم بالذكاء الاصطناعي</span>
+            <span className="text-white font-medium font-din">مدعوم بالذكاء الاصطناعي</span>
             <span className="text-white text-opacity-80 mr-2">•</span>
-            <span className="text-white text-opacity-90 text-sm">AI-Powered Platform</span>
+            <span className="text-white text-opacity-90 text-sm font-english">AI-Powered Platform</span>
           </div>
 
           {/* Main Title */}
-          <h1 className="text-4xl md:text-6xl font-bold text-white mb-6 leading-tight">
+          <h1 className="hero-title text-4xl md:text-6xl font-bold text-white mb-6 leading-tight">
             منصة معارف
             <br />
             <span className="text-2xl md:text-3xl font-normal text-white text-opacity-90">
@@ -88,10 +88,10 @@ export default function HeroBanner() {
             </span>
           </h1>
 
-          <p className="text-xl text-white text-opacity-90 mb-12 max-w-3xl mx-auto leading-relaxed">
-            اكتشف المعرفة، واستكشف الوثائق، واحصل على إجابات فورية من مساعدنا الذكي
+          <p className="hero-subtitle text-xl text-white text-opacity-90 mb-12 max-w-3xl mx-auto leading-relaxed">
+            <span className="font-arabic">اكتشف المعرفة، واستكشف الوثائق، واحصل على إجابات فورية من مساعدنا الذكي</span>
             <br />
-            <span className="text-lg">Discover Knowledge, Explore Documents, Get Instant AI Assistance</span>
+            <span className="text-lg font-english">Discover Knowledge, Explore Documents, Get Instant AI Assistance</span>
           </p>
 
           {/* Action Buttons */}
@@ -102,7 +102,7 @@ export default function HeroBanner() {
                 <input
                   type="text"
                   placeholder="ابحث في المعارف والوثائق..."
-                  className="w-full px-6 py-4 pr-14 rounded-xl text-lg border-0 shadow-lg focus:ring-4 focus:ring-white focus:ring-opacity-30 transition-all"
+                  className="w-full px-6 py-4 pr-14 rounded-xl text-lg border-0 shadow-lg focus:ring-4 focus:ring-white focus:ring-opacity-30 transition-all font-din"
                   onKeyPress={(e) => {
                     if (e.key === 'Enter') {
                       handleSearch(e.currentTarget.value);
@@ -126,7 +126,7 @@ export default function HeroBanner() {
             {/* AI Agent Button */}
             <button
               onClick={() => setShowSearchWidget(true)}
-              className="bg-white text-saudi-green px-8 py-4 rounded-xl font-semibold text-lg hover:bg-gray-50 transition-all shadow-lg flex items-center gap-3 whitespace-nowrap"
+              className="bg-white text-saudi-green px-8 py-4 rounded-xl font-semibold text-lg hover:bg-gray-50 transition-all shadow-lg flex items-center gap-3 whitespace-nowrap font-din"
             >
               <Bot className="h-6 w-6" />
               المساعد الذكي
@@ -139,22 +139,22 @@ export default function HeroBanner() {
               <div className="bg-white bg-opacity-20 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
                 <Search className="h-8 w-8 text-white" />
               </div>
-              <h3 className="text-white font-semibold text-lg mb-2">بحث ذكي</h3>
-              <p className="text-white text-opacity-80">ابحث في آلاف الوثائق والسياسات بسهولة</p>
+              <h3 className="text-white font-semibold text-lg mb-2 font-din">بحث ذكي</h3>
+              <p className="text-white text-opacity-80 font-din">ابحث في آلاف الوثائق والسياسات بسهولة</p>
             </div>
             <div className="text-center">
               <div className="bg-white bg-opacity-20 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
                 <Bot className="h-8 w-8 text-white" />
               </div>
-              <h3 className="text-white font-semibold text-lg mb-2">مساعد ذكي</h3>
-              <p className="text-white text-opacity-80">احصل على إجابات فورية من الذكاء الاصطناعي</p>
+              <h3 className="text-white font-semibold text-lg mb-2 font-din">مساعد ذكي</h3>
+              <p className="text-white text-opacity-80 font-din">احصل على إجابات فورية من الذكاء الاصطناعي</p>
             </div>
             <div className="text-center">
               <div className="bg-white bg-opacity-20 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
                 <FileText className="h-8 w-8 text-white" />
               </div>
-              <h3 className="text-white font-semibold text-lg mb-2">مكتبة شاملة</h3>
-              <p className="text-white text-opacity-80">وصول سريع لجميع الوثائق والمراجع</p>
+              <h3 className="text-white font-semibold text-lg mb-2 font-din">مكتبة شاملة</h3>
+              <p className="text-white text-opacity-80 font-din">وصول سريع لجميع الوثائق والمراجع</p>
             </div>
           </div>
         </div>
@@ -171,8 +171,8 @@ export default function HeroBanner() {
                   <Search className="h-5 w-5" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-gray-900">البحث والمساعد الذكي</h2>
-                  <p className="text-gray-600 text-sm">ابحث في المعارف أو تحدث مع المساعد الذكي</p>
+                  <h2 className="text-xl font-bold text-gray-900 font-din">البحث والمساعد الذكي</h2>
+                  <p className="text-gray-600 text-sm font-din">ابحث في المعارف أو تحدث مع المساعد الذكي</p>
                 </div>
               </div>
               <button
@@ -189,7 +189,7 @@ export default function HeroBanner() {
               <div className="chat-panel">
                 <div className="flex items-center gap-2 mb-4">
                   <Bot className="h-5 w-5 text-saudi-green" />
-                  <h3 className="font-semibold text-gray-900">المساعد الذكي</h3>
+                  <h3 className="font-semibold text-gray-900 font-din">المساعد الذكي</h3>
                   <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse-slow"></div>
                 </div>
 
@@ -221,7 +221,7 @@ export default function HeroBanner() {
                       value={chatInput}
                       onChange={(e) => setChatInput(e.target.value)}
                       placeholder="اسأل عن السياسات والإجراءات..."
-                      className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-saudi-green focus:border-transparent"
+                      className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-saudi-green focus:border-transparent font-din"
                       onKeyPress={(e) => {
                         if (e.key === 'Enter') {
                           handleChatSend();
@@ -243,8 +243,8 @@ export default function HeroBanner() {
               <div className="search-results-panel">
                 <div className="flex items-center gap-2 mb-4">
                   <Search className="h-5 w-5 text-saudi-green" />
-                  <h3 className="font-semibold text-gray-900">نتائج البحث</h3>
-                  <span className="text-sm text-gray-500">({filteredDocuments.length} نتيجة)</span>
+                  <h3 className="font-semibold text-gray-900 font-din">نتائج البحث</h3>
+                  <span className="text-sm text-gray-500 font-din">({filteredDocuments.length} نتيجة)</span>
                 </div>
 
                 <div className="mb-4">
@@ -253,7 +253,7 @@ export default function HeroBanner() {
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="ابحث في الوثائق..."
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-saudi-green focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-saudi-green focus:border-transparent font-din"
                   />
                 </div>
 
@@ -266,13 +266,13 @@ export default function HeroBanner() {
                             <FileText className="h-5 w-5" />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h4 className="font-semibold text-gray-900 mb-1 line-clamp-2">
+                            <h4 className="search-result-title font-semibold text-gray-900 mb-1 line-clamp-2">
                               {doc.title}
                             </h4>
-                            <p className="text-gray-600 text-sm mb-2 line-clamp-2">
+                            <p className="search-result-description text-gray-600 text-sm mb-2 line-clamp-2">
                               {doc.description}
                             </p>
-                            <div className="flex items-center gap-4 text-xs text-gray-500">
+                            <div className="flex items-center gap-4 text-xs text-gray-500 font-din">
                               <div className="flex items-center gap-1">
                                 <MapPin className="h-3 w-3" />
                                 {doc.department}
@@ -286,7 +286,7 @@ export default function HeroBanner() {
                               {doc.tags.slice(0, 3).map((tag) => (
                                 <span
                                   key={tag}
-                                  className="bg-gray-100 text-gray-700 px-2 py-1 rounded text-xs"
+                                  className="bg-gray-100 text-gray-700 px-2 py-1 rounded text-xs font-din"
                                 >
                                   {tag}
                                 </span>
@@ -299,8 +299,8 @@ export default function HeroBanner() {
                   ) : (
                     <div className="text-center py-8 text-gray-500">
                       <Search className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                      <p>لم يتم العثور على نتائج</p>
-                      <p className="text-sm">جرب كلمات مفتاحية أخرى</p>
+                      <p className="font-din">لم يتم العثور على نتائج</p>
+                      <p className="text-sm font-din">جرب كلمات مفتاحية أخرى</p>
                     </div>
                   )}
                 </div>

@@ -2,7 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 @layer base {
@@ -12,7 +11,7 @@
   }
   
   body {
-    font-family: 'Cairo', 'Tahoma', 'Arial', sans-serif;
+    font-family: 'DIN Next LT Arabic', 'Cairo', 'Tahoma', 'Arial', sans-serif;
     background-color: #FAFAFA;
     font-size: 14px;
     line-height: 1.6;
@@ -20,7 +19,7 @@
   }
   
   [dir="ltr"] {
-    font-family: 'Inter', 'Arial', sans-serif;
+    font-family: 'DIN Next LT Arabic', 'Inter', 'Arial', sans-serif;
   }
 }
 
@@ -107,7 +106,7 @@
 
 /* Official header styling to match government portal */
 .official-header {
-  font-family: 'Cairo', 'Tahoma', 'Arial', sans-serif;
+  font-family: 'DIN Next LT Arabic', 'Cairo', 'Tahoma', 'Arial', sans-serif;
 }
 
 .header-link {
@@ -136,12 +135,14 @@
   font-size: 18px;
   line-height: 1.2;
   font-weight: 700;
+  font-family: 'DIN Next LT Arabic', 'Cairo', 'Tahoma', 'Arial', sans-serif;
 }
 
 .ministry-subtitle {
   font-size: 11px;
   color: #666;
   font-weight: 400;
+  font-family: 'DIN Next LT Arabic', 'Inter', 'Arial', sans-serif;
 }
 
 /* Section styling to match government portal */
@@ -151,6 +152,7 @@
   color: #333;
   margin-bottom: 24px;
   text-align: center;
+  font-family: 'DIN Next LT Arabic', 'Cairo', 'Tahoma', 'Arial', sans-serif;
 }
 
 .section-subtitle {
@@ -158,6 +160,7 @@
   color: #666;
   text-align: center;
   margin-bottom: 32px;
+  font-family: 'DIN Next LT Arabic', 'Cairo', 'Tahoma', 'Arial', sans-serif;
 }
 
 .category-title {
@@ -165,6 +168,7 @@
   font-weight: 600;
   color: #333;
   margin-top: 12px;
+  font-family: 'DIN Next LT Arabic', 'Cairo', 'Tahoma', 'Arial', sans-serif;
 }
 
 .category-icon {
@@ -189,11 +193,13 @@
   font-weight: 600;
   color: #333;
   line-height: 1.4;
+  font-family: 'DIN Next LT Arabic', 'Cairo', 'Tahoma', 'Arial', sans-serif;
 }
 
 .news-date {
   font-size: 12px;
   color: #666;
+  font-family: 'DIN Next LT Arabic', 'Cairo', 'Tahoma', 'Arial', sans-serif;
 }
 
 /* Platform sections styling */
@@ -212,11 +218,13 @@
   font-weight: 600;
   color: #333;
   margin-bottom: 8px;
+  font-family: 'DIN Next LT Arabic', 'Cairo', 'Tahoma', 'Arial', sans-serif;
 }
 
 .platform-subtitle {
   font-size: 14px;
   color: #666;
+  font-family: 'DIN Next LT Arabic', 'Inter', 'Arial', sans-serif;
 }
 
 /* Hero Banner Styles */
@@ -239,6 +247,15 @@
 .hero-content {
   position: relative;
   z-index: 1;
+}
+
+.hero-title {
+  font-family: 'DIN Next LT Arabic', 'Cairo', 'Tahoma', 'Arial', sans-serif;
+  font-weight: 700;
+}
+
+.hero-subtitle {
+  font-family: 'DIN Next LT Arabic', 'Inter', 'Arial', sans-serif;
 }
 
 .search-widget {
@@ -307,6 +324,7 @@
   border-radius: 18px;
   margin-bottom: 12px;
   word-wrap: break-word;
+  font-family: 'DIN Next LT Arabic', 'Cairo', 'Tahoma', 'Arial', sans-serif;
 }
 
 .message-user {
@@ -335,6 +353,15 @@
 .search-result-item:hover {
   border-color: #006341;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.search-result-title {
+  font-family: 'DIN Next LT Arabic', 'Cairo', 'Tahoma', 'Arial', sans-serif;
+  font-weight: 600;
+}
+
+.search-result-description {
+  font-family: 'DIN Next LT Arabic', 'Cairo', 'Tahoma', 'Arial', sans-serif;
 }
 
 .typing-indicator {
@@ -472,4 +499,43 @@
   margin-left: auto;
   border-bottom-left-radius: 18px;
   border-bottom-right-radius: 6px;
+}
+
+/* DIN Next LT Arabic specific optimizations */
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'DIN Next LT Arabic', 'Cairo', 'Tahoma', 'Arial', sans-serif;
+  font-weight: 700;
+}
+
+.font-arabic {
+  font-family: 'DIN Next LT Arabic', 'Cairo', 'Tahoma', 'Arial', sans-serif;
+}
+
+.font-english {
+  font-family: 'DIN Next LT Arabic', 'Inter', 'Arial', sans-serif;
+}
+
+/* Improve Arabic text rendering */
+[lang="ar"], [dir="rtl"] {
+  font-family: 'DIN Next LT Arabic', 'Cairo', 'Tahoma', 'Arial', sans-serif;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Ensure proper line height for Arabic text */
+[lang="ar"] p, [dir="rtl"] p {
+  line-height: 1.8;
+}
+
+[lang="ar"] h1, [dir="rtl"] h1 {
+  line-height: 1.3;
+}
+
+[lang="ar"] h2, [dir="rtl"] h2 {
+  line-height: 1.4;
+}
+
+[lang="ar"] h3, [dir="rtl"] h3 {
+  line-height: 1.5;
 }

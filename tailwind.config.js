@@ -15,8 +15,9 @@ export default {
         'saudi-text-light': '#757575',
       },
       fontFamily: {
-        'arabic': ['Cairo', 'Tahoma', 'Arial', 'sans-serif'],
-        'english': ['Inter', 'Arial', 'sans-serif'],
+        'arabic': ['DIN Next LT Arabic', 'Cairo', 'Tahoma', 'Arial', 'sans-serif'],
+        'english': ['DIN Next LT Arabic', 'Inter', 'Arial', 'sans-serif'],
+        'din': ['DIN Next LT Arabic', 'Cairo', 'Tahoma', 'Arial', 'sans-serif'],
       },
       animation: {
         'fade-in': 'fadeIn 0.3s ease-in-out',
