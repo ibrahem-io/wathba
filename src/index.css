@@ -172,3 +172,40 @@
 .gov-button-secondary {
   @apply border-2 border-saudi-green text-saudi-green px-6 py-3 rounded-lg font-medium hover:bg-saudi-green hover:text-white transition-colors duration-200;
 }
+
+/* Official header styling to match government portal */
+.official-header {
+  font-family: 'Noto Sans Arabic', 'Tahoma', sans-serif;
+}
+
+.header-link {
+  @apply text-gray-600 hover:text-saudi-green transition-colors duration-200 text-xs;
+}
+
+.nav-link {
+  @apply text-gray-700 hover:text-saudi-green font-medium transition-colors duration-200 text-sm;
+}
+
+/* Exact spacing and sizing to match the screenshot */
+.top-bar {
+  height: 40px;
+  font-size: 11px;
+}
+
+.main-header {
+  height: 80px;
+}
+
+.logo-section {
+  gap: 12px;
+}
+
+.ministry-title {
+  font-size: 18px;
+  line-height: 1.2;
+}
+
+.ministry-subtitle {
+  font-size: 11px;
+  color: #666;
+}

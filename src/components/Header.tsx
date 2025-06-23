@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Globe, User, LogOut, Bell, Menu, ChevronDown } from 'lucide-react';
+import { Search, Globe, User, LogOut, Bell, Menu, ChevronDown, Calendar, Phone, Mail, Star, Grid3X3, MessageSquare } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { mockUser } from '../data/mockData';
 
@@ -24,42 +24,64 @@ export default function Header({ onMenuToggle, onSearch }: HeaderProps) {
 
   return (
     <>
-      {/* Top Bar */}
-      <div className="bg-gray-100 border-b border-gray-200">
+      {/* Top Navigation Bar */}
+      <div className="bg-gray-50 border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-10 text-sm">
+            {/* Left Side - Search and Language */}
             <div className="flex items-center space-x-4 space-x-reverse">
+              <button className="text-gray-600 hover:text-saudi-green transition-colors">
+                <Search className="h-4 w-4" />
+              </button>
+              <span className="text-gray-400">|</span>
               <button
                 onClick={toggleLanguage}
-                className="text-gray-600 hover:text-saudi-green transition-colors duration-200 flex items-center"
-                title={language === 'ar' ? 'English' : 'العربية'}
+                className="text-gray-600 hover:text-saudi-green transition-colors font-medium"
               >
-                <Globe className="h-4 w-4 mr-1" />
-                <span className="font-medium">
-                  {language === 'ar' ? 'EN' : 'ع'}
-                </span>
+                {language === 'ar' ? 'EN' : 'ع'}
               </button>
-              <span className="text-gray-500">|</span>
-              <span className="text-gray-600">
+              <span className="text-gray-400">|</span>
+              <span className="text-gray-600 flex items-center">
+                <Calendar className="h-3 w-3 ml-1" />
                 {language === 'ar' ? 'الاثنين 26/12/1446 هـ' : 'Monday 26/12/1446 H'}
               </span>
             </div>
             
-            <div className="flex items-center space-x-4 space-x-reverse text-gray-600">
-              <a href="#" className="hover:text-saudi-green transition-colors">
+            {/* Right Side - Government Links */}
+            <div className="flex items-center space-x-4 space-x-reverse text-gray-600 text-xs">
+              <a href="#" className="hover:text-saudi-green transition-colors flex items-center">
+                <Phone className="h-3 w-3 ml-1" />
                 {language === 'ar' ? 'تواصل معنا' : 'Contact Us'}
               </a>
               <span className="text-gray-400">|</span>
               <a href="#" className="hover:text-saudi-green transition-colors">
-                {language === 'ar' ? 'أوان خاصة' : 'Special Times'}
+                {language === 'ar' ? 'أوقات خاصة' : 'Special Times'}
               </a>
               <span className="text-gray-400">|</span>
               <a href="#" className="hover:text-saudi-green transition-colors">
                 {language === 'ar' ? 'الأوامر الملكية' : 'Royal Orders'}
               </a>
               <span className="text-gray-400">|</span>
-              <a href="#" className="hover:text-saudi-green transition-colors">
+              <a href="#" className="hover:text-saudi-green transition-colors flex items-center">
+                <Grid3X3 className="h-3 w-3 ml-1" />
                 {language === 'ar' ? 'البيانات المفتوحة' : 'Open Data'}
+              </a>
+              <span className="text-gray-400">|</span>
+              <a href="#" className="hover:text-saudi-green transition-colors flex items-center">
+                <MessageSquare className="h-3 w-3 ml-1" />
+                {language === 'ar' ? 'ع' : 'ع'}
+              </a>
+              <span className="text-gray-400">|</span>
+              <a href="#" className="hover:text-saudi-green transition-colors flex items-center">
+                <Star className="h-3 w-3 ml-1" />
+              </a>
+              <span className="text-gray-400">|</span>
+              <a href="#" className="hover:text-saudi-green transition-colors flex items-center">
+                <Mail className="h-3 w-3 ml-1" />
+              </a>
+              <span className="text-gray-400">|</span>
+              <a href="#" className="hover:text-saudi-green transition-colors flex items-center">
+                <Grid3X3 className="h-3 w-3 ml-1" />
               </a>
             </div>
           </div>
@@ -70,119 +92,70 @@ export default function Header({ onMenuToggle, onSearch }: HeaderProps) {
       <header className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-20">
-            {/* Logo and Title */}
-            <div className="flex items-center">
-              <button
-                onClick={onMenuToggle}
-                className="lg:hidden text-gray-600 hover:text-saudi-green mr-4"
-              >
-                <Menu className="h-6 w-6" />
+            {/* Mobile Menu Button */}
+            <button
+              onClick={onMenuToggle}
+              className="lg:hidden text-gray-600 hover:text-saudi-green ml-4"
+            >
+              <Menu className="h-6 w-6" />
+            </button>
+
+            {/* Login Button (Left Side) */}
+            <div className="hidden lg:flex">
+              <button className="bg-saudi-green text-white px-6 py-2 rounded-lg text-sm font-medium hover:bg-saudi-green-light transition-colors flex items-center">
+                <ChevronDown className="h-4 w-4 ml-2" />
+                {language === 'ar' ? 'تسجيل الدخول' : 'Login'}
               </button>
-              
-              <div className="flex items-center">
-                <div className="flex items-center mr-6">
-                  <img
-                    src="https://www.mof.gov.sa/themes/custom/mof/logo.svg"
-                    alt="Ministry of Finance Logo"
-                    className="h-12 w-auto"
-                    onError={(e) => {
-                      e.currentTarget.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' fill='%23006341'/%3E%3Ctext x='24' y='30' text-anchor='middle' fill='white' font-size='16' font-weight='bold'%3Eم%3C/text%3E%3C/svg%3E";
-                    }}
-                  />
-                  <div className="mr-4">
-                    <h1 className="text-xl font-bold text-gray-900">
-                      {language === 'ar' ? 'وزارة المالية' : 'Ministry of Finance'}
-                    </h1>
-                    <p className="text-sm text-gray-600">
-                      {language === 'ar' ? 'المملكة العربية السعودية' : 'Kingdom of Saudi Arabia'}
-                    </p>
-                  </div>
-                </div>
-              </div>
             </div>
 
-            {/* Navigation Menu */}
+            {/* Main Navigation Menu */}
             <nav className="hidden lg:flex items-center space-x-8 space-x-reverse">
-              <a href="#" className="text-gray-700 hover:text-saudi-green font-medium transition-colors">
+              <a href="#" className="text-gray-700 hover:text-saudi-green font-medium transition-colors text-sm">
                 {language === 'ar' ? 'عن الوزارة' : 'About Ministry'}
               </a>
-              <a href="#" className="text-gray-700 hover:text-saudi-green font-medium transition-colors">
+              <a href="#" className="text-gray-700 hover:text-saudi-green font-medium transition-colors text-sm">
                 {language === 'ar' ? 'ميزانية الدولة' : 'State Budget'}
               </a>
-              <a href="#" className="text-gray-700 hover:text-saudi-green font-medium transition-colors">
+              <a href="#" className="text-gray-700 hover:text-saudi-green font-medium transition-colors text-sm">
                 {language === 'ar' ? 'المركز الإعلامي' : 'Media Center'}
               </a>
-              <a href="#" className="text-gray-700 hover:text-saudi-green font-medium transition-colors">
+              <a href="#" className="text-gray-700 hover:text-saudi-green font-medium transition-colors text-sm">
                 {language === 'ar' ? 'الخدمات الإلكترونية' : 'E-Services'}
               </a>
-              <a href="#" className="text-gray-700 hover:text-saudi-green font-medium transition-colors">
+              <a href="#" className="text-gray-700 hover:text-saudi-green font-medium transition-colors text-sm">
                 {language === 'ar' ? 'مركز المعرفة' : 'Knowledge Center'}
               </a>
             </nav>
 
-            {/* Right Side Actions */}
-            <div className="flex items-center space-x-4 space-x-reverse">
-              {/* Search */}
-              <div className="hidden md:flex">
-                <form onSubmit={handleSearch} className="relative">
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder={t('header.search.placeholder')}
-                    className="w-64 px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-saudi-green focus:border-saudi-green text-gray-900"
-                    dir={dir}
-                  />
-                  <button
-                    type="submit"
-                    className="absolute inset-y-0 right-0 flex items-center pr-3"
-                  >
-                    <Search className="h-5 w-5 text-gray-400 hover:text-saudi-green" />
-                  </button>
-                </form>
+            {/* Logo and Title (Right Side) */}
+            <div className="flex items-center">
+              <div className="text-right ml-4">
+                <h1 className="text-lg font-bold text-gray-900 leading-tight">
+                  {language === 'ar' ? 'وزارة المالية' : 'Ministry of Finance'}
+                </h1>
+                <p className="text-xs text-gray-600">
+                  {language === 'ar' ? 'المملكة العربية السعودية' : 'Kingdom of Saudi Arabia'}
+                </p>
               </div>
-
-              {/* User Profile */}
-              <div className="relative">
-                <button
-                  onClick={() => setShowProfileMenu(!showProfileMenu)}
-                  className="flex items-center text-gray-700 hover:text-saudi-green transition-colors duration-200"
-                >
-                  <div className="w-8 h-8 bg-saudi-green rounded-full flex items-center justify-center mr-2">
-                    <User className="h-5 w-5 text-white" />
-                  </div>
-                  <span className="hidden md:block text-sm font-medium">
-                    {language === 'ar' ? mockUser.name : mockUser.nameEn}
-                  </span>
-                  <ChevronDown className="h-4 w-4 mr-1" />
-                </button>
-
-                {showProfileMenu && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 z-50 border border-gray-200">
-                    <div className="px-4 py-2 border-b border-gray-200">
-                      <p className="text-sm font-medium text-gray-900">
-                        {language === 'ar' ? mockUser.name : mockUser.nameEn}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        {language === 'ar' ? mockUser.department : mockUser.departmentEn}
-                      </p>
-                    </div>
-                    <button className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center">
-                      <User className="h-4 w-4 mr-2" />
-                      {t('header.profile')}
-                    </button>
-                    <button className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center">
-                      <LogOut className="h-4 w-4 mr-2" />
-                      {t('header.logout')}
-                    </button>
-                  </div>
-                )}
+              <div className="flex items-center">
+                <img
+                  src="https://www.mof.gov.sa/themes/custom/mof/logo.svg"
+                  alt="Ministry of Finance Logo"
+                  className="h-12 w-auto"
+                  onError={(e) => {
+                    e.currentTarget.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'%3E%3Ccircle cx='24' cy='24' r='20' fill='%23006341'/%3E%3Cpath d='M24 8l8 8h-6v12h-4V16h-6l8-8z' fill='white'/%3E%3C/svg%3E";
+                  }}
+                />
+                {/* Saudi Vision 2030 Logo */}
+                <div className="mr-3 bg-gray-100 p-2 rounded">
+                  <div className="text-xs font-bold text-gray-700">2030</div>
+                </div>
               </div>
             </div>
           </div>
 
           {/* Mobile Search */}
-          <div className="md:hidden pb-4">
+          <div className="lg:hidden pb-4">
             <form onSubmit={handleSearch}>
               <div className="relative">
                 <input
