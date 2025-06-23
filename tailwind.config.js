@@ -4,18 +4,38 @@ export default {
   theme: {
     extend: {
       colors: {
-        'saudi-primary': '#0c5997',
-        'saudi-secondary': '#156cb3',
-        'saudi-accent': '#1a8754',
-        'saudi-light': '#e8f1fa',
-        'saudi-dark': '#0a3c66',
+        'saudi-green': '#1B5E20',
+        'saudi-green-light': '#2E7D32',
+        'saudi-green-dark': '#0D4E14',
+        'saudi-gold': '#FFB300',
+        'saudi-gold-light': '#FFC107',
+        'saudi-gold-dark': '#FF8F00',
+        'saudi-gray': '#F5F5F5',
+        'saudi-text': '#212121',
+        'saudi-text-light': '#757575',
       },
       fontFamily: {
-        'tajawal': ['Tajawal', 'sans-serif'],
+        'arabic': ['Noto Sans Arabic', 'Tahoma', 'Arial', 'sans-serif'],
+        'english': ['Roboto', 'Arial', 'sans-serif'],
       },
-      boxShadow: {
-        'card': '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
-        'card-hover': '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+      animation: {
+        'fade-in': 'fadeIn 0.3s ease-in-out',
+        'slide-in-right': 'slideInRight 0.3s ease-out',
+        'slide-in-left': 'slideInLeft 0.3s ease-out',
+      },
+      keyframes: {
+        fadeIn: {
+          '0%': { opacity: '0' },
+          '100%': { opacity: '1' },
+        },
+        slideInRight: {
+          '0%': { transform: 'translateX(100%)' },
+          '100%': { transform: 'translateX(0)' },
+        },
+        slideInLeft: {
+          '0%': { transform: 'translateX(-100%)' },
+          '100%': { transform: 'translateX(0)' },
+        },
       },
     },
   },

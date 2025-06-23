@@ -1,150 +1,147 @@
-import { useState, useEffect } from 'react';
-import { FileIcon, LayoutDashboard, FileText, LogOut, Menu, X, Settings } from 'lucide-react';
+import React, { useState } from 'react';
+import { LanguageProvider } from './contexts/LanguageContext';
 import Header from './components/Header';
 import Sidebar from './components/Sidebar';
-import DocumentUpload from './components/DocumentUpload';
-import DocumentList from './components/DocumentList';
-import ChatInterface from './components/ChatInterface';
-import AuditDashboard from './components/AuditDashboard';
-import ApiConfiguration from './components/ApiConfiguration';
-import Auth from './pages/Auth';
-import { useAuth } from './contexts/AuthContext';
-import { AuthProvider } from './contexts/AuthContext';
+import Dashboard from './components/Dashboard';
+import SearchResults from './components/SearchResults';
+import ChatPanel from './components/ChatPanel';
+import DocumentPreview from './components/DocumentPreview';
+import { Document } from './types';
 
-const AppContent = () => {
-  const [documents, setDocuments] = useState<any[]>([]);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [activeTab, setActiveTab] = useState('dashboard');
-  const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
-  const { user, signOut, isPublicMode, publicUser } = useAuth();
+function App() {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [activeSection, setActiveSection] = useState('dashboard');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [chatOpen, setChatOpen] = useState(false);
+  const [chatMinimized, setChatMinimized] = useState(false);
+  const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
 
-  // Use public user if in public mode, otherwise use authenticated user
-  const currentUser = isPublicMode ? publicUser : user;
-
-  useEffect(() => {
-    // Load documents from localStorage if available
-    const savedDocuments = localStorage.getItem('documents');
-    if (savedDocuments) {
-      setDocuments(JSON.parse(savedDocuments));
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+    if (query.trim()) {
+      setActiveSection('search');
     }
-  }, []);
-
-  useEffect(() => {
-    // Save documents to localStorage when updated
-    localStorage.setItem('documents', JSON.stringify(documents));
-  }, [documents]);
-
-  const handleFileUpload = (files: File[]) => {
-    const newDocuments = files.map(file => {
-      // Generate random labels
-      const possibleLabels = ['مالي', 'قانوني', 'تشغيلي', 'ضريبي', 'أداء', 'امتثال', 'مخاطر', 'حوكمة'];
-      const numLabels = Math.floor(Math.random() * 3) + 1;
-      const labels = [];
-      
-      for (let i = 0; i < numLabels; i++) {
-        const randomIndex = Math.floor(Math.random() * possibleLabels.length);
-        const label = possibleLabels[randomIndex];
-        if (!labels.includes(label)) {
-          labels.push(label);
-        }
-      }
-
-      return {
-        id: Date.now() + Math.random().toString(36).substring(2, 9),
-        name: file.name,
-        type: file.type,
-        size: file.size,
-        lastModified: file.lastModified,
-        uploadDate: new Date().toISOString(),
-        labels: labels,
-      };
-    });
-
-    setDocuments([...documents, ...newDocuments]);
   };
 
-  const toggleSidebar = () => {
-    setIsSidebarOpen(!isSidebarOpen);
+  const handleDocumentSelect = (document: Document) => {
+    setSelectedDocument(document);
   };
 
-  // Check if user has admin role for configuration access
-  const hasAdminAccess = () => {
-    if (isPublicMode) return true; // Allow access in public mode for demo
-    return currentUser?.user_metadata?.role === 'admin' || currentUser?.role === 'admin';
+  const handleSectionChange = (section: string) => {
+    setActiveSection(section);
+    if (section !== 'search') {
+      setSearchQuery('');
+    }
   };
 
-  // In public mode, always show the app. Otherwise, check for authenticated user
-  if (!isPublicMode && !user) {
-    return <Auth />;
-  }
+  const renderMainContent = () => {
+    switch (activeSection) {
+      case 'dashboard':
+        return <Dashboard onDocumentSelect={handleDocumentSelect} />;
+      case 'search':
+        return (
+          <SearchResults 
+            searchQuery={searchQuery} 
+            onDocumentSelect={handleDocumentSelect}
+          />
+        );
+      case 'documents':
+        return (
+          <SearchResults 
+            searchQuery="" 
+            onDocumentSelect={handleDocumentSelect}
+          />
+        );
+      case 'policies':
+        return (
+          <SearchResults 
+            searchQuery="سياسة policy" 
+            onDocumentSelect={handleDocumentSelect}
+          />
+        );
+      case 'procedures':
+        return (
+          <SearchResults 
+            searchQuery="إجراء procedure" 
+            onDocumentSelect={handleDocumentSelect}
+          />
+        );
+      case 'training':
+        return (
+          <SearchResults 
+            searchQuery="تدريب training" 
+            onDocumentSelect={handleDocumentSelect}
+          />
+        );
+      case 'forms':
+        return (
+          <SearchResults 
+            searchQuery="نموذج form" 
+            onDocumentSelect={handleDocumentSelect}
+          />
+        );
+      case 'announcements':
+        return (
+          <SearchResults 
+            searchQuery="إعلان announcement" 
+            onDocumentSelect={handleDocumentSelect}
+          />
+        );
+      case 'multimedia':
+        return (
+          <SearchResults 
+            searchQuery="فيديو صوت video audio" 
+            onDocumentSelect={handleDocumentSelect}
+          />
+        );
+      default:
+        return <Dashboard onDocumentSelect={handleDocumentSelect} />;
+    }
+  };
 
   return (
-    <div className="flex flex-col h-screen bg-gray-50" dir="rtl">
-      <Header toggleSidebar={toggleSidebar} isSidebarOpen={isSidebarOpen} />
-      
-      <div className="flex flex-1 overflow-hidden">
-        <Sidebar 
-          isOpen={isSidebarOpen} 
-          activeTab={activeTab} 
-          setActiveTab={setActiveTab}
-          onLogout={isPublicMode ? () => {} : signOut}
-          isPublicMode={isPublicMode}
-          hasAdminAccess={hasAdminAccess()}
+    <LanguageProvider>
+      <div className="min-h-screen bg-gray-50">
+        {/* Header */}
+        <Header 
+          onMenuToggle={() => setSidebarOpen(!sidebarOpen)}
+          onSearch={handleSearch}
         />
-        
-        <main className={`flex-1 overflow-y-auto transition-all duration-300 p-4 md:p-6`}>
-          {activeTab === 'dashboard' && (
-            <>
-              <AuditDashboard />
-              {isPublicMode && (
-                <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-                  <p className="text-blue-700 text-sm">
-                    🔓 تعمل المنصة حالياً في الوضع العام - جميع البيانات محفوظة محلياً
-                  </p>
-                </div>
-              )}
-            </>
-          )}
-          
-          {activeTab === 'documents' && (
-            <>
-              <DocumentUpload onFileUpload={handleFileUpload} />
-              <DocumentList 
-                documents={documents} 
-                selectedFolderId={selectedFolderId}
-              />
-            </>
-          )}
 
-          {activeTab === 'chat' && (
-            <ChatInterface selectedFolderId={selectedFolderId} />
-          )}
+        <div className="flex">
+          {/* Sidebar */}
+          <Sidebar
+            isOpen={sidebarOpen}
+            onClose={() => setSidebarOpen(false)}
+            activeSection={activeSection}
+            onSectionChange={handleSectionChange}
+          />
 
-          {activeTab === 'settings' && hasAdminAccess() && (
-            <ApiConfiguration />
-          )}
+          {/* Main Content */}
+          <main className="flex-1 p-6 lg:p-8">
+            {renderMainContent()}
+          </main>
+        </div>
 
-          {activeTab === 'settings' && !hasAdminAccess() && (
-            <div className="bg-white rounded-lg shadow p-6">
-              <div className="text-center py-8">
-                <Settings className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">غير مصرح</h3>
-                <p className="text-gray-500">تحتاج إلى صلاحيات المدير للوصول إلى الإعدادات</p>
-              </div>
-            </div>
-          )}
-        </main>
+        {/* Chat Panel */}
+        <ChatPanel
+          isOpen={chatOpen}
+          onToggle={() => setChatOpen(!chatOpen)}
+          isMinimized={chatMinimized}
+          onMinimize={() => setChatMinimized(!chatMinimized)}
+          currentDocument={selectedDocument}
+        />
+
+        {/* Document Preview Modal */}
+        {selectedDocument && (
+          <DocumentPreview
+            document={selectedDocument}
+            onClose={() => setSelectedDocument(null)}
+          />
+        )}
       </div>
-    </div>
+    </LanguageProvider>
   );
-};
-
-const App = () => {
-  return (
-    <AuthProvider>
-      <AppContent />
-    </AuthProvider>
-  );
-};
+}
 
 export default App;
