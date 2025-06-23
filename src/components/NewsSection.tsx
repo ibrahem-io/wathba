@@ -7,13 +7,13 @@ export default function NewsSection() {
       id: 1,
       title: 'معالي وزير المالية يرأس وفد المملكة المشارك في الاجتماع (123) للجنة التعاون المالي والاقتصادي لدول مجلس التعاون الخليجي في الكويت',
       date: '15 ربيع الأول 1446',
-      image: '/src/assets/images/image.png'
+      image: '/images/news-placeholder.jpg'
     },
     {
       id: 2,
       title: 'لقاء وكيل وزارة المالية للشؤون الدولية بمعالي وزير المالية والميزانية لجمهورية القمر المتحدة',
       date: '12 جمادى الأول 1446',
-      image: '/src/assets/images/image.png'
+      image: '/images/news-placeholder.jpg'
     }
   ];
 

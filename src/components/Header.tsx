@@ -83,7 +83,7 @@ export default function Header() {
             <div className="flex items-center">
               <div className="flex items-center">
                 <img
-                  src="/src/assets/images/image.png"
+                  src="/images/mof-logo.png"
                   alt="Ministry of Finance Logo"
                   className="h-16 w-auto"
                   onError={(e) => {
