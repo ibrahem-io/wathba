@@ -9,7 +9,11 @@ import {
   Star,
   Calendar,
   BarChart3,
-  PieChart
+  PieChart,
+  PlayCircle,
+  Volume2,
+  Image,
+  FileSpreadsheet
 } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { mockDocuments } from '../data/mockData';
@@ -20,6 +24,112 @@ interface DashboardProps {
 
 export default function Dashboard({ onDocumentSelect }: DashboardProps) {
   const { t, language } = useLanguage();
+
+  // Digital Library Categories
+  const digitalLibraryCategories = [
+    {
+      id: 'contracts',
+      titleAr: 'العقود والمشاريع',
+      titleEn: 'Contracts and Projects',
+      icon: FileText,
+      color: 'text-blue-600',
+      bgColor: 'bg-blue-50',
+      count: 245
+    },
+    {
+      id: 'agreements',
+      titleAr: 'نماذج الاتفاقيات الإطارية للجهات الحكومية',
+      titleEn: 'Framework Agreement Templates for Government Entities',
+      icon: FileSpreadsheet,
+      color: 'text-green-600',
+      bgColor: 'bg-green-50',
+      count: 89
+    },
+    {
+      id: 'regulations',
+      titleAr: 'الأنظمة والتعليمات',
+      titleEn: 'Regulations and Instructions',
+      icon: FileText,
+      color: 'text-purple-600',
+      bgColor: 'bg-purple-50',
+      count: 156
+    },
+    {
+      id: 'budget-data',
+      titleAr: 'بيانات الميزانية',
+      titleEn: 'Budget Data',
+      icon: BarChart3,
+      color: 'text-orange-600',
+      bgColor: 'bg-orange-50',
+      count: 78
+    },
+    {
+      id: 'statistics',
+      titleAr: 'بيانات إحصائية',
+      titleEn: 'Statistical Data',
+      icon: PieChart,
+      color: 'text-indigo-600',
+      bgColor: 'bg-indigo-50',
+      count: 134
+    },
+    {
+      id: 'ministry-forms',
+      titleAr: 'نماذج الوزارة',
+      titleEn: 'Ministry Forms',
+      icon: FileText,
+      color: 'text-teal-600',
+      bgColor: 'bg-teal-50',
+      count: 67
+    },
+    {
+      id: 'ministry-contracts',
+      titleAr: 'عقود وزارة المالية',
+      titleEn: 'Ministry of Finance Contracts',
+      icon: FileText,
+      color: 'text-red-600',
+      bgColor: 'bg-red-50',
+      count: 92
+    },
+    {
+      id: 'procedures',
+      titleAr: 'القواعد والإجراءات',
+      titleEn: 'Rules and Procedures',
+      icon: FileText,
+      color: 'text-yellow-600',
+      bgColor: 'bg-yellow-50',
+      count: 123
+    },
+    {
+      id: 'open-data',
+      titleAr: 'البيانات المفتوحة',
+      titleEn: 'Open Data',
+      icon: BarChart3,
+      color: 'text-pink-600',
+      bgColor: 'bg-pink-50',
+      count: 201
+    }
+  ];
+
+  const mediaLibraryCategories = [
+    {
+      id: 'video-library',
+      titleAr: 'مكتبة الفيديو',
+      titleEn: 'Video Library',
+      icon: PlayCircle,
+      color: 'text-red-600',
+      bgColor: 'bg-red-50',
+      count: 45
+    },
+    {
+      id: 'image-library',
+      titleAr: 'مكتبة الصور',
+      titleEn: 'Image Library',
+      icon: Image,
+      color: 'text-blue-600',
+      bgColor: 'bg-blue-50',
+      count: 234
+    }
+  ];
 
   const stats = [
     {
@@ -56,38 +166,32 @@ export default function Dashboard({ onDocumentSelect }: DashboardProps) {
     }
   ];
 
-  const recentDocuments = mockDocuments.slice(0, 5);
-  const popularDocuments = [...mockDocuments].sort(() => Math.random() - 0.5).slice(0, 4);
-
-  const departmentStats = [
-    { name: language === 'ar' ? 'الميزانية' : 'Budget', value: 45, color: 'bg-blue-500' },
-    { name: language === 'ar' ? 'المحاسبة' : 'Accounting', value: 32, color: 'bg-green-500' },
-    { name: language === 'ar' ? 'الخزانة' : 'Treasury', value: 28, color: 'bg-yellow-500' },
-    { name: language === 'ar' ? 'الضرائب' : 'Tax', value: 18, color: 'bg-red-500' },
-    { name: language === 'ar' ? 'أخرى' : 'Others', value: 12, color: 'bg-gray-500' }
-  ];
+  const recentDocuments = mockDocuments.slice(0, 3);
 
   return (
     <div className="space-y-8">
-      {/* Welcome Section */}
-      <div className="bg-gradient-to-r from-saudi-green to-saudi-green-light text-white rounded-lg p-8">
-        <div className="max-w-4xl">
-          <h1 className="text-3xl font-bold mb-4">
-            {language === 'ar' ? 'مرحباً بك في منصة معارف' : 'Welcome to Maaref Platform'}
-          </h1>
-          <p className="text-lg opacity-90 mb-6">
-            {language === 'ar' 
-              ? 'منصة المعرفة الشاملة لوزارة المالية - ابحث واستكشف واستفد من المساعد الذكي'
-              : 'Comprehensive knowledge platform for Ministry of Finance - Search, explore, and benefit from AI assistance'
-            }
-          </p>
-          <div className="flex flex-wrap gap-4">
-            <button className="bg-white text-saudi-green px-6 py-3 rounded-lg font-medium hover:bg-gray-100 transition-colors">
-              {language === 'ar' ? 'استكشف الوثائق' : 'Explore Documents'}
-            </button>
-            <button className="border border-white text-white px-6 py-3 rounded-lg font-medium hover:bg-white hover:text-saudi-green transition-colors">
-              {language === 'ar' ? 'جرب المساعد الذكي' : 'Try AI Assistant'}
-            </button>
+      {/* Hero Section */}
+      <div className="relative bg-gradient-to-r from-saudi-green to-saudi-green-light text-white rounded-lg overflow-hidden">
+        <div className="absolute inset-0 bg-black bg-opacity-20"></div>
+        <div className="relative px-8 py-12">
+          <div className="max-w-4xl">
+            <h1 className="text-4xl font-bold mb-4">
+              {language === 'ar' ? 'مرحباً بك في منصة معارف' : 'Welcome to Maaref Platform'}
+            </h1>
+            <p className="text-xl opacity-90 mb-8">
+              {language === 'ar' 
+                ? 'منصة المعرفة الشاملة لوزارة المالية - ابحث واستكشف واستفد من المساعد الذكي'
+                : 'Comprehensive knowledge platform for Ministry of Finance - Search, explore, and benefit from AI assistance'
+              }
+            </p>
+            <div className="flex flex-wrap gap-4">
+              <button className="bg-white text-saudi-green px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
+                {language === 'ar' ? 'استكشف المكتبة الرقمية' : 'Explore Digital Library'}
+              </button>
+              <button className="border-2 border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-saudi-green transition-colors">
+                {language === 'ar' ? 'جرب المساعد الذكي' : 'Try AI Assistant'}
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -97,15 +201,15 @@ export default function Dashboard({ onDocumentSelect }: DashboardProps) {
         {stats.map((stat, index) => {
           const Icon = stat.icon;
           return (
-            <div key={index} className="card p-6">
+            <div key={index} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600 mb-1">{stat.title}</p>
-                  <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
+                  <p className="text-3xl font-bold text-gray-900">{stat.value}</p>
                   <p className="text-sm text-green-600 font-medium">{stat.change}</p>
                 </div>
                 <div className={`${stat.bgColor} ${stat.color} p-3 rounded-lg`}>
-                  <Icon className="h-6 w-6" />
+                  <Icon className="h-8 w-8" />
                 </div>
               </div>
             </div>
@@ -113,21 +217,93 @@ export default function Dashboard({ onDocumentSelect }: DashboardProps) {
         })}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Recent Documents */}
-        <div className="lg:col-span-2">
-          <div className="card p-6">
+      {/* Main Content Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        {/* Digital Library */}
+        <div className="lg:col-span-3">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold text-gray-900 flex items-center">
-                <Clock className="h-5 w-5 mr-2 text-saudi-green" />
-                {language === 'ar' ? 'الوثائق الحديثة' : 'Recent Documents'}
+              <h2 className="text-2xl font-bold text-gray-900">
+                {language === 'ar' ? 'المكتبة الرقمية' : 'Digital Library'}
               </h2>
               <button className="text-saudi-green hover:text-saudi-green-dark text-sm font-medium">
                 {language === 'ar' ? 'عرض الكل' : 'View All'}
               </button>
             </div>
             
-            <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {digitalLibraryCategories.map((category) => {
+                const Icon = category.icon;
+                const title = language === 'ar' ? category.titleAr : category.titleEn;
+                
+                return (
+                  <div
+                    key={category.id}
+                    className="group cursor-pointer bg-gray-50 hover:bg-gray-100 rounded-lg p-4 transition-all duration-200 border border-gray-200 hover:border-saudi-green hover:shadow-md"
+                  >
+                    <div className="flex items-start justify-between mb-3">
+                      <div className={`${category.bgColor} ${category.color} p-2 rounded-lg group-hover:scale-110 transition-transform`}>
+                        <Icon className="h-5 w-5" />
+                      </div>
+                      <span className="text-xs bg-saudi-green text-white px-2 py-1 rounded-full">
+                        {category.count}
+                      </span>
+                    </div>
+                    <h3 className="font-semibold text-gray-900 text-sm leading-tight group-hover:text-saudi-green transition-colors">
+                      {title}
+                    </h3>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Media Library */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mt-6">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-bold text-gray-900">
+                {language === 'ar' ? 'مكتبة الوسائط' : 'Media Library'}
+              </h2>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {mediaLibraryCategories.map((category) => {
+                const Icon = category.icon;
+                const title = language === 'ar' ? category.titleAr : category.titleEn;
+                
+                return (
+                  <div
+                    key={category.id}
+                    className="group cursor-pointer bg-gray-50 hover:bg-gray-100 rounded-lg p-6 transition-all duration-200 border border-gray-200 hover:border-saudi-green hover:shadow-md"
+                  >
+                    <div className="flex items-center justify-between mb-4">
+                      <div className={`${category.bgColor} ${category.color} p-3 rounded-lg group-hover:scale-110 transition-transform`}>
+                        <Icon className="h-6 w-6" />
+                      </div>
+                      <span className="text-sm bg-saudi-green text-white px-3 py-1 rounded-full">
+                        {category.count}
+                      </span>
+                    </div>
+                    <h3 className="font-semibold text-gray-900 group-hover:text-saudi-green transition-colors">
+                      {title}
+                    </h3>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* Sidebar */}
+        <div className="space-y-6">
+          {/* Recent Documents */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center">
+              <Clock className="h-5 w-5 mr-2 text-saudi-green" />
+              {language === 'ar' ? 'الوثائق الحديثة' : 'Recent Documents'}
+            </h3>
+            
+            <div className="space-y-3">
               {recentDocuments.map((doc) => {
                 const title = language === 'ar' ? doc.title : doc.titleEn;
                 const department = language === 'ar' ? doc.department : doc.departmentEn;
@@ -135,164 +311,89 @@ export default function Dashboard({ onDocumentSelect }: DashboardProps) {
                 return (
                   <div
                     key={doc.id}
-                    className="flex items-center gap-4 p-4 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors"
+                    className="flex items-start gap-3 p-3 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors"
                     onClick={() => onDocumentSelect(doc)}
                   >
                     <img
                       src={doc.thumbnailUrl}
                       alt={title}
-                      className="w-12 h-12 object-cover rounded"
+                      className="w-10 h-10 object-cover rounded flex-shrink-0"
                     />
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-medium text-gray-900 truncate">{title}</h3>
-                      <p className="text-sm text-gray-600">{department}</p>
+                      <h4 className="font-medium text-gray-900 text-sm line-clamp-2 leading-tight">
+                        {title}
+                      </h4>
+                      <p className="text-xs text-gray-600 mt-1">{department}</p>
                       <p className="text-xs text-gray-500">
                         {new Date(doc.uploadDate).toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en-US')}
                       </p>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-gray-500">{doc.fileSize}</span>
-                      <button className="text-saudi-green hover:text-saudi-green-dark">
-                        <Eye className="h-4 w-4" />
-                      </button>
-                    </div>
                   </div>
                 );
               })}
-            </div>
-          </div>
-        </div>
-
-        {/* Department Statistics */}
-        <div className="space-y-6">
-          {/* Popular Documents */}
-          <div className="card p-6">
-            <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center">
-              <Star className="h-5 w-5 mr-2 text-saudi-gold" />
-              {language === 'ar' ? 'الأكثر شعبية' : 'Most Popular'}
-            </h2>
-            
-            <div className="space-y-3">
-              {popularDocuments.map((doc, index) => {
-                const title = language === 'ar' ? doc.title : doc.titleEn;
-                
-                return (
-                  <div
-                    key={doc.id}
-                    className="flex items-center gap-3 cursor-pointer hover:bg-gray-50 p-2 rounded"
-                    onClick={() => onDocumentSelect(doc)}
-                  >
-                    <span className="flex-shrink-0 w-6 h-6 bg-saudi-gold text-white text-xs rounded-full flex items-center justify-center font-bold">
-                      {index + 1}
-                    </span>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900 truncate">{title}</p>
-                      <p className="text-xs text-gray-500">{doc.type.toUpperCase()}</p>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Department Distribution */}
-          <div className="card p-6">
-            <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center">
-              <PieChart className="h-5 w-5 mr-2 text-saudi-green" />
-              {language === 'ar' ? 'توزيع الإدارات' : 'Department Distribution'}
-            </h2>
-            
-            <div className="space-y-3">
-              {departmentStats.map((dept, index) => (
-                <div key={index} className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className={`w-3 h-3 rounded-full ${dept.color}`}></div>
-                    <span className="text-sm text-gray-700">{dept.name}</span>
-                  </div>
-                  <span className="text-sm font-medium text-gray-900">{dept.value}%</span>
-                </div>
-              ))}
             </div>
           </div>
 
           {/* Quick Actions */}
-          <div className="card p-6">
-            <h2 className="text-lg font-bold text-gray-900 mb-4">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <h3 className="text-lg font-bold text-gray-900 mb-4">
               {language === 'ar' ? 'إجراءات سريعة' : 'Quick Actions'}
-            </h2>
+            </h3>
             
             <div className="space-y-2">
-              <button className="w-full text-left p-3 hover:bg-gray-50 rounded-lg transition-colors">
-                <div className="font-medium text-gray-900">
-                  {language === 'ar' ? 'رفع وثيقة جديدة' : 'Upload New Document'}
+              <button className="w-full text-left p-3 hover:bg-gray-50 rounded-lg transition-colors border border-gray-200">
+                <div className="font-medium text-gray-900 text-sm">
+                  {language === 'ar' ? 'البحث المتقدم' : 'Advanced Search'}
                 </div>
-                <div className="text-sm text-gray-600">
-                  {language === 'ar' ? 'إضافة وثيقة إلى المنصة' : 'Add document to platform'}
+                <div className="text-xs text-gray-600 mt-1">
+                  {language === 'ar' ? 'بحث تفصيلي في الوثائق' : 'Detailed document search'}
                 </div>
               </button>
               
-              <button className="w-full text-left p-3 hover:bg-gray-50 rounded-lg transition-colors">
-                <div className="font-medium text-gray-900">
+              <button className="w-full text-left p-3 hover:bg-gray-50 rounded-lg transition-colors border border-gray-200">
+                <div className="font-medium text-gray-900 text-sm">
                   {language === 'ar' ? 'طلب وثيقة' : 'Request Document'}
                 </div>
-                <div className="text-sm text-gray-600">
+                <div className="text-xs text-gray-600 mt-1">
                   {language === 'ar' ? 'طلب وثيقة غير متوفرة' : 'Request unavailable document'}
                 </div>
               </button>
               
-              <button className="w-full text-left p-3 hover:bg-gray-50 rounded-lg transition-colors">
-                <div className="font-medium text-gray-900">
-                  {language === 'ar' ? 'تقرير مشكلة' : 'Report Issue'}
+              <button className="w-full text-left p-3 hover:bg-gray-50 rounded-lg transition-colors border border-gray-200">
+                <div className="font-medium text-gray-900 text-sm">
+                  {language === 'ar' ? 'المساعد الذكي' : 'AI Assistant'}
                 </div>
-                <div className="text-sm text-gray-600">
-                  {language === 'ar' ? 'الإبلاغ عن مشكلة تقنية' : 'Report technical issue'}
+                <div className="text-xs text-gray-600 mt-1">
+                  {language === 'ar' ? 'احصل على مساعدة فورية' : 'Get instant assistance'}
                 </div>
               </button>
             </div>
           </div>
-        </div>
-      </div>
 
-      {/* Activity Timeline */}
-      <div className="card p-6">
-        <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
-          <Calendar className="h-5 w-5 mr-2 text-saudi-green" />
-          {language === 'ar' ? 'النشاط الأخير' : 'Recent Activity'}
-        </h2>
-        
-        <div className="space-y-4">
-          {[
-            {
-              time: '10:30 ص',
-              action: language === 'ar' ? 'تم رفع وثيقة جديدة' : 'New document uploaded',
-              details: language === 'ar' ? 'سياسة المصروفات الرأسمالية 2024' : 'Capital Expenditure Policy 2024',
-              user: language === 'ar' ? 'أحمد العلي' : 'Ahmed Al-Ali'
-            },
-            {
-              time: '09:15 ص',
-              action: language === 'ar' ? 'تم تحديث وثيقة' : 'Document updated',
-              details: language === 'ar' ? 'دليل إجراءات المحاسبة' : 'Accounting Procedures Manual',
-              user: language === 'ar' ? 'فاطمة السالم' : 'Fatima Al-Salem'
-            },
-            {
-              time: '08:45 ص',
-              action: language === 'ar' ? 'استفسار جديد للمساعد الذكي' : 'New AI assistant query',
-              details: language === 'ar' ? 'حول إجراءات اعتماد الميزانية' : 'About budget approval procedures',
-              user: language === 'ar' ? 'محمد الأحمد' : 'Mohammed Al-Ahmad'
-            }
-          ].map((activity, index) => (
-            <div key={index} className="flex items-start gap-4 pb-4 border-b border-gray-100 last:border-b-0">
-              <div className="flex-shrink-0 w-2 h-2 bg-saudi-green rounded-full mt-2"></div>
-              <div className="flex-1">
-                <div className="flex items-center justify-between">
-                  <p className="font-medium text-gray-900">{activity.action}</p>
-                  <span className="text-xs text-gray-500">{activity.time}</span>
-                </div>
-                <p className="text-sm text-gray-600">{activity.details}</p>
-                <p className="text-xs text-gray-500 mt-1">{activity.user}</p>
-              </div>
+          {/* Popular Tags */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <h3 className="text-lg font-bold text-gray-900 mb-4">
+              {language === 'ar' ? 'العلامات الشائعة' : 'Popular Tags'}
+            </h3>
+            
+            <div className="flex flex-wrap gap-2">
+              {[
+                { ar: 'ميزانية', en: 'Budget' },
+                { ar: 'سياسات', en: 'Policies' },
+                { ar: 'إجراءات', en: 'Procedures' },
+                { ar: 'تقارير', en: 'Reports' },
+                { ar: 'نماذج', en: 'Forms' },
+                { ar: 'قوانين', en: 'Laws' }
+              ].map((tag, index) => (
+                <span
+                  key={index}
+                  className="inline-block px-3 py-1 bg-gray-100 text-gray-700 text-xs rounded-full hover:bg-saudi-green hover:text-white cursor-pointer transition-colors"
+                >
+                  {language === 'ar' ? tag.ar : tag.en}
+                </span>
+              ))}
             </div>
-          ))}
+          </div>
         </div>
       </div>
     </div>

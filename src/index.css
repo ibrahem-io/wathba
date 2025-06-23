@@ -34,7 +34,7 @@
   }
   
   .card {
-    @apply bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200;
+    @apply bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow duration-200;
   }
   
   .input-field {
@@ -51,6 +51,20 @@
   
   .document-card {
     @apply card p-4 hover:border-saudi-green border border-transparent transition-all duration-200;
+  }
+
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
 }
 
@@ -123,4 +137,38 @@
       .25em 0 0 black,
       .5em 0 0 black;
   }
+}
+
+/* Government portal specific styles */
+.hero-gradient {
+  background: linear-gradient(135deg, #006341 0%, #00A859 100%);
+}
+
+.category-card {
+  @apply bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md hover:border-saudi-green transition-all duration-200 cursor-pointer;
+}
+
+.category-card:hover .category-icon {
+  @apply scale-110;
+}
+
+.category-icon {
+  @apply transition-transform duration-200;
+}
+
+/* Official government styling */
+.gov-header {
+  background: linear-gradient(90deg, #006341 0%, #00A859 100%);
+}
+
+.gov-card {
+  @apply bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-all duration-200;
+}
+
+.gov-button {
+  @apply bg-saudi-green text-white px-6 py-3 rounded-lg font-medium hover:bg-saudi-green-light transition-colors duration-200;
+}
+
+.gov-button-secondary {
+  @apply border-2 border-saudi-green text-saudi-green px-6 py-3 rounded-lg font-medium hover:bg-saudi-green hover:text-white transition-colors duration-200;
 }

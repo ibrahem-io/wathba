@@ -4,9 +4,9 @@ export default {
   theme: {
     extend: {
       colors: {
-        'saudi-green': '#1B5E20',
-        'saudi-green-light': '#2E7D32',
-        'saudi-green-dark': '#0D4E14',
+        'saudi-green': '#006341',
+        'saudi-green-light': '#00A859',
+        'saudi-green-dark': '#004A31',
         'saudi-gold': '#FFB300',
         'saudi-gold-light': '#FFC107',
         'saudi-gold-dark': '#FF8F00',
