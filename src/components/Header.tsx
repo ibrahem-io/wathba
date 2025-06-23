@@ -82,14 +82,20 @@ export default function Header() {
             {/* Right Side - Logo and Title */}
             <div className="flex items-center">
               <div className="flex items-center">
-                <img
-                  src="/images/mof-logo.png"
-                  alt="Ministry of Finance Logo"
+                <svg
+                  width="64"
+                  height="64"
+                  viewBox="0 0 128 128"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
                   className="h-16 w-auto"
-                  onError={(e) => {
-                    e.currentTarget.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='28' fill='%23006341' stroke='%23FFB300' stroke-width='2'/%3E%3Ctext x='32' y='38' text-anchor='middle' fill='white' font-size='12' font-weight='bold'%3EMOF%3C/text%3E%3C/svg%3E";
-                  }}
-                />
+                >
+                  <rect width="128" height="128" rx="16" fill="#006341"/>
+                  <circle cx="64" cy="48" r="16" fill="#FFB300"/>
+                  <rect x="32" y="72" width="64" height="8" rx="4" fill="#FFB300"/>
+                  <rect x="40" y="88" width="48" height="6" rx="3" fill="#FFB300"/>
+                  <text x="64" y="110" textAnchor="middle" fill="white" fontSize="12" fontWeight="bold" fontFamily="Arial">MOF</text>
+                </svg>
               </div>
               <div className="text-right mr-4">
                 <h1 className="ministry-title text-gray-900 leading-tight">
