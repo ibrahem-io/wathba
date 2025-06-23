@@ -45,8 +45,8 @@ export default function Sidebar({ isOpen, onClose, activeSection, onSectionChang
 
       {/* Sidebar */}
       <div
-        className={`fixed lg:static inset-y-0 ${dir === 'rtl' ? 'right-0' : 'left-0'} z-50 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out ${
-          isOpen ? 'translate-x-0' : dir === 'rtl' ? 'translate-x-full' : '-translate-x-full'
+        className={`fixed lg:static inset-y-0 right-0 z-50 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out ${
+          isOpen ? 'translate-x-0' : 'translate-x-full'
         } lg:translate-x-0`}
       >
         <div className="flex flex-col h-full">
@@ -80,7 +80,7 @@ export default function Sidebar({ isOpen, onClose, activeSection, onSectionChang
                       : 'text-gray-700 hover:bg-saudi-green hover:text-white'
                   }`}
                 >
-                  <Icon className="h-5 w-5 mr-3" />
+                  <Icon className="h-5 w-5 ml-3" />
                   <span className="font-medium">{t(item.key)}</span>
                 </button>
               );

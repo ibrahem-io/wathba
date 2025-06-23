@@ -28,7 +28,7 @@ export default function Header({ onMenuToggle, onSearch }: HeaderProps) {
       <div className="bg-gray-50 border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-10 text-sm">
-            {/* Left Side - Search and Language */}
+            {/* Right Side - Search and Language */}
             <div className="flex items-center gap-4">
               <button className="text-gray-600 hover:text-saudi-green transition-colors">
                 <Search className="h-4 w-4" />
@@ -42,15 +42,15 @@ export default function Header({ onMenuToggle, onSearch }: HeaderProps) {
               </button>
               <span className="text-gray-400">|</span>
               <span className="text-gray-600 flex items-center">
-                <Calendar className="h-3 w-3 ml-1" />
+                <Calendar className="h-3 w-3 mr-1" />
                 الاثنين 26/12/1446 هـ
               </span>
             </div>
             
-            {/* Right Side - Government Links */}
+            {/* Left Side - Government Links */}
             <div className="flex items-center gap-4 text-gray-600 text-xs">
               <a href="#" className="hover:text-saudi-green transition-colors flex items-center">
-                <Phone className="h-3 w-3 ml-1" />
+                <Phone className="h-3 w-3 mr-1" />
                 تواصل معنا
               </a>
               <span className="text-gray-400">|</span>
@@ -63,25 +63,25 @@ export default function Header({ onMenuToggle, onSearch }: HeaderProps) {
               </a>
               <span className="text-gray-400">|</span>
               <a href="#" className="hover:text-saudi-green transition-colors flex items-center">
-                <Grid3X3 className="h-3 w-3 ml-1" />
+                <Grid3X3 className="h-3 w-3 mr-1" />
                 البيانات المفتوحة
               </a>
               <span className="text-gray-400">|</span>
               <a href="#" className="hover:text-saudi-green transition-colors flex items-center">
-                <MessageSquare className="h-3 w-3 ml-1" />
+                <MessageSquare className="h-3 w-3 mr-1" />
                 ع
               </a>
               <span className="text-gray-400">|</span>
               <a href="#" className="hover:text-saudi-green transition-colors flex items-center">
-                <Star className="h-3 w-3 ml-1" />
+                <Star className="h-3 w-3 mr-1" />
               </a>
               <span className="text-gray-400">|</span>
               <a href="#" className="hover:text-saudi-green transition-colors flex items-center">
-                <Mail className="h-3 w-3 ml-1" />
+                <Mail className="h-3 w-3 mr-1" />
               </a>
               <span className="text-gray-400">|</span>
               <a href="#" className="hover:text-saudi-green transition-colors flex items-center">
-                <Grid3X3 className="h-3 w-3 ml-1" />
+                <Grid3X3 className="h-3 w-3 mr-1" />
               </a>
             </div>
           </div>
@@ -92,54 +92,8 @@ export default function Header({ onMenuToggle, onSearch }: HeaderProps) {
       <header className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-20">
-            {/* Left Side - Mobile Menu and Login Button */}
-            <div className="flex items-center gap-4">
-              {/* Mobile Menu Button */}
-              <button
-                onClick={onMenuToggle}
-                className="lg:hidden text-gray-600 hover:text-saudi-green"
-              >
-                <Menu className="h-6 w-6" />
-              </button>
-
-              {/* Login Button */}
-              <div className="hidden lg:flex">
-                <button className="bg-saudi-green text-white px-6 py-2 rounded-lg text-sm font-medium hover:bg-saudi-green-light transition-colors flex items-center">
-                  <ChevronDown className="h-4 w-4 ml-2" />
-                  تسجيل الدخول
-                </button>
-              </div>
-            </div>
-
-            {/* Center - Main Navigation Menu */}
-            <nav className="hidden lg:flex items-center gap-8">
-              <a href="#" className="text-gray-700 hover:text-saudi-green font-medium transition-colors text-sm">
-                عن الوزارة
-              </a>
-              <a href="#" className="text-gray-700 hover:text-saudi-green font-medium transition-colors text-sm">
-                ميزانية الدولة
-              </a>
-              <a href="#" className="text-gray-700 hover:text-saudi-green font-medium transition-colors text-sm">
-                المركز الإعلامي
-              </a>
-              <a href="#" className="text-gray-700 hover:text-saudi-green font-medium transition-colors text-sm">
-                الخدمات الإلكترونية
-              </a>
-              <a href="#" className="text-gray-700 hover:text-saudi-green font-medium transition-colors text-sm">
-                مركز المعرفة
-              </a>
-            </nav>
-
             {/* Right Side - Logo and Title */}
             <div className="flex items-center">
-              <div className="text-right ml-4">
-                <h1 className="text-lg font-bold text-gray-900 leading-tight">
-                  وزارة المالية
-                </h1>
-                <p className="text-xs text-gray-600">
-                  Ministry of Finance
-                </p>
-              </div>
               <div className="flex items-center">
                 <img
                   src="/src/assets/images/image.png"
@@ -151,6 +105,52 @@ export default function Header({ onMenuToggle, onSearch }: HeaderProps) {
                   }}
                 />
               </div>
+              <div className="text-right mr-4">
+                <h1 className="text-lg font-bold text-gray-900 leading-tight">
+                  وزارة المالية
+                </h1>
+                <p className="text-xs text-gray-600">
+                  Ministry of Finance
+                </p>
+              </div>
+            </div>
+
+            {/* Center - Main Navigation Menu */}
+            <nav className="hidden lg:flex items-center gap-8">
+              <a href="#" className="text-gray-700 hover:text-saudi-green font-medium transition-colors text-sm">
+                مركز المعرفة
+              </a>
+              <a href="#" className="text-gray-700 hover:text-saudi-green font-medium transition-colors text-sm">
+                الخدمات الإلكترونية
+              </a>
+              <a href="#" className="text-gray-700 hover:text-saudi-green font-medium transition-colors text-sm">
+                المركز الإعلامي
+              </a>
+              <a href="#" className="text-gray-700 hover:text-saudi-green font-medium transition-colors text-sm">
+                ميزانية الدولة
+              </a>
+              <a href="#" className="text-gray-700 hover:text-saudi-green font-medium transition-colors text-sm">
+                عن الوزارة
+              </a>
+            </nav>
+
+            {/* Left Side - Mobile Menu and Login Button */}
+            <div className="flex items-center gap-4">
+              {/* Login Button */}
+              <div className="hidden lg:flex">
+                <button className="bg-saudi-green text-white px-6 py-2 rounded-lg text-sm font-medium hover:bg-saudi-green-light transition-colors flex items-center">
+                  <ChevronDown className="h-4 w-4 mr-2" />
+                  تسجيل الدخول
+                </button>
+              </div>
+
+              {/* Mobile Menu Button */}
+              <button
+                onClick={onMenuToggle}
+                className="lg:hidden text-gray-600 hover:text-saudi-green"
+              >
+                <Menu className="h-6 w-6" />
+              </button>
             </div>
           </div>
 
@@ -163,12 +163,12 @@ export default function Header({ onMenuToggle, onSearch }: HeaderProps) {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="ابحث في المعارف والوثائق..."
-                  className="w-full px-4 py-2 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-saudi-green focus:border-saudi-green text-gray-900"
+                  className="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-saudi-green focus:border-saudi-green text-gray-900"
                   dir="rtl"
                 />
                 <button
                   type="submit"
-                  className="absolute inset-y-0 left-0 flex items-center pl-3"
+                  className="absolute inset-y-0 right-0 flex items-center pr-3"
                 >
                   <Search className="h-5 w-5 text-gray-400" />
                 </button>
@@ -183,13 +183,6 @@ export default function Header({ onMenuToggle, onSearch }: HeaderProps) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="py-4">
             <div className="flex items-center justify-between">
-              <div className="hidden md:block">
-                <div className="bg-white bg-opacity-20 rounded-lg px-4 py-2">
-                  <p className="text-sm font-medium">
-                    مدعوم بالذكاء الاصطناعي
-                  </p>
-                </div>
-              </div>
               <div className="text-right">
                 <h2 className="text-2xl font-bold">
                   منصة معارف
@@ -197,6 +190,13 @@ export default function Header({ onMenuToggle, onSearch }: HeaderProps) {
                 <p className="text-saudi-green-light text-sm">
                   منصة المعرفة الشاملة لوزارة المالية
                 </p>
+              </div>
+              <div className="hidden md:block">
+                <div className="bg-white bg-opacity-20 rounded-lg px-4 py-2">
+                  <p className="text-sm font-medium">
+                    مدعوم بالذكاء الاصطناعي
+                  </p>
+                </div>
               </div>
             </div>
           </div>

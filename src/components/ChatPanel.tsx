@@ -180,7 +180,7 @@ export default function ChatPanel({
     return (
       <button
         onClick={onToggle}
-        className="fixed bottom-6 right-6 bg-saudi-green text-white p-4 rounded-full shadow-lg hover:bg-saudi-green-light transition-colors duration-200 z-40"
+        className="fixed bottom-6 left-6 bg-saudi-green text-white p-4 rounded-full shadow-lg hover:bg-saudi-green-light transition-colors duration-200 z-40"
       >
         <MessageCircle className="h-6 w-6" />
       </button>
@@ -188,13 +188,13 @@ export default function ChatPanel({
   }
 
   return (
-    <div className={`fixed ${dir === 'rtl' ? 'left-6' : 'right-6'} bottom-6 bg-white rounded-lg shadow-xl border border-gray-200 z-40 transition-all duration-300 ${
+    <div className={`fixed left-6 bottom-6 bg-white rounded-lg shadow-xl border border-gray-200 z-40 transition-all duration-300 ${
       isMinimized ? 'w-80 h-16' : 'w-96 h-[600px]'
     }`}>
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-saudi-green text-white rounded-t-lg">
         <div className="flex items-center">
-          <Bot className="h-5 w-5 mr-2" />
+          <Bot className="h-5 w-5 ml-2" />
           <h3 className="font-semibold">{t('chat.title')}</h3>
         </div>
         <div className="flex items-center gap-2">
@@ -220,10 +220,10 @@ export default function ChatPanel({
             {messages.map((message) => (
               <div
                 key={message.id}
-                className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
+                className={`flex ${message.type === 'user' ? 'justify-start' : 'justify-end'}`}
               >
                 <div className={`flex items-start gap-2 max-w-xs lg:max-w-sm ${
-                  message.type === 'user' ? 'flex-row-reverse' : 'flex-row'
+                  message.type === 'user' ? 'flex-row' : 'flex-row-reverse'
                 }`}>
                   <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
                     message.type === 'user' ? 'bg-saudi-green' : 'bg-saudi-gold'
@@ -253,7 +253,7 @@ export default function ChatPanel({
                               key={index}
                               className="flex items-center text-xs bg-blue-50 text-blue-800 px-2 py-1 rounded"
                             >
-                              <FileText className="h-3 w-3 mr-1" />
+                              <FileText className="h-3 w-3 ml-1" />
                               {ref.title}
                             </div>
                           ))}
@@ -273,7 +273,7 @@ export default function ChatPanel({
             ))}
 
             {isTyping && (
-              <div className="flex justify-start">
+              <div className="flex justify-end">
                 <div className="flex items-start gap-2">
                   <div className="flex-shrink-0 w-8 h-8 rounded-full bg-saudi-gold flex items-center justify-center">
                     <Bot className="h-4 w-4 text-white" />
@@ -300,7 +300,7 @@ export default function ChatPanel({
                   <button
                     key={index}
                     onClick={() => setInputMessage(language === 'ar' ? action.ar : action.en)}
-                    className="w-full text-left text-xs text-saudi-green hover:bg-saudi-green hover:text-white px-2 py-1 rounded transition-colors"
+                    className="w-full text-right text-xs text-saudi-green hover:bg-saudi-green hover:text-white px-2 py-1 rounded transition-colors"
                   >
                     {language === 'ar' ? action.ar : action.en}
                   </button>
@@ -323,11 +323,11 @@ export default function ChatPanel({
                     }
                   }}
                   placeholder={t('chat.placeholder')}
-                  className="w-full px-3 py-2 pr-20 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-saudi-green focus:border-transparent"
+                  className="w-full px-3 py-2 pl-20 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-saudi-green focus:border-transparent"
                   rows={2}
                   dir={dir}
                 />
-                <div className="absolute right-2 top-2 flex items-center gap-1">
+                <div className="absolute left-2 top-2 flex items-center gap-1">
                   <button
                     onClick={handleFileUpload}
                     className="text-gray-400 hover:text-saudi-green transition-colors"

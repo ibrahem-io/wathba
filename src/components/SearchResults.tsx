@@ -153,9 +153,9 @@ export default function SearchResults({ searchQuery, onDocumentSelect }: SearchR
             onClick={() => setShowFilters(!showFilters)}
             className="btn-primary flex items-center"
           >
-            <Filter className="h-4 w-4 mr-2" />
+            <Filter className="h-4 w-4 ml-2" />
             {t('search.filters')}
-            <ChevronDown className={`h-4 w-4 ml-2 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
+            <ChevronDown className={`h-4 w-4 mr-2 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
           </button>
         </div>
       </div>
@@ -188,7 +188,7 @@ export default function SearchResults({ searchQuery, onDocumentSelect }: SearchR
                           }));
                         }
                       }}
-                      className="mr-2"
+                      className="ml-2"
                     />
                     <span className="text-sm">
                       {language === 'ar' ? type.nameAr : type.nameEn}
@@ -223,7 +223,7 @@ export default function SearchResults({ searchQuery, onDocumentSelect }: SearchR
                           }));
                         }
                       }}
-                      className="mr-2"
+                      className="ml-2"
                     />
                     <span className="text-sm">
                       {language === 'ar' ? dept.nameAr : dept.nameEn}
@@ -333,12 +333,12 @@ export default function SearchResults({ searchQuery, onDocumentSelect }: SearchR
                       alt={title}
                       className="w-full h-32 object-cover rounded-lg"
                     />
-                    <div className="absolute top-2 right-2">
+                    <div className="absolute top-2 left-2">
                       <span className={`px-2 py-1 rounded text-xs font-medium ${getPriorityColor(document.priority)}`}>
                         {document.priority === 'high' ? 'عالي' : document.priority === 'medium' ? 'متوسط' : 'منخفض'}
                       </span>
                     </div>
-                    <div className="absolute bottom-2 left-2">
+                    <div className="absolute bottom-2 right-2">
                       <div className="bg-black bg-opacity-75 text-white p-1 rounded">
                         <FileIcon className="h-4 w-4" />
                       </div>
@@ -368,7 +368,7 @@ export default function SearchResults({ searchQuery, onDocumentSelect }: SearchR
                           key={index}
                           className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-800"
                         >
-                          <Tag className="h-3 w-3 mr-1" />
+                          <Tag className="h-3 w-3 ml-1" />
                           {tag}
                         </span>
                       ))}
@@ -380,11 +380,11 @@ export default function SearchResults({ searchQuery, onDocumentSelect }: SearchR
                     {/* Metadata */}
                     <div className="flex items-center justify-between text-xs text-gray-500">
                       <div className="flex items-center">
-                        <Building className="h-3 w-3 mr-1" />
+                        <Building className="h-3 w-3 ml-1" />
                         {department}
                       </div>
                       <div className="flex items-center">
-                        <Calendar className="h-3 w-3 mr-1" />
+                        <Calendar className="h-3 w-3 ml-1" />
                         {formatDate(document.uploadDate)}
                       </div>
                     </div>
@@ -438,7 +438,7 @@ export default function SearchResults({ searchQuery, onDocumentSelect }: SearchR
                         alt={title}
                         className="w-20 h-16 object-cover rounded"
                       />
-                      <div className="absolute -top-1 -right-1">
+                      <div className="absolute -top-1 -left-1">
                         <div className="bg-black bg-opacity-75 text-white p-1 rounded">
                           <FileIcon className="h-3 w-3" />
                         </div>
@@ -464,18 +464,18 @@ export default function SearchResults({ searchQuery, onDocumentSelect }: SearchR
 
                           <div className="flex items-center gap-4 text-xs text-gray-500">
                             <div className="flex items-center">
-                              <Building className="h-3 w-3 mr-1" />
+                              <Building className="h-3 w-3 ml-1" />
                               {department}
                             </div>
                             <div className="flex items-center">
-                              <Calendar className="h-3 w-3 mr-1" />
+                              <Calendar className="h-3 w-3 ml-1" />
                               {formatDate(document.uploadDate)}
                             </div>
                             <span>{document.fileSize}</span>
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-2 ml-4">
+                        <div className="flex items-center gap-2 mr-4">
                           <span className={`px-2 py-1 rounded text-xs font-medium ${getPriorityColor(document.priority)}`}>
                             {document.priority === 'high' ? 'عالي' : document.priority === 'medium' ? 'متوسط' : 'منخفض'}
                           </span>
@@ -513,7 +513,7 @@ export default function SearchResults({ searchQuery, onDocumentSelect }: SearchR
                             key={index}
                             className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-800"
                           >
-                            <Tag className="h-3 w-3 mr-1" />
+                            <Tag className="h-3 w-3 ml-1" />
                             {tag}
                           </span>
                         ))}
