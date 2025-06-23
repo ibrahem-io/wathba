@@ -28,8 +28,8 @@ export default function Header({ onMenuToggle, onSearch }: HeaderProps) {
       <div className="bg-gray-50 border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-10 text-sm">
-            {/* Left Side - Search and Language */}
-            <div className="flex items-center space-x-4 space-x-reverse">
+            {/* Right Side - Search and Language (RTL) */}
+            <div className="flex items-center gap-4">
               <button className="text-gray-600 hover:text-saudi-green transition-colors">
                 <Search className="h-4 w-4" />
               </button>
@@ -47,8 +47,8 @@ export default function Header({ onMenuToggle, onSearch }: HeaderProps) {
               </span>
             </div>
             
-            {/* Right Side - Government Links */}
-            <div className="flex items-center space-x-4 space-x-reverse text-gray-600 text-xs">
+            {/* Left Side - Government Links (RTL) */}
+            <div className="flex items-center gap-4 text-gray-600 text-xs">
               <a href="#" className="hover:text-saudi-green transition-colors flex items-center">
                 <Phone className="h-3 w-3 ml-1" />
                 {language === 'ar' ? 'تواصل معنا' : 'Contact Us'}
@@ -92,24 +92,34 @@ export default function Header({ onMenuToggle, onSearch }: HeaderProps) {
       <header className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-20">
-            {/* Mobile Menu Button */}
-            <button
-              onClick={onMenuToggle}
-              className="lg:hidden text-gray-600 hover:text-saudi-green ml-4"
-            >
-              <Menu className="h-6 w-6" />
-            </button>
-
-            {/* Login Button (Left Side) */}
-            <div className="hidden lg:flex">
-              <button className="bg-saudi-green text-white px-6 py-2 rounded-lg text-sm font-medium hover:bg-saudi-green-light transition-colors flex items-center">
-                <ChevronDown className="h-4 w-4 ml-2" />
-                {language === 'ar' ? 'تسجيل الدخول' : 'Login'}
-              </button>
+            {/* Right Side - Logo and Title (RTL) */}
+            <div className="flex items-center">
+              <div className="flex items-center">
+                <img
+                  src="https://www.mof.gov.sa/themes/custom/mof/logo.svg"
+                  alt="Ministry of Finance Logo"
+                  className="h-12 w-auto"
+                  onError={(e) => {
+                    e.currentTarget.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'%3E%3Ccircle cx='24' cy='24' r='20' fill='%23006341'/%3E%3Cpath d='M24 8l8 8h-6v12h-4V16h-6l8-8z' fill='white'/%3E%3C/svg%3E";
+                  }}
+                />
+                {/* Saudi Vision 2030 Logo */}
+                <div className="mr-3 bg-gray-100 p-2 rounded">
+                  <div className="text-xs font-bold text-gray-700">2030</div>
+                </div>
+              </div>
+              <div className="text-right mr-4">
+                <h1 className="text-lg font-bold text-gray-900 leading-tight">
+                  {language === 'ar' ? 'وزارة المالية' : 'Ministry of Finance'}
+                </h1>
+                <p className="text-xs text-gray-600">
+                  {language === 'ar' ? 'المملكة العربية السعودية' : 'Kingdom of Saudi Arabia'}
+                </p>
+              </div>
             </div>
 
-            {/* Main Navigation Menu */}
-            <nav className="hidden lg:flex items-center space-x-8 space-x-reverse">
+            {/* Center - Main Navigation Menu */}
+            <nav className="hidden lg:flex items-center gap-8">
               <a href="#" className="text-gray-700 hover:text-saudi-green font-medium transition-colors text-sm">
                 {language === 'ar' ? 'عن الوزارة' : 'About Ministry'}
               </a>
@@ -127,29 +137,22 @@ export default function Header({ onMenuToggle, onSearch }: HeaderProps) {
               </a>
             </nav>
 
-            {/* Logo and Title (Right Side) */}
-            <div className="flex items-center">
-              <div className="text-right ml-4">
-                <h1 className="text-lg font-bold text-gray-900 leading-tight">
-                  {language === 'ar' ? 'وزارة المالية' : 'Ministry of Finance'}
-                </h1>
-                <p className="text-xs text-gray-600">
-                  {language === 'ar' ? 'المملكة العربية السعودية' : 'Kingdom of Saudi Arabia'}
-                </p>
-              </div>
-              <div className="flex items-center">
-                <img
-                  src="https://www.mof.gov.sa/themes/custom/mof/logo.svg"
-                  alt="Ministry of Finance Logo"
-                  className="h-12 w-auto"
-                  onError={(e) => {
-                    e.currentTarget.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'%3E%3Ccircle cx='24' cy='24' r='20' fill='%23006341'/%3E%3Cpath d='M24 8l8 8h-6v12h-4V16h-6l8-8z' fill='white'/%3E%3C/svg%3E";
-                  }}
-                />
-                {/* Saudi Vision 2030 Logo */}
-                <div className="mr-3 bg-gray-100 p-2 rounded">
-                  <div className="text-xs font-bold text-gray-700">2030</div>
-                </div>
+            {/* Left Side - Login Button and Mobile Menu (RTL) */}
+            <div className="flex items-center gap-4">
+              {/* Mobile Menu Button */}
+              <button
+                onClick={onMenuToggle}
+                className="lg:hidden text-gray-600 hover:text-saudi-green"
+              >
+                <Menu className="h-6 w-6" />
+              </button>
+
+              {/* Login Button */}
+              <div className="hidden lg:flex">
+                <button className="bg-saudi-green text-white px-6 py-2 rounded-lg text-sm font-medium hover:bg-saudi-green-light transition-colors flex items-center">
+                  <ChevronDown className="h-4 w-4 mr-2" />
+                  {language === 'ar' ? 'تسجيل الدخول' : 'Login'}
+                </button>
               </div>
             </div>
           </div>
