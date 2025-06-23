@@ -225,11 +225,12 @@
   font-family: 'Inter', 'Cairo', 'Arial', sans-serif;
 }
 
-/* Hero Banner Styles */
+/* Hero Banner Styles - Reduced Height */
 .hero-banner {
   background: linear-gradient(135deg, #006341 0%, #00A859 100%);
   position: relative;
   overflow: hidden;
+  min-height: 300px; /* Reduced from previous height */
 }
 
 .hero-banner::before {
