@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&display=swap');
 
 @layer base {
   html {
@@ -11,7 +11,7 @@
   }
   
   body {
-    font-family: 'DIN Next LT Arabic', 'Cairo', 'Tahoma', 'Arial', sans-serif;
+    font-family: 'Cairo', 'Tahoma', 'Arial', sans-serif;
     background-color: #FAFAFA;
     font-size: 14px;
     line-height: 1.6;
@@ -19,7 +19,7 @@
   }
   
   [dir="ltr"] {
-    font-family: 'DIN Next LT Arabic', 'Inter', 'Arial', sans-serif;
+    font-family: 'Inter', 'Cairo', 'Arial', sans-serif;
   }
 }
 
@@ -106,7 +106,7 @@
 
 /* Official header styling to match government portal */
 .official-header {
-  font-family: 'DIN Next LT Arabic', 'Cairo', 'Tahoma', 'Arial', sans-serif;
+  font-family: 'Cairo', 'Tahoma', 'Arial', sans-serif;
 }
 
 .header-link {
@@ -135,14 +135,14 @@
   font-size: 18px;
   line-height: 1.2;
   font-weight: 700;
-  font-family: 'DIN Next LT Arabic', 'Cairo', 'Tahoma', 'Arial', sans-serif;
+  font-family: 'Cairo', 'Tahoma', 'Arial', sans-serif;
 }
 
 .ministry-subtitle {
   font-size: 11px;
   color: #666;
   font-weight: 400;
-  font-family: 'DIN Next LT Arabic', 'Inter', 'Arial', sans-serif;
+  font-family: 'Inter', 'Cairo', 'Arial', sans-serif;
 }
 
 /* Section styling to match government portal */
@@ -152,7 +152,7 @@
   color: #333;
   margin-bottom: 24px;
   text-align: center;
-  font-family: 'DIN Next LT Arabic', 'Cairo', 'Tahoma', 'Arial', sans-serif;
+  font-family: 'Cairo', 'Tahoma', 'Arial', sans-serif;
 }
 
 .section-subtitle {
@@ -160,7 +160,7 @@
   color: #666;
   text-align: center;
   margin-bottom: 32px;
-  font-family: 'DIN Next LT Arabic', 'Cairo', 'Tahoma', 'Arial', sans-serif;
+  font-family: 'Cairo', 'Tahoma', 'Arial', sans-serif;
 }
 
 .category-title {
@@ -168,7 +168,7 @@
   font-weight: 600;
   color: #333;
   margin-top: 12px;
-  font-family: 'DIN Next LT Arabic', 'Cairo', 'Tahoma', 'Arial', sans-serif;
+  font-family: 'Cairo', 'Tahoma', 'Arial', sans-serif;
 }
 
 .category-icon {
@@ -193,13 +193,13 @@
   font-weight: 600;
   color: #333;
   line-height: 1.4;
-  font-family: 'DIN Next LT Arabic', 'Cairo', 'Tahoma', 'Arial', sans-serif;
+  font-family: 'Cairo', 'Tahoma', 'Arial', sans-serif;
 }
 
 .news-date {
   font-size: 12px;
   color: #666;
-  font-family: 'DIN Next LT Arabic', 'Cairo', 'Tahoma', 'Arial', sans-serif;
+  font-family: 'Cairo', 'Tahoma', 'Arial', sans-serif;
 }
 
 /* Platform sections styling */
@@ -218,13 +218,13 @@
   font-weight: 600;
   color: #333;
   margin-bottom: 8px;
-  font-family: 'DIN Next LT Arabic', 'Cairo', 'Tahoma', 'Arial', sans-serif;
+  font-family: 'Cairo', 'Tahoma', 'Arial', sans-serif;
 }
 
 .platform-subtitle {
   font-size: 14px;
   color: #666;
-  font-family: 'DIN Next LT Arabic', 'Inter', 'Arial', sans-serif;
+  font-family: 'Inter', 'Cairo', 'Arial', sans-serif;
 }
 
 /* Hero Banner Styles */
@@ -250,12 +250,12 @@
 }
 
 .hero-title {
-  font-family: 'DIN Next LT Arabic', 'Cairo', 'Tahoma', 'Arial', sans-serif;
+  font-family: 'Cairo', 'Tahoma', 'Arial', sans-serif;
   font-weight: 700;
 }
 
 .hero-subtitle {
-  font-family: 'DIN Next LT Arabic', 'Inter', 'Arial', sans-serif;
+  font-family: 'Cairo', 'Inter', 'Arial', sans-serif;
 }
 
 .search-widget {
@@ -324,7 +324,7 @@
   border-radius: 18px;
   margin-bottom: 12px;
   word-wrap: break-word;
-  font-family: 'DIN Next LT Arabic', 'Cairo', 'Tahoma', 'Arial', sans-serif;
+  font-family: 'Cairo', 'Tahoma', 'Arial', sans-serif;
 }
 
 .message-user {
@@ -356,12 +356,12 @@
 }
 
 .search-result-title {
-  font-family: 'DIN Next LT Arabic', 'Cairo', 'Tahoma', 'Arial', sans-serif;
+  font-family: 'Cairo', 'Tahoma', 'Arial', sans-serif;
   font-weight: 600;
 }
 
 .search-result-description {
-  font-family: 'DIN Next LT Arabic', 'Cairo', 'Tahoma', 'Arial', sans-serif;
+  font-family: 'Cairo', 'Tahoma', 'Arial', sans-serif;
 }
 
 .typing-indicator {
@@ -501,23 +501,27 @@
   border-bottom-right-radius: 6px;
 }
 
-/* DIN Next LT Arabic specific optimizations */
+/* Cairo font specific optimizations */
 h1, h2, h3, h4, h5, h6 {
-  font-family: 'DIN Next LT Arabic', 'Cairo', 'Tahoma', 'Arial', sans-serif;
+  font-family: 'Cairo', 'Tahoma', 'Arial', sans-serif;
   font-weight: 700;
 }
 
 .font-arabic {
-  font-family: 'DIN Next LT Arabic', 'Cairo', 'Tahoma', 'Arial', sans-serif;
+  font-family: 'Cairo', 'Tahoma', 'Arial', sans-serif;
 }
 
 .font-english {
-  font-family: 'DIN Next LT Arabic', 'Inter', 'Arial', sans-serif;
+  font-family: 'Inter', 'Cairo', 'Arial', sans-serif;
+}
+
+.font-cairo {
+  font-family: 'Cairo', 'Tahoma', 'Arial', sans-serif;
 }
 
 /* Improve Arabic text rendering */
 [lang="ar"], [dir="rtl"] {
-  font-family: 'DIN Next LT Arabic', 'Cairo', 'Tahoma', 'Arial', sans-serif;
+  font-family: 'Cairo', 'Tahoma', 'Arial', sans-serif;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -539,3 +543,12 @@ h1, h2, h3, h4, h5, h6 {
 [lang="ar"] h3, [dir="rtl"] h3 {
   line-height: 1.5;
 }
+
+/* Cairo font weight optimization */
+.font-light { font-weight: 300; }
+.font-normal { font-weight: 400; }
+.font-medium { font-weight: 500; }
+.font-semibold { font-weight: 600; }
+.font-bold { font-weight: 700; }
+.font-extrabold { font-weight: 800; }
+.font-black { font-weight: 900; }

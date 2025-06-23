@@ -15,9 +15,10 @@ export default {
         'saudi-text-light': '#757575',
       },
       fontFamily: {
-        'arabic': ['DIN Next LT Arabic', 'Cairo', 'Tahoma', 'Arial', 'sans-serif'],
-        'english': ['DIN Next LT Arabic', 'Inter', 'Arial', 'sans-serif'],
-        'din': ['DIN Next LT Arabic', 'Cairo', 'Tahoma', 'Arial', 'sans-serif'],
+        'arabic': ['Cairo', 'Tahoma', 'Arial', 'sans-serif'],
+        'english': ['Inter', 'Cairo', 'Arial', 'sans-serif'],
+        'cairo': ['Cairo', 'Tahoma', 'Arial', 'sans-serif'],
+        'sans': ['Cairo', 'Tahoma', 'Arial', 'sans-serif'],
       },
       animation: {
         'fade-in': 'fadeIn 0.3s ease-in-out',
