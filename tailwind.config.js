@@ -15,13 +15,14 @@ export default {
         'saudi-text-light': '#757575',
       },
       fontFamily: {
-        'arabic': ['Noto Sans Arabic', 'Tahoma', 'Arial', 'sans-serif'],
-        'english': ['Roboto', 'Arial', 'sans-serif'],
+        'arabic': ['Cairo', 'Tahoma', 'Arial', 'sans-serif'],
+        'english': ['Inter', 'Arial', 'sans-serif'],
       },
       animation: {
         'fade-in': 'fadeIn 0.3s ease-in-out',
         'slide-in-right': 'slideInRight 0.3s ease-out',
         'slide-in-left': 'slideInLeft 0.3s ease-out',
+        'pulse-slow': 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
       },
       keyframes: {
         fadeIn: {

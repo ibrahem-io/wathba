@@ -1,6 +1,7 @@
 import React from 'react';
 import { LanguageProvider } from './contexts/LanguageContext';
 import Header from './components/Header';
+import HeroBanner from './components/HeroBanner';
 import MainSections from './components/MainSections';
 import DigitalLibrary from './components/DigitalLibrary';
 import NewsSection from './components/NewsSection';
@@ -15,6 +16,9 @@ function App() {
 
         {/* Main Content */}
         <main>
+          {/* Hero Banner with AI */}
+          <HeroBanner />
+          
           {/* Hero Sections */}
           <MainSections />
           
