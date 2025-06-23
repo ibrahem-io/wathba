@@ -96,11 +96,12 @@ export default function Header({ onMenuToggle, onSearch }: HeaderProps) {
             <div className="flex items-center">
               <div className="flex items-center">
                 <img
-                  src="https://www.mof.gov.sa/themes/custom/mof/logo.svg"
+                  src="/src/assets/images/image.png"
                   alt="Ministry of Finance Logo"
-                  className="h-12 w-auto"
+                  className="h-16 w-auto"
                   onError={(e) => {
-                    e.currentTarget.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'%3E%3Ccircle cx='24' cy='24' r='20' fill='%23006341'/%3E%3Cpath d='M24 8l8 8h-6v12h-4V16h-6l8-8z' fill='white'/%3E%3C/svg%3E";
+                    // Fallback to a simple SVG if the image fails to load
+                    e.currentTarget.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='28' fill='%23006341' stroke='%23FFB300' stroke-width='2'/%3E%3Ctext x='32' y='38' text-anchor='middle' fill='white' font-size='12' font-weight='bold'%3EMOF%3C/text%3E%3C/svg%3E";
                   }}
                 />
                 {/* Saudi Vision 2030 Logo */}
