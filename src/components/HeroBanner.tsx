@@ -143,12 +143,161 @@ export default function HeroBanner() {
     );
   };
 
-  const handleSearch = (query: string) => {
+  const handleSearch = async (query: string) => {
     setSearchQuery(query);
     const results = generateMockSearchResults(query);
     setSearchResults(results);
     setSelectedResult(null);
     setShowSearchWidget(true);
+
+    // If no results found, automatically initiate AI chat
+    if (results.length === 0 && query.trim()) {
+      await initiateAIChatFromSearch(query);
+    }
+  };
+
+  const initiateAIChatFromSearch = async (searchTerms: string) => {
+    // Create a question from search terms
+    const aiQuestion = `لم أجد مستندات مطابقة لمصطلحات البحث "${searchTerms}". هل يمكنك مساعدتي في العثور على معلومات ذات صلة أو تقديم إرشادات حول هذا الموضوع؟`;
+    
+    // Add user message to chat
+    const userMessage: ChatMessage = {
+      id: Date.now().toString(),
+      type: 'user',
+      content: aiQuestion,
+      timestamp: new Date()
+    };
+
+    setChatMessages(prev => [...prev, userMessage]);
+    setChatInput('');
+    setIsTyping(true);
+
+    // Add streaming placeholder
+    const streamingMessage: ChatMessage = {
+      id: (Date.now() + 1).toString(),
+      type: 'assistant',
+      content: '',
+      timestamp: new Date(),
+      isStreaming: true
+    };
+    setChatMessages(prev => [...prev, streamingMessage]);
+
+    try {
+      if (assistantReady && uploadedFiles.some(f => f.status === 'ready')) {
+        // Use RAG if files are uploaded
+        const response = await openaiService.sendMessage(aiQuestion, threadId || undefined);
+        
+        setChatMessages(prev => prev.map(msg => 
+          msg.isStreaming 
+            ? {
+                ...msg,
+                content: response.content,
+                citations: response.citations?.map(citation => ({
+                  title: citation,
+                  fileId: `rag-file-${Math.random()}`,
+                  content: 'محتوى من الوثيقة المرفوعة...'
+                })),
+                isStreaming: false
+              }
+            : msg
+        ));
+
+        if (response.threadId) {
+          setThreadId(response.threadId);
+        }
+      } else {
+        // Fallback to contextual response about the search terms
+        setTimeout(() => {
+          const contextualResponse = generateContextualResponse(searchTerms);
+          setChatMessages(prev => prev.map(msg => 
+            msg.isStreaming 
+              ? { ...msg, content: contextualResponse, isStreaming: false }
+              : msg
+          ));
+        }, 1500);
+      }
+    } catch (error) {
+      console.error('Chat error:', error);
+      setChatMessages(prev => prev.filter(msg => !msg.isStreaming));
+      
+      const errorMessage: ChatMessage = {
+        id: (Date.now() + 2).toString(),
+        type: 'assistant',
+        content: 'عذراً، حدث خطأ أثناء معالجة استفسارك. يرجى المحاولة مرة أخرى.',
+        timestamp: new Date()
+      };
+      setChatMessages(prev => [...prev, errorMessage]);
+    } finally {
+      setIsTyping(false);
+    }
+  };
+
+  const generateContextualResponse = (searchTerms: string): string => {
+    const responses = {
+      'ميزانية': `لم أجد مستندات محددة حول "${searchTerms}" في قاعدة البيانات الحالية، ولكن يمكنني مساعدتك بالمعلومات التالية:
+
+📊 **حول الميزانية في وزارة المالية:**
+• الميزانية العامة للدولة تُعد وفقاً للمعايير الدولية
+• تشمل الإيرادات والمصروفات المخططة للسنة المالية
+• يتم مراجعتها وتحديثها دورياً
+
+💡 **اقتراحات للبحث:**
+• جرب مصطلحات مثل "الميزانية العامة" أو "التخطيط المالي"
+• ارفع مستندات ذات صلة للحصول على إجابات أكثر دقة
+• تواصل مع إدارة الميزانية للحصول على الوثائق الرسمية`,
+
+      'محاسبة': `لم أعثر على مستندات محددة حول "${searchTerms}"، ولكن إليك معلومات مفيدة:
+
+📋 **المحاسبة الحكومية:**
+• تطبق وزارة المالية معايير المحاسبة الدولية للقطاع العام
+• النظام المحاسبي يشمل المحاسبة النقدية والاستحقاقية
+• التقارير المالية تُعد وفقاً للمعايير السعودية والدولية
+
+🔍 **للحصول على مزيد من المعلومات:**
+• ابحث عن "دليل الإجراءات المحاسبية"
+• راجع "معايير المحاسبة الحكومية"
+• ارفع الوثائق المحاسبية للتحليل التفصيلي`,
+
+      'سياسة': `لم أجد مستندات تطابق "${searchTerms}" تماماً، ولكن يمكنني توضيح:
+
+📜 **السياسات في وزارة المالية:**
+• السياسات المالية تحدد الإطار العام للعمليات المالية
+• تشمل سياسات الإنفاق والاستثمار والرقابة
+• يتم تحديثها بانتظام لتواكب التطورات
+
+📝 **نصائح للبحث الفعال:**
+• استخدم مصطلحات أكثر تحديداً
+• جرب البحث بالإنجليزية أيضاً
+• ارفع نسخ من السياسات للتحليل المفصل`
+    };
+
+    // Find the most relevant response based on search terms
+    const searchLower = searchTerms.toLowerCase();
+    for (const [key, response] of Object.entries(responses)) {
+      if (searchLower.includes(key)) {
+        return response;
+      }
+    }
+
+    // Default response for unmatched terms
+    return `لم أعثر على مستندات تطابق مصطلحات البحث "${searchTerms}" في قاعدة البيانات الحالية.
+
+🤔 **ماذا يمكنك فعله:**
+
+1. **جرب مصطلحات بديلة:**
+   • استخدم كلمات مرادفة أو مصطلحات أوسع
+   • جرب البحث باللغة الإنجليزية
+   • استخدم مصطلحات أكثر تحديداً
+
+2. **ارفع مستندات ذات صلة:**
+   • ارفع ملفات PDF أو Word تحتوي على المعلومات المطلوبة
+   • سأتمكن من تحليلها والإجابة على أسئلتك بدقة أكبر
+
+3. **اطرح أسئلة مباشرة:**
+   • بدلاً من البحث، اسألني مباشرة عما تريد معرفته
+   • يمكنني تقديم معلومات عامة حول المواضيع المالية والإدارية
+
+هل تريد المساعدة في صياغة استفسار أكثر تحديداً؟`;
   };
 
   const handleFileUpload = async (files: File[]) => {
@@ -306,7 +455,7 @@ export default function HeroBanner() {
 
   const generateAIResponse = (query: string, results: SearchResult[]) => {
     if (results.length === 0) {
-      return 'عذراً، لم أجد مستندات مطابقة لاستفسارك. يمكنك تجربة كلمات مفتاحية أخرى أو رفع مستندات ذات صلة للحصول على إجابات أكثر دقة.';
+      return generateContextualResponse(query);
     }
 
     const topResult = results[0];
@@ -679,6 +828,11 @@ ${topResult.content.substring(0, 200)}...
                           setSearchQuery(e.target.value);
                           const results = generateMockSearchResults(e.target.value);
                           setSearchResults(results);
+                          
+                          // Auto-initiate AI chat if no results and query is not empty
+                          if (results.length === 0 && e.target.value.trim()) {
+                            setTimeout(() => initiateAIChatFromSearch(e.target.value), 500);
+                          }
                         }}
                         placeholder="ابحث في الوثائق..."
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-saudi-green focus:border-transparent font-cairo text-sm"
@@ -730,11 +884,22 @@ ${topResult.content.substring(0, 200)}...
                               </div>
                             </div>
                           ))
+                        ) : searchQuery.trim() ? (
+                          <div className="text-center py-8 text-gray-500">
+                            <Bot className="h-12 w-12 mx-auto mb-4 text-saudi-green animate-pulse" />
+                            <p className="font-cairo font-medium mb-2">لم يتم العثور على نتائج</p>
+                            <p className="text-sm font-cairo mb-4">تم تشغيل المساعد الذكي تلقائياً للمساعدة</p>
+                            <div className="bg-blue-50 p-3 rounded-lg">
+                              <p className="text-xs text-blue-700 font-cairo">
+                                💡 المساعد الذكي يحلل استفسارك ويقدم إجابات مفيدة حتى لو لم توجد مستندات مطابقة
+                              </p>
+                            </div>
+                          </div>
                         ) : (
                           <div className="text-center py-8 text-gray-500">
                             <Search className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                            <p className="font-cairo">لم يتم العثور على نتائج</p>
-                            <p className="text-sm font-cairo">جرب كلمات مفتاحية أخرى</p>
+                            <p className="font-cairo">ابدأ البحث في الوثائق</p>
+                            <p className="text-sm font-cairo">أو استخدم المساعد الذكي للاستفسار</p>
                           </div>
                         )}
                       </div>
