@@ -1,12 +1,28 @@
 import React, { useState } from 'react';
-import { Search, Bot, Sparkles, X, Send, FileText, Calendar, MapPin } from 'lucide-react';
+import { Search, Bot, Sparkles, X, Send, FileText, Calendar, MapPin, Eye, Download, Share2, Tag } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
-import { mockDocuments } from '../data/mockData';
+
+interface SearchResult {
+  id: string;
+  title: string;
+  description: string;
+  department: string;
+  uploadDate: string;
+  fileType: string;
+  fileSize: string;
+  tags: string[];
+  category: string;
+  content: string;
+  riskLevel: 'low' | 'medium' | 'high';
+  relevanceScore: number;
+}
 
 export default function HeroBanner() {
   const { t } = useLanguage();
   const [showSearchWidget, setShowSearchWidget] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+  const [selectedResult, setSelectedResult] = useState<SearchResult | null>(null);
   const [chatMessages, setChatMessages] = useState([
     {
       id: '1',
@@ -18,8 +34,113 @@ export default function HeroBanner() {
   const [chatInput, setChatInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
 
+  const generateSearchResults = (query: string): SearchResult[] => {
+    const allResults: SearchResult[] = [
+      {
+        id: '1',
+        title: 'سياسة المصروفات الرأسمالية للعام المالي 2024',
+        description: 'دليل شامل للسياسات والإجراءات المتعلقة بالمصروفات الرأسمالية وآليات الاعتماد والمتابعة',
+        department: 'إدارة الميزانية',
+        uploadDate: '2024-01-15',
+        fileType: 'PDF',
+        fileSize: '2.4 MB',
+        tags: ['سياسة', 'مصروفات رأسمالية', 'ميزانية', '2024'],
+        category: 'السياسات المالية',
+        content: 'تحدد هذه السياسة الإجراءات المطلوبة لاعتماد المصروفات الرأسمالية، بما في ذلك حدود الصلاحيات ومتطلبات التوثيق والمراجعة. تشمل السياسة تعريفات واضحة للمصروفات الرأسمالية، وإجراءات التخطيط والموافقة، ومعايير التقييم والمتابعة.',
+        riskLevel: 'low',
+        relevanceScore: 95
+      },
+      {
+        id: '2',
+        title: 'دليل إجراءات المحاسبة الحكومية',
+        description: 'دليل تفصيلي لجميع الإجراءات المحاسبية المطبقة في الوزارة وفقاً للمعايير الدولية',
+        department: 'إدارة المحاسبة',
+        uploadDate: '2024-01-10',
+        fileType: 'PDF',
+        fileSize: '5.1 MB',
+        tags: ['محاسبة', 'إجراءات', 'معايير دولية', 'دليل'],
+        category: 'الأدلة والإجراءات',
+        content: 'يغطي الدليل جميع العمليات المحاسبية من القيد إلى إعداد التقارير المالية، مع التركيز على الامتثال للمعايير الدولية. يتضمن أمثلة عملية وحالات دراسية لتطبيق الإجراءات المحاسبية.',
+        riskLevel: 'medium',
+        relevanceScore: 88
+      },
+      {
+        id: '3',
+        title: 'تقرير الأداء المالي الربعي Q4 2023',
+        description: 'تقرير شامل عن الأداء المالي للربع الأخير من عام 2023',
+        department: 'إدارة المحاسبة',
+        uploadDate: '2024-01-01',
+        fileType: 'Excel',
+        fileSize: '3.2 MB',
+        tags: ['تقرير', 'أداء مالي', 'ربعي', '2023'],
+        category: 'التقارير المالية',
+        content: 'يعرض التقرير المؤشرات المالية الرئيسية والمقارنات مع الفترات السابقة والأهداف المحددة. يشمل تحليل الإيرادات والمصروفات، ومؤشرات الأداء، والتوصيات للتحسين.',
+        riskLevel: 'low',
+        relevanceScore: 82
+      },
+      {
+        id: '4',
+        title: 'نموذج طلب اعتماد مصروف',
+        description: 'النموذج الرسمي لطلب اعتماد المصروفات بجميع أنواعها',
+        department: 'إدارة المالية',
+        uploadDate: '2024-01-08',
+        fileType: 'Word',
+        fileSize: '156 KB',
+        tags: ['نموذج', 'اعتماد', 'مصروف', 'طلب'],
+        category: 'النماذج والاستمارات',
+        content: 'نموذج موحد لطلب اعتماد المصروفات يتضمن جميع البيانات المطلوبة والتوقيعات اللازمة. يشمل تعليمات مفصلة لملء النموذج ومتطلبات المرفقات.',
+        riskLevel: 'low',
+        relevanceScore: 75
+      },
+      {
+        id: '5',
+        title: 'لائحة الحوكمة المؤسسية المحدثة',
+        description: 'اللائحة المحدثة للحوكمة المؤسسية وإجراءات الامتثال',
+        department: 'إدارة الامتثال',
+        uploadDate: '2023-12-20',
+        fileType: 'PDF',
+        fileSize: '1.8 MB',
+        tags: ['حوكمة', 'امتثال', 'لائحة', 'مؤسسية'],
+        category: 'الحوكمة والامتثال',
+        content: 'تحدد اللائحة إطار الحوكمة المؤسسية ومسؤوليات الإدارات المختلفة في ضمان الامتثال. تشمل آليات الرقابة الداخلية وإجراءات إدارة المخاطر.',
+        riskLevel: 'high',
+        relevanceScore: 90
+      },
+      {
+        id: '6',
+        title: 'دليل المعايير المحاسبية السعودية',
+        description: 'دليل شامل للمعايير المحاسبية المطبقة في المملكة العربية السعودية',
+        department: 'إدارة المحاسبة',
+        uploadDate: '2023-11-15',
+        fileType: 'PDF',
+        fileSize: '8.7 MB',
+        tags: ['معايير محاسبية', 'سعودية', 'دليل', 'تطبيق'],
+        category: 'المعايير والقوانين',
+        content: 'يوضح الدليل جميع المعايير المحاسبية المعتمدة في المملكة مع أمثلة تطبيقية وحالات عملية. يتضمن التحديثات الأخيرة والتفسيرات الرسمية.',
+        riskLevel: 'medium',
+        relevanceScore: 85
+      }
+    ];
+
+    if (!query.trim()) return allResults;
+
+    const queryLower = query.toLowerCase();
+    return allResults
+      .filter(result => 
+        result.title.toLowerCase().includes(queryLower) ||
+        result.description.toLowerCase().includes(queryLower) ||
+        result.tags.some(tag => tag.toLowerCase().includes(queryLower)) ||
+        result.category.toLowerCase().includes(queryLower) ||
+        result.department.toLowerCase().includes(queryLower)
+      )
+      .sort((a, b) => b.relevanceScore - a.relevanceScore);
+  };
+
   const handleSearch = (query: string) => {
     setSearchQuery(query);
+    const results = generateSearchResults(query);
+    setSearchResults(results);
+    setSelectedResult(null);
     setShowSearchWidget(true);
   };
 
@@ -34,6 +155,12 @@ export default function HeroBanner() {
     };
 
     setChatMessages(prev => [...prev, userMessage]);
+    
+    // Generate search results based on chat input
+    const results = generateSearchResults(chatInput);
+    setSearchResults(results);
+    setSelectedResult(null);
+    
     setChatInput('');
     setIsTyping(true);
 
@@ -42,7 +169,7 @@ export default function HeroBanner() {
       const aiResponse = {
         id: (Date.now() + 1).toString(),
         type: 'assistant' as const,
-        content: generateAIResponse(chatInput),
+        content: generateAIResponse(chatInput, results),
         timestamp: new Date()
       };
       setChatMessages(prev => [...prev, aiResponse]);
@@ -50,21 +177,58 @@ export default function HeroBanner() {
     }, 1500);
   };
 
-  const generateAIResponse = (query: string) => {
-    const responses = [
-      'بناءً على بحثي في قاعدة البيانات، وجدت عدة مستندات ذات صلة بسؤالك. يمكنك الاطلاع على سياسة المصروفات الرأسمالية ودليل الإجراءات المحاسبية.',
-      'يمكنني مساعدتك في العثور على المعلومات المطلوبة. هناك عدة وثائق في النظام تتعلق بموضوعك.',
-      'وفقاً للوثائق المتاحة في المنصة، يمكنني توجيهك إلى المراجع المناسبة لاستفسارك.',
-      'تم العثور على معلومات مفيدة في عدة مستندات. دعني أوضح لك أهم النقاط المتعلقة بسؤالك.'
-    ];
-    return responses[Math.floor(Math.random() * responses.length)];
+  const generateAIResponse = (query: string, results: SearchResult[]) => {
+    if (results.length === 0) {
+      return 'عذراً، لم أجد مستندات مطابقة لاستفسارك. يمكنك تجربة كلمات مفتاحية أخرى أو التواصل مع فريق الدعم للمساعدة.';
+    }
+
+    const topResult = results[0];
+    return `وجدت ${results.length} مستند${results.length > 1 ? 'ات' : ''} ذات صلة باستفسارك. أهم النتائج:
+
+📄 **${topResult.title}**
+من ${topResult.department} - ${topResult.category}
+
+${topResult.content.substring(0, 200)}...
+
+يمكنك الاطلاع على النتائج في القائمة الجانبية للحصول على تفاصيل أكثر.`;
   };
 
-  const filteredDocuments = mockDocuments.filter(doc =>
-    doc.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    doc.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    doc.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
+  const handleResultClick = (result: SearchResult) => {
+    setSelectedResult(result);
+  };
+
+  const getRiskBadge = (riskLevel: string) => {
+    const colors = {
+      low: 'bg-green-100 text-green-800',
+      medium: 'bg-yellow-100 text-yellow-800',
+      high: 'bg-red-100 text-red-800'
+    };
+    const labels = {
+      low: 'منخفض',
+      medium: 'متوسط',
+      high: 'عالي'
+    };
+    
+    return (
+      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${colors[riskLevel as keyof typeof colors]}`}>
+        {labels[riskLevel as keyof typeof labels]}
+      </span>
+    );
+  };
+
+  const getFileIcon = (fileType: string) => {
+    const iconClass = "h-5 w-5";
+    switch (fileType.toLowerCase()) {
+      case 'pdf':
+        return <FileText className={`${iconClass} text-red-500`} />;
+      case 'word':
+        return <FileText className={`${iconClass} text-blue-500`} />;
+      case 'excel':
+        return <FileText className={`${iconClass} text-green-500`} />;
+      default:
+        return <FileText className={`${iconClass} text-gray-500`} />;
+    }
+  };
 
   return (
     <>
@@ -151,7 +315,10 @@ export default function HeroBanner() {
                 </div>
               </div>
               <button
-                onClick={() => setShowSearchWidget(false)}
+                onClick={() => {
+                  setShowSearchWidget(false);
+                  setSelectedResult(null);
+                }}
                 className="text-gray-500 hover:text-gray-700 p-2"
               >
                 <X className="h-6 w-6" />
@@ -159,9 +326,9 @@ export default function HeroBanner() {
             </div>
 
             {/* Content Grid */}
-            <div className="search-results-grid">
+            <div className="flex h-full">
               {/* Chat Panel */}
-              <div className="chat-panel">
+              <div className="flex-1 chat-panel">
                 <div className="flex items-center gap-2 mb-4">
                   <Bot className="h-5 w-5 text-saudi-green" />
                   <h3 className="font-semibold text-gray-900 font-cairo">المساعد الذكي</h3>
@@ -215,70 +382,187 @@ export default function HeroBanner() {
               </div>
 
               {/* Search Results Panel */}
-              <div className="search-results-panel">
-                <div className="flex items-center gap-2 mb-4">
-                  <Search className="h-5 w-5 text-saudi-green" />
-                  <h3 className="font-semibold text-gray-900 font-cairo">نتائج البحث</h3>
-                  <span className="text-sm text-gray-500 font-cairo">({filteredDocuments.length} نتيجة)</span>
-                </div>
+              <div className="w-96 border-l border-gray-200 flex flex-col">
+                {!selectedResult ? (
+                  <>
+                    <div className="p-4 border-b border-gray-200">
+                      <div className="flex items-center gap-2 mb-3">
+                        <Search className="h-5 w-5 text-saudi-green" />
+                        <h3 className="font-semibold text-gray-900 font-cairo">نتائج البحث</h3>
+                        <span className="text-sm text-gray-500 font-cairo">({searchResults.length} نتيجة)</span>
+                      </div>
 
-                <div className="mb-4">
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="ابحث في الوثائق..."
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-saudi-green focus:border-transparent font-cairo"
-                  />
-                </div>
+                      <input
+                        type="text"
+                        value={searchQuery}
+                        onChange={(e) => {
+                          setSearchQuery(e.target.value);
+                          const results = generateSearchResults(e.target.value);
+                          setSearchResults(results);
+                        }}
+                        placeholder="ابحث في الوثائق..."
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-saudi-green focus:border-transparent font-cairo text-sm"
+                      />
+                    </div>
 
-                <div className="space-y-3 custom-scrollbar" style={{ maxHeight: 'calc(100% - 120px)', overflowY: 'auto' }}>
-                  {filteredDocuments.length > 0 ? (
-                    filteredDocuments.map((doc) => (
-                      <div key={doc.id} className="search-result-item">
-                        <div className="flex items-start gap-3">
-                          <div className="bg-blue-50 text-blue-600 p-2 rounded-lg flex-shrink-0">
-                            <FileText className="h-5 w-5" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <h4 className="search-result-title font-semibold text-gray-900 mb-1 line-clamp-2">
-                              {doc.title}
-                            </h4>
-                            <p className="search-result-description text-gray-600 text-sm mb-2 line-clamp-2">
-                              {doc.description}
-                            </p>
-                            <div className="flex items-center gap-4 text-xs text-gray-500 font-cairo">
-                              <div className="flex items-center gap-1">
-                                <MapPin className="h-3 w-3" />
-                                {doc.department}
-                              </div>
-                              <div className="flex items-center gap-1">
-                                <Calendar className="h-3 w-3" />
-                                {doc.uploadDate}
+                    <div className="flex-1 overflow-y-auto p-4">
+                      <div className="space-y-3">
+                        {searchResults.length > 0 ? (
+                          searchResults.map((result) => (
+                            <div 
+                              key={result.id} 
+                              className="search-result-item cursor-pointer"
+                              onClick={() => handleResultClick(result)}
+                            >
+                              <div className="flex items-start gap-3">
+                                <div className="bg-blue-50 text-blue-600 p-2 rounded-lg flex-shrink-0">
+                                  {getFileIcon(result.fileType)}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <h4 className="search-result-title font-semibold text-gray-900 mb-1 line-clamp-2">
+                                    {result.title}
+                                  </h4>
+                                  <p className="search-result-description text-gray-600 text-sm mb-2 line-clamp-2">
+                                    {result.description}
+                                  </p>
+                                  <div className="flex items-center gap-2 mb-2">
+                                    <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-cairo">
+                                      {result.category}
+                                    </span>
+                                    {getRiskBadge(result.riskLevel)}
+                                  </div>
+                                  <div className="flex items-center gap-4 text-xs text-gray-500 font-cairo">
+                                    <div className="flex items-center gap-1">
+                                      <MapPin className="h-3 w-3" />
+                                      {result.department}
+                                    </div>
+                                    <div className="flex items-center gap-1">
+                                      <Calendar className="h-3 w-3" />
+                                      {result.uploadDate}
+                                    </div>
+                                  </div>
+                                </div>
                               </div>
                             </div>
-                            <div className="flex flex-wrap gap-1 mt-2">
-                              {doc.tags.slice(0, 3).map((tag) => (
-                                <span
-                                  key={tag}
-                                  className="bg-gray-100 text-gray-700 px-2 py-1 rounded text-xs font-cairo"
-                                >
-                                  {tag}
-                                </span>
-                              ))}
+                          ))
+                        ) : (
+                          <div className="text-center py-8 text-gray-500">
+                            <Search className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                            <p className="font-cairo">لم يتم العثور على نتائج</p>
+                            <p className="text-sm font-cairo">جرب كلمات مفتاحية أخرى</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  /* Document Details View */
+                  <div className="flex flex-col h-full">
+                    <div className="p-4 border-b border-gray-200">
+                      <button
+                        onClick={() => setSelectedResult(null)}
+                        className="flex items-center gap-2 text-saudi-green hover:text-saudi-green-dark mb-3"
+                      >
+                        <X className="h-4 w-4" />
+                        <span className="text-sm font-cairo">العودة للنتائج</span>
+                      </button>
+                      <h3 className="font-semibold text-gray-900 font-cairo">تفاصيل المستند</h3>
+                    </div>
+
+                    <div className="flex-1 overflow-y-auto p-4">
+                      <div className="space-y-4">
+                        {/* Document Header */}
+                        <div className="flex items-start gap-3">
+                          <div className="bg-blue-50 text-blue-600 p-3 rounded-lg">
+                            {getFileIcon(selectedResult.fileType)}
+                          </div>
+                          <div className="flex-1">
+                            <h4 className="font-bold text-gray-900 mb-2 leading-tight font-cairo">
+                              {selectedResult.title}
+                            </h4>
+                            <div className="flex items-center gap-2 mb-2">
+                              <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-cairo">
+                                {selectedResult.category}
+                              </span>
+                              {getRiskBadge(selectedResult.riskLevel)}
                             </div>
                           </div>
                         </div>
+
+                        {/* Document Info */}
+                        <div className="bg-gray-50 rounded-lg p-3 space-y-2">
+                          <div className="flex justify-between text-sm">
+                            <span className="text-gray-600 font-cairo">الإدارة:</span>
+                            <span className="font-medium font-cairo">{selectedResult.department}</span>
+                          </div>
+                          <div className="flex justify-between text-sm">
+                            <span className="text-gray-600 font-cairo">نوع الملف:</span>
+                            <span className="font-medium">{selectedResult.fileType}</span>
+                          </div>
+                          <div className="flex justify-between text-sm">
+                            <span className="text-gray-600 font-cairo">حجم الملف:</span>
+                            <span className="font-medium">{selectedResult.fileSize}</span>
+                          </div>
+                          <div className="flex justify-between text-sm">
+                            <span className="text-gray-600 font-cairo">تاريخ الرفع:</span>
+                            <span className="font-medium font-cairo">{selectedResult.uploadDate}</span>
+                          </div>
+                          <div className="flex justify-between text-sm">
+                            <span className="text-gray-600 font-cairo">درجة الصلة:</span>
+                            <span className="font-medium">{selectedResult.relevanceScore}%</span>
+                          </div>
+                        </div>
+
+                        {/* Description */}
+                        <div>
+                          <h5 className="font-semibold text-gray-900 mb-2 font-cairo">الوصف</h5>
+                          <p className="text-gray-700 text-sm leading-relaxed font-cairo">
+                            {selectedResult.description}
+                          </p>
+                        </div>
+
+                        {/* Content Preview */}
+                        <div>
+                          <h5 className="font-semibold text-gray-900 mb-2 font-cairo">معاينة المحتوى</h5>
+                          <p className="text-gray-700 text-sm leading-relaxed font-cairo bg-gray-50 p-3 rounded-lg">
+                            {selectedResult.content}
+                          </p>
+                        </div>
+
+                        {/* Tags */}
+                        <div>
+                          <h5 className="font-semibold text-gray-900 mb-2 font-cairo">العلامات</h5>
+                          <div className="flex flex-wrap gap-2">
+                            {selectedResult.tags.map((tag, index) => (
+                              <span
+                                key={index}
+                                className="inline-flex items-center bg-gray-100 text-gray-700 px-2 py-1 rounded text-xs font-cairo"
+                              >
+                                <Tag className="h-3 w-3 ml-1" />
+                                {tag}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Actions */}
+                        <div className="flex gap-2 pt-4 border-t border-gray-200">
+                          <button className="flex-1 bg-saudi-green text-white px-3 py-2 rounded-lg hover:bg-saudi-green-dark transition-colors flex items-center justify-center gap-2 text-sm font-cairo">
+                            <Eye className="h-4 w-4" />
+                            معاينة
+                          </button>
+                          <button className="flex-1 bg-blue-600 text-white px-3 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 text-sm font-cairo">
+                            <Download className="h-4 w-4" />
+                            تحميل
+                          </button>
+                          <button className="bg-gray-200 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-300 transition-colors flex items-center justify-center gap-2 text-sm">
+                            <Share2 className="h-4 w-4" />
+                          </button>
+                        </div>
                       </div>
-                    ))
-                  ) : (
-                    <div className="text-center py-8 text-gray-500">
-                      <Search className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                      <p className="font-cairo">لم يتم العثور على نتائج</p>
-                      <p className="text-sm font-cairo">جرب كلمات مفتاحية أخرى</p>
                     </div>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
