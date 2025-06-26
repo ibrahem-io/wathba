@@ -92,12 +92,12 @@ const AppContent = () => {
           hasAdminAccess={hasAdminAccess()}
         />
         
-        <main className={`flex-1 overflow-y-auto transition-all duration-300 p-4 md:p-6`}>
+        <main className={`flex-1 overflow-y-auto transition-all duration-300 p-6 md:p-8`}>
           {activeTab === 'dashboard' && (
             <>
               <AuditDashboard />
               {isPublicMode && (
-                <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+                <div className="mt-8 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                   <p className="text-blue-700 text-sm">
                     🔓 تعمل المنصة حالياً في الوضع العام - جميع البيانات محفوظة محلياً
                   </p>
@@ -107,13 +107,13 @@ const AppContent = () => {
           )}
           
           {activeTab === 'documents' && (
-            <>
+            <div className="space-y-6">
               <DocumentUpload onFileUpload={handleFileUpload} />
               <DocumentList 
                 documents={documents} 
                 selectedFolderId={selectedFolderId}
               />
-            </>
+            </div>
           )}
 
           {activeTab === 'chat' && (
@@ -125,8 +125,8 @@ const AppContent = () => {
           )}
 
           {activeTab === 'settings' && !hasAdminAccess() && (
-            <div className="bg-white rounded-lg shadow p-6">
-              <div className="text-center py-8">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8">
+              <div className="text-center py-12">
                 <Settings className="h-16 w-16 text-gray-300 mx-auto mb-4" />
                 <h3 className="text-lg font-medium text-gray-900 mb-2">غير مصرح</h3>
                 <p className="text-gray-500">تحتاج إلى صلاحيات المدير للوصول إلى الإعدادات</p>

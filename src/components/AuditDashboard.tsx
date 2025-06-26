@@ -1,4 +1,4 @@
-import { BarChart3, PieChart, TrendingUp, AlertTriangle, CheckCircle, XCircle, FileText, Calendar } from 'lucide-react';
+import { BarChart3, PieChart, TrendingUp, AlertTriangle, CheckCircle, XCircle, FileText, Calendar, Award, Shield } from 'lucide-react';
 
 const AuditDashboard = () => {
   const riskData = [
@@ -64,61 +64,100 @@ const AuditDashboard = () => {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="bg-white rounded-lg shadow p-6">
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">لوحة المراجعة والامتثال</h2>
-        <p className="text-gray-600">نظرة شاملة على حالة المراجعة والمخاطر والامتثال</p>
+    <div className="space-y-8">
+      {/* Hero Section */}
+      <div className="relative bg-gradient-to-l from-green-700 to-green-800 rounded-2xl p-8 text-white overflow-hidden">
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-0 left-0 w-full h-full">
+            {/* Decorative circles pattern */}
+            <div className="absolute top-4 left-4 w-32 h-32 border border-white/20 rounded-full"></div>
+            <div className="absolute top-12 left-12 w-24 h-24 border border-white/20 rounded-full"></div>
+            <div className="absolute bottom-4 right-4 w-40 h-40 border border-white/20 rounded-full"></div>
+            <div className="absolute bottom-12 right-12 w-28 h-28 border border-white/20 rounded-full"></div>
+          </div>
+        </div>
+        <div className="relative z-10">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold mb-2">تميز</h1>
+              <h2 className="text-5xl font-bold mb-4">مؤسسي ورقمي</h2>
+              <p className="text-xl text-green-100 max-w-2xl">
+                منصة المراجعة الرقمية المتطورة للديوان العام للمحاسبة - نحو مستقبل رقمي متميز في الرقابة والمراجعة
+              </p>
+              <div className="flex space-x-2 space-x-reverse mt-6">
+                <div className="w-3 h-3 bg-white rounded-full"></div>
+                <div className="w-3 h-3 bg-white/50 rounded-full"></div>
+              </div>
+            </div>
+            <div className="hidden lg:block">
+              <img
+                src="/src/assets/images/gca-logo copy.svg"
+                alt="شعار الديوان"
+                className="h-32 w-auto opacity-20"
+              />
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Key Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center">
-            <FileText className="h-8 w-8 text-blue-500" />
-            <div className="mr-4">
-              <p className="text-2xl font-bold text-gray-900">75</p>
-              <p className="text-gray-600">إجمالي المستندات</p>
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-3xl font-bold text-gray-900">75</p>
+              <p className="text-gray-600 font-medium">إجمالي المستندات</p>
+            </div>
+            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+              <FileText className="h-6 w-6 text-blue-600" />
             </div>
           </div>
         </div>
         
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center">
-            <AlertTriangle className="h-8 w-8 text-yellow-500" />
-            <div className="mr-4">
-              <p className="text-2xl font-bold text-gray-900">7</p>
-              <p className="text-gray-600">مخاطر عالية</p>
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-3xl font-bold text-gray-900">7</p>
+              <p className="text-gray-600 font-medium">مخاطر عالية</p>
+            </div>
+            <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
+              <AlertTriangle className="h-6 w-6 text-yellow-600" />
             </div>
           </div>
         </div>
         
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center">
-            <CheckCircle className="h-8 w-8 text-green-500" />
-            <div className="mr-4">
-              <p className="text-2xl font-bold text-gray-900">85%</p>
-              <p className="text-gray-600">معدل الامتثال</p>
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-3xl font-bold text-gray-900">85%</p>
+              <p className="text-gray-600 font-medium">معدل الامتثال</p>
+            </div>
+            <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+              <CheckCircle className="h-6 w-6 text-green-600" />
             </div>
           </div>
         </div>
         
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center">
-            <TrendingUp className="h-8 w-8 text-saudi-primary" />
-            <div className="mr-4">
-              <p className="text-2xl font-bold text-gray-900">12</p>
-              <p className="text-gray-600">تحديثات هذا الشهر</p>
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-3xl font-bold text-gray-900">12</p>
+              <p className="text-gray-600 font-medium">تحديثات هذا الشهر</p>
+            </div>
+            <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+              <TrendingUp className="h-6 w-6 text-purple-600" />
             </div>
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Risk Distribution */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center mb-4">
-            <BarChart3 className="h-6 w-6 text-saudi-primary ml-2" />
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+          <div className="flex items-center mb-6">
+            <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center ml-3">
+              <BarChart3 className="h-5 w-5 text-green-600" />
+            </div>
             <h3 className="text-lg font-semibold text-gray-900">توزيع المخاطر</h3>
           </div>
           <div className="space-y-4">
@@ -126,7 +165,7 @@ const AuditDashboard = () => {
               <div key={index} className="flex items-center justify-between">
                 <div className="flex items-center">
                   <div className={`w-4 h-4 rounded-full ${item.color} ml-3`}></div>
-                  <span className="text-gray-700">{item.level}</span>
+                  <span className="text-gray-700 font-medium">{item.level}</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="w-32 bg-gray-200 rounded-full h-2">
@@ -135,7 +174,7 @@ const AuditDashboard = () => {
                       style={{ width: `${item.percentage}%` }}
                     ></div>
                   </div>
-                  <span className="text-gray-900 font-medium w-8">{item.count}</span>
+                  <span className="text-gray-900 font-semibold w-8">{item.count}</span>
                 </div>
               </div>
             ))}
@@ -143,38 +182,42 @@ const AuditDashboard = () => {
         </div>
 
         {/* Category Distribution */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center mb-4">
-            <PieChart className="h-6 w-6 text-saudi-primary ml-2" />
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+          <div className="flex items-center mb-6">
+            <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center ml-3">
+              <PieChart className="h-5 w-5 text-green-600" />
+            </div>
             <h3 className="text-lg font-semibold text-gray-900">توزيع التصنيفات</h3>
           </div>
           <div className="space-y-3">
             {categoryData.map((item, index) => (
-              <div key={index} className="flex items-center justify-between">
+              <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                 <div className="flex items-center">
                   <div className={`w-3 h-3 rounded-full ${item.color} ml-3`}></div>
-                  <span className="text-gray-700">{item.name}</span>
+                  <span className="text-gray-700 font-medium">{item.name}</span>
                 </div>
-                <span className="text-gray-900 font-medium">{item.count}</span>
+                <span className="text-gray-900 font-semibold">{item.count}</span>
               </div>
             ))}
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Recent Uploads */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center mb-4">
-            <Calendar className="h-6 w-6 text-saudi-primary ml-2" />
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+          <div className="flex items-center mb-6">
+            <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center ml-3">
+              <Calendar className="h-5 w-5 text-green-600" />
+            </div>
             <h3 className="text-lg font-semibold text-gray-900">آخر التحديثات</h3>
           </div>
           <div className="space-y-3">
             {recentUploads.map((item, index) => (
-              <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <div key={index} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                 <div className="flex-1">
                   <p className="text-sm font-medium text-gray-900">{item.name}</p>
-                  <p className="text-xs text-gray-500">{item.date}</p>
+                  <p className="text-xs text-gray-500 mt-1">{item.date}</p>
                 </div>
                 {getRiskBadge(item.risk)}
               </div>
@@ -183,14 +226,16 @@ const AuditDashboard = () => {
         </div>
 
         {/* Compliance Status */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center mb-4">
-            <CheckCircle className="h-6 w-6 text-saudi-primary ml-2" />
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+          <div className="flex items-center mb-6">
+            <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center ml-3">
+              <Shield className="h-5 w-5 text-green-600" />
+            </div>
             <h3 className="text-lg font-semibold text-gray-900">حالة الامتثال</h3>
           </div>
           <div className="space-y-3">
             {complianceStatus.map((item, index) => (
-              <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <div key={index} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                 <div className="flex items-center">
                   {getStatusIcon(item.status)}
                   <div className="mr-3">
@@ -204,17 +249,49 @@ const AuditDashboard = () => {
         </div>
       </div>
 
-      {/* Generate Report Button */}
-      <div className="bg-white rounded-lg shadow p-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900">تقرير المراجعة الشامل</h3>
-            <p className="text-gray-600">إنشاء تقرير PDF شامل لحالة المراجعة والامتثال</p>
+      {/* Services Section */}
+      <div className="bg-gray-50 rounded-xl p-8">
+        <div className="text-center mb-8">
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">الخدمات الإلكترونية</h2>
+          <p className="text-gray-600 max-w-2xl mx-auto">
+            استفد من مجموعة شاملة من الخدمات الرقمية المتطورة لتعزيز كفاءة عمليات المراجعة والرقابة
+          </p>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">المكتبة الرقمية للأرشيف (وثيقة)</h3>
+                <p className="text-gray-600 text-sm">Digital Library for Archives (Wathiqa)</p>
+              </div>
+              <img
+                src="/src/assets/images/gca-logo copy.svg"
+                alt="شعار الخدمة"
+                className="h-12 w-auto opacity-60"
+              />
+            </div>
+            <button className="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition-colors font-medium">
+              ابدأ الخدمة
+            </button>
           </div>
-          <button className="bg-saudi-primary text-white px-6 py-3 rounded-lg hover:bg-saudi-secondary transition-colors flex items-center">
-            <FileText className="h-5 w-5 ml-2" />
-            إنشاء التقرير
-          </button>
+
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">منصة المراجعة الرقمية (شامل)</h3>
+                <p className="text-gray-600 text-sm">Digital Audit Platform (Shamel)</p>
+              </div>
+              <img
+                src="/src/assets/images/gca-logo copy.svg"
+                alt="شعار الخدمة"
+                className="h-12 w-auto opacity-60"
+              />
+            </div>
+            <button className="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition-colors font-medium">
+              ابدأ الخدمة
+            </button>
+          </div>
         </div>
       </div>
     </div>

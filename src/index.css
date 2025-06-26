@@ -23,8 +23,8 @@ html, body {
 }
 
 .dropzone:hover {
-  border-color: #4285F4;
-  background-color: #F3F4F6;
+  border-color: #16a34a;
+  background-color: #f0fdf4;
 }
 
 .label {
@@ -91,4 +91,29 @@ html, body {
 /* Progress bar animation */
 .progress-bar {
   transition: width 0.5s ease;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* Smooth transitions */
+.transition-all {
+  transition-property: all;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 300ms;
 }
