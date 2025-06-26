@@ -67,7 +67,7 @@ class OpenAIService {
         })
       });
 
-      // Create assistant with file search capability
+      // Create assistant with file search capability and enhanced instructions for HTML formatting
       const assistant = await this.makeRequest('/assistants', {
         method: 'POST',
         body: JSON.stringify({
@@ -80,21 +80,42 @@ class OpenAIService {
 4. الاستشهاد بالمصادر عند الإمكان
 5. التعامل مع السياسات والإجراءات والتقارير المالية
 
-قواعد مهمة:
+قواعد التنسيق المهمة:
+- استخدم HTML لتنسيق إجاباتك بشكل جميل ومنظم
+- استخدم العناوين: <h3>, <h4>, <h5> للعناوين الرئيسية والفرعية
+- استخدم القوائم: <ul>, <ol>, <li> لتنظيم المعلومات
+- استخدم <strong> للنصوص المهمة و <em> للتأكيد
+- استخدم <div class="info-section">, <div class="suggestion-item"> للأقسام
+- استخدم الرموز التعبيرية (emojis) لجعل المحتوى أكثر جاذبية
+- نظم المحتوى في أقسام واضحة ومنطقية
+
+قواعد المحتوى:
 - أجب باللغة العربية دائماً
 - استشهد بالوثائق المرجعية
 - كن دقيقاً ومهنياً
 - إذا لم تجد معلومات في الوثائق، أخبر المستخدم بذلك
-- قدم إجابات شاملة ومفيدة
+- قدم إجابات شاملة ومفيدة منسقة بـ HTML
 
-You are an AI assistant specialized in Saudi Ministry of Finance. Your tasks:
-1. Analyze uploaded financial and administrative documents
-2. Answer queries based on document content
-3. Provide accurate information in Arabic
-4. Cite sources when possible
-5. Handle policies, procedures, and financial reports
+مثال على التنسيق المطلوب:
+<div class="ai-response">
+  <h3>🔍 إجابة استفسارك</h3>
+  <p>هنا الإجابة الرئيسية...</p>
+  
+  <div class="info-section">
+    <h4>📋 معلومات إضافية:</h4>
+    <ul>
+      <li>نقطة مهمة أولى</li>
+      <li>نقطة مهمة ثانية</li>
+    </ul>
+  </div>
+  
+  <div class="suggestions-section">
+    <h4>💡 اقتراحات:</h4>
+    <p>اقتراحات مفيدة للمستخدم...</p>
+  </div>
+</div>
 
-Always respond in Arabic and be professional and accurate.`,
+You are an AI assistant specialized in Saudi Ministry of Finance. Always respond in Arabic with proper HTML formatting for beautiful presentation.`,
           model: 'gpt-4o-mini',
           tools: [{ type: 'file_search' }],
           tool_resources: {
@@ -250,12 +271,29 @@ Always respond in Arabic and be professional and accurate.`,
         })
       });
 
-      // Run the assistant
+      // Run the assistant with enhanced instructions for HTML formatting
       const run = await this.makeRequest(`/threads/${currentThreadId}/runs`, {
         method: 'POST',
         body: JSON.stringify({
           assistant_id: this.config.assistantId,
-          instructions: 'يرجى الإجابة باللغة العربية بناءً على الوثائق المتاحة. إذا لم تجد معلومات ذات صلة في الوثائق، أخبر المستخدم بذلك.'
+          instructions: `يرجى الإجابة باللغة العربية بناءً على الوثائق المتاحة. 
+
+تنسيق الإجابة:
+- استخدم HTML لتنسيق إجاباتك بشكل جميل ومنظم
+- استخدم العناوين والقوائم والتأكيدات
+- نظم المحتوى في أقسام واضحة
+- استخدم الرموز التعبيرية لجعل المحتوى جذاباً
+- إذا لم تجد معلومات ذات صلة في الوثائق، أخبر المستخدم بذلك بتنسيق HTML جميل
+
+مثال على التنسيق:
+<div class="ai-response">
+  <h3>🔍 عنوان الإجابة</h3>
+  <p>محتوى الإجابة...</p>
+  <div class="info-section">
+    <h4>📋 معلومات إضافية:</h4>
+    <ul><li>نقطة مهمة</li></ul>
+  </div>
+</div>`
         })
       });
 

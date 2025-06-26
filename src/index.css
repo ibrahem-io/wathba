@@ -344,6 +344,130 @@
   border-bottom-left-radius: 6px;
 }
 
+/* AI Response Formatting Styles */
+.ai-formatted-content {
+  font-family: 'Cairo', 'Tahoma', 'Arial', sans-serif;
+  line-height: 1.6;
+}
+
+.ai-formatted-content .ai-response {
+  background: #f8fafc;
+  border-radius: 8px;
+  padding: 16px;
+  border-left: 4px solid #006341;
+}
+
+.ai-formatted-content h3 {
+  color: #006341;
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ai-formatted-content h4 {
+  color: #1f2937;
+  font-size: 14px;
+  font-weight: 600;
+  margin: 16px 0 8px 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ai-formatted-content h5 {
+  color: #374151;
+  font-size: 13px;
+  font-weight: 600;
+  margin: 12px 0 6px 0;
+}
+
+.ai-formatted-content p {
+  margin-bottom: 12px;
+  color: #374151;
+  font-size: 13px;
+}
+
+.ai-formatted-content ul, .ai-formatted-content ol {
+  margin: 8px 0 12px 20px;
+  color: #374151;
+  font-size: 13px;
+}
+
+.ai-formatted-content li {
+  margin-bottom: 4px;
+  line-height: 1.5;
+}
+
+.ai-formatted-content strong {
+  color: #1f2937;
+  font-weight: 600;
+}
+
+.ai-formatted-content em {
+  color: #6b7280;
+  font-style: italic;
+}
+
+.ai-formatted-content .info-section {
+  background: #eff6ff;
+  border-radius: 6px;
+  padding: 12px;
+  margin: 12px 0;
+  border-left: 3px solid #3b82f6;
+}
+
+.ai-formatted-content .suggestions-section {
+  background: #f0fdf4;
+  border-radius: 6px;
+  padding: 12px;
+  margin: 12px 0;
+  border-left: 3px solid #10b981;
+}
+
+.ai-formatted-content .suggestion-item {
+  background: #fefce8;
+  border-radius: 6px;
+  padding: 10px;
+  margin: 8px 0;
+  border-left: 3px solid #eab308;
+}
+
+.ai-formatted-content .help-section {
+  background: #fdf2f8;
+  border-radius: 6px;
+  padding: 12px;
+  margin: 12px 0;
+  border-left: 3px solid #ec4899;
+}
+
+.ai-formatted-content .result-highlight {
+  background: #f1f5f9;
+  border-radius: 6px;
+  padding: 12px;
+  margin: 12px 0;
+  border-left: 3px solid #64748b;
+}
+
+.ai-formatted-content .document-card {
+  background: white;
+  border-radius: 4px;
+  padding: 10px;
+  margin: 8px 0;
+  border: 1px solid #e2e8f0;
+}
+
+.ai-formatted-content .action-note {
+  background: #ecfdf5;
+  border-radius: 6px;
+  padding: 10px;
+  margin: 12px 0;
+  border-left: 3px solid #059669;
+  font-size: 12px;
+}
+
 .search-result-item {
   border: 1px solid #e5e7eb;
   border-radius: 8px;
