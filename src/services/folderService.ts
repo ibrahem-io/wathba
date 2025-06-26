@@ -1,4 +1,4 @@
-import supabase from '../lib/supabase';
+import { supabase } from '../lib/supabase';
 import { Database } from '../lib/database.types';
 
 type Folder = Database['public']['Tables']['folders']['Row'];

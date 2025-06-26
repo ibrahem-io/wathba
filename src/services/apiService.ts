@@ -1,4 +1,4 @@
-import supabase from '../lib/supabase';
+import { supabase } from '../lib/supabase';
 import { Database } from '../lib/database.types';
 
 type ApiConfiguration = Database['public']['Tables']['api_configurations']['Row'];
