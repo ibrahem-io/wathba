@@ -12,17 +12,22 @@ import SearchInterface from './components/DocumentSearch/SearchInterface';
 
 function App() {
   const [currentPage, setCurrentPage] = useState<'home' | 'rag' | 'search'>('home');
+  const [searchQuery, setSearchQuery] = useState<string>('');
 
   const navigateToRAG = () => {
     setCurrentPage('rag');
   };
 
-  const navigateToSearch = () => {
+  const navigateToSearch = (query?: string) => {
+    if (query) {
+      setSearchQuery(query);
+    }
     setCurrentPage('search');
   };
 
   const navigateToHome = () => {
     setCurrentPage('home');
+    setSearchQuery('');
   };
 
   if (currentPage === 'rag') {
@@ -39,7 +44,10 @@ function App() {
     return (
       <AuthProvider>
         <LanguageProvider>
-          <SearchInterface onNavigateBack={navigateToHome} />
+          <SearchInterface 
+            onNavigateBack={navigateToHome}
+            initialSearchQuery={searchQuery}
+          />
         </LanguageProvider>
       </AuthProvider>
     );
@@ -54,8 +62,8 @@ function App() {
 
           {/* Main Content */}
           <main>
-            {/* Hero Banner with AI */}
-            <HeroBanner />
+            {/* Hero Banner with Enhanced Search */}
+            <HeroBanner onNavigateToSearch={navigateToSearch} />
             
             {/* Hero Sections */}
             <MainSections />
@@ -82,7 +90,7 @@ function App() {
                   </p>
                   <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
                     <button
-                      onClick={navigateToSearch}
+                      onClick={() => navigateToSearch()}
                       className="bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-50 transition-all shadow-lg flex items-center gap-2"
                     >
                       <span>🔍</span>
