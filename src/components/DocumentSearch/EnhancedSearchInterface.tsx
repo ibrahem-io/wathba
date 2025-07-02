@@ -497,7 +497,7 @@ const EnhancedSearchInterface: React.FC<EnhancedSearchInterfaceProps> = ({ onNav
               <>
                 {/* Question Answer Display */}
                 {showQuestionMode && questionAnswer && (
-                  <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+                  <div className="bg-white rounded-lg border border-gray-200 p-6 mb-6">
                     <div className="flex items-center gap-2 mb-4">
                       <MessageCircle className="h-6 w-6 text-blue-600" />
                       <h3 className="text-lg font-semibold text-gray-900">إجابة السؤال</h3>
@@ -534,11 +534,11 @@ const EnhancedSearchInterface: React.FC<EnhancedSearchInterfaceProps> = ({ onNav
 
                 {/* Search Results Header (only in search mode) */}
                 {!showQuestionMode && (
-                  <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
+                  <div className="bg-white rounded-lg border border-gray-200 p-6 mb-6">
                     {/* Results Info */}
                     <div className="flex items-center justify-between mb-4">
                       <div className="flex items-center gap-4">
-                        <div>
+                        <div className="text-lg">
                           {isLoading ? (
                             <div className="flex items-center gap-2">
                               <div className="w-5 h-5 border-2 border-saudi-green border-t-transparent rounded-full animate-spin" />
@@ -615,7 +615,7 @@ const EnhancedSearchInterface: React.FC<EnhancedSearchInterfaceProps> = ({ onNav
 
                     {/* Search Performance Info */}
                     {(searchQuery || initialSearchQuery) && searchTime > 0 && !showQuestionMode && (
-                      <div className="flex items-center justify-between text-sm text-gray-500 pt-2 border-t border-gray-100">
+                      <div className="flex items-center justify-between text-sm text-gray-500 pt-4 border-t border-gray-100">
                         <div className="flex items-center gap-4">
                           <span>وقت البحث: {(searchTime / 1000).toFixed(2)} ثانية</span>
                           {openaiResults > 0 && (
