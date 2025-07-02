@@ -26,6 +26,10 @@ export default function HeroBanner({ onNavigateToSearch }: HeroBannerProps) {
         const transcript = event.results[0][0].transcript;
         setSearchQuery(transcript);
         setIsListening(false);
+        // Auto-search when voice input is complete
+        if (onNavigateToSearch) {
+          onNavigateToSearch(transcript);
+        }
       };
       
       recognitionInstance.onerror = () => {
@@ -38,7 +42,7 @@ export default function HeroBanner({ onNavigateToSearch }: HeroBannerProps) {
       
       setRecognition(recognitionInstance);
     }
-  }, []);
+  }, [onNavigateToSearch]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
