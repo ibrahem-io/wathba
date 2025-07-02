@@ -1,4 +1,5 @@
 import openaiService from './openaiService';
+import documentIndexingService from './documentIndexingService';
 
 export interface RAGSearchResult {
   id: string;
@@ -44,17 +45,32 @@ class RAGSearchService {
         await this.initialize();
       }
 
+      // Get uploaded documents count
+      const uploadedFiles = await this.getUploadedFiles();
+      if (uploadedFiles.length === 0) {
+        return {
+          results: [],
+          totalCount: 0,
+          searchTime: Date.now() - startTime,
+          suggestions: []
+        };
+      }
+
       // Use OpenAI Assistant to search through uploaded documents
       const searchPrompt = `
         ابحث في الوثائق المرفوعة عن: "${query}"
         
-        يرجى تقديم النتائج بالتنسيق التالي:
-        - قائمة بالوثائق ذات الصلة
-        - مقاطع نصية من كل وثيقة تحتوي على المعلومات المطلوبة
-        - درجة الصلة لكل نتيجة (من 1 إلى 100)
-        - اقتراحات لمصطلحات بحث أخرى ذات صلة
+        يرجى تقديم النتائج بالتنسيق التالي لكل وثيقة ذات صلة:
+        
+        [DOCUMENT_START]
+        العنوان: [عنوان الوثيقة]
+        المحتوى: [مقطع نصي من الوثيقة يحتوي على المعلومات المطلوبة]
+        الصلة: [درجة من 1 إلى 100]
+        المرجع: [اسم الملف أو مصدر المعلومة]
+        [DOCUMENT_END]
         
         ركز على النتائج الأكثر صلة وقدم مقاطع نصية واضحة ومفيدة.
+        إذا لم تجد معلومات ذات صلة، اذكر ذلك بوضوح.
       `;
 
       const response = await openaiService.sendMessage(searchPrompt);
@@ -73,33 +89,86 @@ class RAGSearchService {
     } catch (error) {
       console.error('RAG search error:', error);
       
-      // Fallback to mock results if RAG fails
-      return this.getMockSearchResults(query, limit);
+      // Return empty results if RAG fails
+      return {
+        results: [],
+        totalCount: 0,
+        searchTime: Date.now() - startTime,
+        suggestions: []
+      };
     }
   }
 
   private parseSearchResponse(aiResponse: string, originalQuery: string): RAGSearchResult[] {
-    // This is a simplified parser - in a real implementation, you'd want more sophisticated parsing
     const results: RAGSearchResult[] = [];
     
-    // For now, generate mock results based on the AI response
-    // In a real implementation, the AI would return structured data
-    const mockResults = [
-      {
-        id: 'rag-1',
-        title: 'نتيجة من الوثائق المرفوعة',
-        content: aiResponse.substring(0, 300) + '...',
-        relevanceScore: 95,
-        fileId: 'uploaded-file-1',
-        fileName: 'document.pdf',
-        fileType: 'pdf',
-        uploadDate: new Date().toISOString(),
-        excerpt: aiResponse.substring(0, 150) + '...',
-        citations: ['مستند مرفوع - صفحة 1', 'مستند مرفوع - صفحة 3']
+    try {
+      // Parse the structured response from AI
+      const documentBlocks = aiResponse.split('[DOCUMENT_START]').slice(1);
+      
+      documentBlocks.forEach((block, index) => {
+        const endIndex = block.indexOf('[DOCUMENT_END]');
+        if (endIndex === -1) return;
+        
+        const content = block.substring(0, endIndex).trim();
+        const lines = content.split('\n').filter(line => line.trim());
+        
+        let title = `نتيجة ${index + 1}`;
+        let documentContent = '';
+        let relevanceScore = 50;
+        let reference = 'مستند مرفوع';
+        
+        lines.forEach(line => {
+          if (line.includes('العنوان:')) {
+            title = line.replace('العنوان:', '').trim();
+          } else if (line.includes('المحتوى:')) {
+            documentContent = line.replace('المحتوى:', '').trim();
+          } else if (line.includes('الصلة:')) {
+            const scoreMatch = line.match(/\d+/);
+            if (scoreMatch) {
+              relevanceScore = parseInt(scoreMatch[0]);
+            }
+          } else if (line.includes('المرجع:')) {
+            reference = line.replace('المرجع:', '').trim();
+          }
+        });
+        
+        if (documentContent) {
+          results.push({
+            id: `rag-${Date.now()}-${index}`,
+            title,
+            content: documentContent,
+            relevanceScore,
+            fileId: `file-${index}`,
+            fileName: reference,
+            fileType: 'pdf',
+            uploadDate: new Date().toISOString(),
+            excerpt: documentContent.substring(0, 150) + '...',
+            citations: [reference]
+          });
+        }
+      });
+      
+      // If no structured results found, create a general result
+      if (results.length === 0 && aiResponse.trim()) {
+        results.push({
+          id: `rag-general-${Date.now()}`,
+          title: `نتائج البحث عن "${originalQuery}"`,
+          content: aiResponse.substring(0, 500),
+          relevanceScore: 75,
+          fileId: 'general-search',
+          fileName: 'نتائج عامة',
+          fileType: 'text',
+          uploadDate: new Date().toISOString(),
+          excerpt: aiResponse.substring(0, 150) + '...',
+          citations: ['الوثائق المرفوعة']
+        });
       }
-    ];
+    } catch (error) {
+      console.error('Error parsing RAG response:', error);
+    }
     
-    return mockResults;
+    return results;
   }
 
   private generateSearchSuggestions(query: string): string[] {
@@ -108,34 +177,11 @@ class RAGSearchService {
       `سياسة ${query}`,
       `إجراءات ${query}`,
       `تقرير ${query}`,
-      `دليل ${query}`
+      `دليل ${query}`,
+      `معايير ${query}`
     ];
     
     return suggestions.slice(0, 3);
-  }
-
-  private getMockSearchResults(query: string, limit: number): SearchResponse {
-    const mockResults: RAGSearchResult[] = [
-      {
-        id: 'mock-1',
-        title: `نتائج البحث عن "${query}"`,
-        content: `تم العثور على معلومات ذات صلة بـ "${query}" في الوثائق المرفوعة. هذه نتيجة تجريبية توضح كيفية عمل نظام البحث المدعوم بالذكاء الاصطناعي.`,
-        relevanceScore: 85,
-        fileId: 'mock-file-1',
-        fileName: 'mock-document.pdf',
-        fileType: 'pdf',
-        uploadDate: new Date().toISOString(),
-        excerpt: `معلومات مهمة حول ${query} موجودة في هذا المستند...`,
-        citations: ['المستند المرفوع - صفحة 2']
-      }
-    ];
-    
-    return {
-      results: mockResults.slice(0, limit),
-      totalCount: mockResults.length,
-      searchTime: 250,
-      suggestions: this.generateSearchSuggestions(query)
-    };
   }
 
   async uploadAndIndexDocument(file: File): Promise<{ success: boolean; fileId?: string; error?: string }> {

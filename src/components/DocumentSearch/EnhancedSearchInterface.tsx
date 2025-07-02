@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Search, Filter, Grid, List, Upload, Download, Eye, Share2, FileText, Calendar, User, Tag, ChevronDown, X, SortAsc, SortDesc, ArrowLeft, Mic, MicOff, Bot, Sparkles, Zap } from 'lucide-react';
+import { Search, Filter, Grid, List, Upload, Download, Eye, Share2, FileText, Calendar, User, Tag, ChevronDown, X, SortAsc, SortDesc, ArrowLeft, Mic, MicOff, Bot, Sparkles, Zap, BarChart3 } from 'lucide-react';
 import { useDebounce } from '../../hooks/useDebounce';
 import DocumentUploadModal from './DocumentUploadModal';
 import DocumentViewer from './DocumentViewer';
 import SearchFilters from './SearchFilters';
 import SearchResults from './SearchResults';
-import { searchDocuments, getDocuments, DocumentSearchResult, SearchFilters as ISearchFilters } from '../../services/searchService';
+import { searchDocuments, getDocuments, getDocumentStats, DocumentSearchResult, SearchFilters as ISearchFilters } from '../../services/searchService';
 import { ragSearchService, RAGSearchResult } from '../../services/ragSearchService';
 
 interface EnhancedSearchInterfaceProps {
@@ -35,6 +35,7 @@ const EnhancedSearchInterface: React.FC<EnhancedSearchInterfaceProps> = ({ onNav
   const [ragInitialized, setRagInitialized] = useState(false);
   const [uploadedFilesCount, setUploadedFilesCount] = useState(0);
   const [searchSuggestions, setSearchSuggestions] = useState<string[]>([]);
+  const [documentStats, setDocumentStats] = useState<any>(null);
   
   const [filters, setFilters] = useState<ISearchFilters>({
     dateRange: { start: '', end: '' },
@@ -51,6 +52,7 @@ const EnhancedSearchInterface: React.FC<EnhancedSearchInterfaceProps> = ({ onNav
     loadSearchHistory();
     initializeSpeechRecognition();
     initializeRAG();
+    loadDocumentStats();
   }, []);
 
   useEffect(() => {
@@ -67,6 +69,15 @@ const EnhancedSearchInterface: React.FC<EnhancedSearchInterfaceProps> = ({ onNav
       setRagResults([]);
     }
   }, [debouncedSearchQuery, filters, sortBy, sortOrder]);
+
+  const loadDocumentStats = async () => {
+    try {
+      const stats = await getDocumentStats();
+      setDocumentStats(stats);
+    } catch (error) {
+      console.error('Error loading document stats:', error);
+    }
+  };
 
   const initializeRAG = async () => {
     try {
@@ -199,6 +210,7 @@ const EnhancedSearchInterface: React.FC<EnhancedSearchInterfaceProps> = ({ onNav
 
   const handleUploadSuccess = async () => {
     await loadDocuments();
+    await loadDocumentStats();
     
     // Refresh RAG file count
     if (ragInitialized) {
@@ -311,9 +323,15 @@ const EnhancedSearchInterface: React.FC<EnhancedSearchInterfaceProps> = ({ onNav
                     )}
                   </h1>
                   <p className="text-sm text-gray-600">
-                    البحث التقليدي والذكي المدعوم بـ RAG
-                    {uploadedFilesCount > 0 && (
-                      <span className="text-saudi-green"> • {uploadedFilesCount} ملف مرفوع</span>
+                    {documentStats ? (
+                      <>
+                        {documentStats.totalDocuments} مستند مفهرس
+                        {documentStats.ragEnabled > 0 && (
+                          <span className="text-saudi-green"> • {documentStats.ragEnabled} مع RAG</span>
+                        )}
+                      </>
+                    ) : (
+                      'البحث التقليدي والذكي المدعوم بـ RAG'
                     )}
                   </p>
                 </div>
@@ -322,15 +340,18 @@ const EnhancedSearchInterface: React.FC<EnhancedSearchInterfaceProps> = ({ onNav
 
             {/* Actions */}
             <div className="flex items-center gap-4">
-              <div className="text-sm text-gray-600">
-                {activeResults.length} نتيجة
-              </div>
+              {documentStats && (
+                <div className="flex items-center gap-2 text-sm text-gray-600">
+                  <BarChart3 className="h-4 w-4" />
+                  <span>{activeResults.length} نتيجة</span>
+                </div>
+              )}
               <button
                 onClick={() => setShowUploadModal(true)}
                 className="bg-gradient-to-r from-saudi-green to-saudi-green-light text-white px-4 py-2 rounded-lg hover:from-saudi-green-dark hover:to-saudi-green transition-all shadow-lg flex items-center gap-2"
               >
                 <Upload className="h-4 w-4" />
-                رفع للـ RAG
+                رفع مستندات
               </button>
             </div>
           </div>
@@ -348,9 +369,9 @@ const EnhancedSearchInterface: React.FC<EnhancedSearchInterfaceProps> = ({ onNav
                       onChange={(e) => setSearchQuery(e.target.value)}
                       onFocus={() => setShowSearchHistory(true)}
                       placeholder={
-                        ragInitialized && uploadedFilesCount > 0
-                          ? "ابحث في المستندات التقليدية والمرفوعة بالذكاء الاصطناعي..."
-                          : "ابحث في المستندات... (ارفع ملفات لتفعيل البحث الذكي)"
+                        documentStats?.totalDocuments > 0
+                          ? `ابحث في ${documentStats.totalDocuments} مستند مفهرس...`
+                          : "ابحث في المستندات... (ارفع ملفات أولاً)"
                       }
                       className="w-full pr-12 pl-4 py-4 border-0 focus:ring-0 focus:outline-none text-lg font-cairo"
                       dir="rtl"
@@ -435,47 +456,63 @@ const EnhancedSearchInterface: React.FC<EnhancedSearchInterfaceProps> = ({ onNav
 
             {/* Quick Search Terms and Suggestions */}
             <div className="mt-4 space-y-3">
-              <div>
-                <p className="text-gray-600 text-sm mb-2">عمليات بحث شائعة:</p>
-                <div className="flex flex-wrap gap-2">
-                  {quickSearchTerms.map((term, index) => (
-                    <button
-                      key={index}
-                      onClick={() => {
-                        setSearchQuery(term);
-                        performSearch();
-                      }}
-                      className="bg-gray-100 hover:bg-saudi-green hover:text-white text-gray-700 px-3 py-1 rounded-full text-sm transition-all font-cairo"
-                    >
-                      {term}
-                    </button>
-                  ))}
+              {documentStats?.totalDocuments === 0 ? (
+                <div className="text-center py-8 bg-blue-50 rounded-lg border border-blue-200">
+                  <Upload className="h-12 w-12 text-blue-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-blue-900 mb-2">لا توجد مستندات مفهرسة</h3>
+                  <p className="text-blue-700 mb-4">ابدأ برفع بعض المستندات لتتمكن من البحث فيها</p>
+                  <button
+                    onClick={() => setShowUploadModal(true)}
+                    className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    رفع مستندات
+                  </button>
                 </div>
-              </div>
-
-              {/* AI Suggestions */}
-              {searchSuggestions.length > 0 && (
-                <div>
-                  <p className="text-gray-600 text-sm mb-2 flex items-center gap-1">
-                    <Sparkles className="h-4 w-4 text-saudi-green" />
-                    اقتراحات الذكاء الاصطناعي:
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    {searchSuggestions.map((suggestion, index) => (
-                      <button
-                        key={index}
-                        onClick={() => {
-                          setSearchQuery(suggestion);
-                          performSearch();
-                        }}
-                        className="bg-green-50 hover:bg-saudi-green hover:text-white text-saudi-green px-3 py-1 rounded-full text-sm transition-all font-cairo border border-green-200"
-                      >
-                        <Zap className="h-3 w-3 inline mr-1" />
-                        {suggestion}
-                      </button>
-                    ))}
+              ) : (
+                <>
+                  <div>
+                    <p className="text-gray-600 text-sm mb-2">عمليات بحث شائعة:</p>
+                    <div className="flex flex-wrap gap-2">
+                      {quickSearchTerms.map((term, index) => (
+                        <button
+                          key={index}
+                          onClick={() => {
+                            setSearchQuery(term);
+                            performSearch();
+                          }}
+                          className="bg-gray-100 hover:bg-saudi-green hover:text-white text-gray-700 px-3 py-1 rounded-full text-sm transition-all font-cairo"
+                        >
+                          {term}
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                </div>
+
+                  {/* AI Suggestions */}
+                  {searchSuggestions.length > 0 && (
+                    <div>
+                      <p className="text-gray-600 text-sm mb-2 flex items-center gap-1">
+                        <Sparkles className="h-4 w-4 text-saudi-green" />
+                        اقتراحات الذكاء الاصطناعي:
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {searchSuggestions.map((suggestion, index) => (
+                          <button
+                            key={index}
+                            onClick={() => {
+                              setSearchQuery(suggestion);
+                              performSearch();
+                            }}
+                            className="bg-green-50 hover:bg-saudi-green hover:text-white text-saudi-green px-3 py-1 rounded-full text-sm transition-all font-cairo border border-green-200"
+                          >
+                            <Zap className="h-3 w-3 inline mr-1" />
+                            {suggestion}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
             </div>
           </div>
@@ -498,145 +535,149 @@ const EnhancedSearchInterface: React.FC<EnhancedSearchInterfaceProps> = ({ onNav
 
           {/* Results Area */}
           <div className="flex-1 min-w-0">
-            {/* Results Header */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
-              {/* Search Type Tabs */}
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex space-x-1">
-                  <button
-                    onClick={() => setActiveTab('combined')}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 ${
-                      activeTab === 'combined'
-                        ? 'bg-gradient-to-r from-saudi-green to-saudi-green-light text-white'
-                        : 'text-gray-600 hover:text-saudi-green hover:bg-gray-50'
-                    }`}
-                  >
-                    <Sparkles className="h-4 w-4" />
-                    البحث الشامل ({getCombinedResults().length})
-                  </button>
-                  <button
-                    onClick={() => setActiveTab('rag')}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 ${
-                      activeTab === 'rag'
-                        ? 'bg-gradient-to-r from-saudi-green to-saudi-green-light text-white'
-                        : 'text-gray-600 hover:text-saudi-green hover:bg-gray-50'
-                    }`}
-                    disabled={!ragInitialized || uploadedFilesCount === 0}
-                  >
-                    <Bot className="h-4 w-4" />
-                    البحث الذكي ({ragResults.length})
-                    {isRAGLoading && <div className="w-3 h-3 border border-white border-t-transparent rounded-full animate-spin" />}
-                  </button>
-                  <button
-                    onClick={() => setActiveTab('traditional')}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                      activeTab === 'traditional'
-                        ? 'bg-saudi-green text-white'
-                        : 'text-gray-600 hover:text-saudi-green hover:bg-gray-50'
-                    }`}
-                  >
-                    البحث التقليدي ({searchResults.length})
-                  </button>
-                </div>
+            {documentStats?.totalDocuments > 0 && (
+              <>
+                {/* Results Header */}
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
+                  {/* Search Type Tabs */}
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex space-x-1">
+                      <button
+                        onClick={() => setActiveTab('combined')}
+                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 ${
+                          activeTab === 'combined'
+                            ? 'bg-gradient-to-r from-saudi-green to-saudi-green-light text-white'
+                            : 'text-gray-600 hover:text-saudi-green hover:bg-gray-50'
+                        }`}
+                      >
+                        <Sparkles className="h-4 w-4" />
+                        البحث الشامل ({getCombinedResults().length})
+                      </button>
+                      <button
+                        onClick={() => setActiveTab('rag')}
+                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 ${
+                          activeTab === 'rag'
+                            ? 'bg-gradient-to-r from-saudi-green to-saudi-green-light text-white'
+                            : 'text-gray-600 hover:text-saudi-green hover:bg-gray-50'
+                        }`}
+                        disabled={!ragInitialized || uploadedFilesCount === 0}
+                      >
+                        <Bot className="h-4 w-4" />
+                        البحث الذكي ({ragResults.length})
+                        {isRAGLoading && <div className="w-3 h-3 border border-white border-t-transparent rounded-full animate-spin" />}
+                      </button>
+                      <button
+                        onClick={() => setActiveTab('traditional')}
+                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                          activeTab === 'traditional'
+                            ? 'bg-saudi-green text-white'
+                            : 'text-gray-600 hover:text-saudi-green hover:bg-gray-50'
+                        }`}
+                      >
+                        البحث التقليدي ({searchResults.length})
+                      </button>
+                    </div>
 
-                <div className="flex items-center gap-4">
-                  {/* Sort Options */}
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-gray-600">ترتيب:</span>
-                    <select
-                      value={`${sortBy}-${sortOrder}`}
-                      onChange={(e) => {
-                        const [sort, order] = e.target.value.split('-');
-                        setSortBy(sort as any);
-                        setSortOrder(order as any);
-                      }}
-                      className="text-sm border border-gray-300 rounded px-2 py-1"
-                    >
-                      <option value="relevance-desc">الصلة</option>
-                      <option value="date-desc">الأحدث</option>
-                      <option value="date-asc">الأقدم</option>
-                      <option value="title-asc">العنوان (أ-ي)</option>
-                      <option value="title-desc">العنوان (ي-أ)</option>
-                      <option value="size-desc">الحجم (الأكبر)</option>
-                      <option value="size-asc">الحجم (الأصغر)</option>
-                    </select>
+                    <div className="flex items-center gap-4">
+                      {/* Sort Options */}
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-gray-600">ترتيب:</span>
+                        <select
+                          value={`${sortBy}-${sortOrder}`}
+                          onChange={(e) => {
+                            const [sort, order] = e.target.value.split('-');
+                            setSortBy(sort as any);
+                            setSortOrder(order as any);
+                          }}
+                          className="text-sm border border-gray-300 rounded px-2 py-1"
+                        >
+                          <option value="relevance-desc">الصلة</option>
+                          <option value="date-desc">الأحدث</option>
+                          <option value="date-asc">الأقدم</option>
+                          <option value="title-asc">العنوان (أ-ي)</option>
+                          <option value="title-desc">العنوان (ي-أ)</option>
+                          <option value="size-desc">الحجم (الأكبر)</option>
+                          <option value="size-asc">الحجم (الأصغر)</option>
+                        </select>
+                      </div>
+
+                      {/* View Mode Toggle */}
+                      <div className="flex items-center border border-gray-300 rounded-lg">
+                        <button
+                          onClick={() => setViewMode('list')}
+                          className={`p-2 ${viewMode === 'list' ? 'bg-saudi-green text-white' : 'text-gray-600'}`}
+                        >
+                          <List className="h-4 w-4" />
+                        </button>
+                        <button
+                          onClick={() => setViewMode('grid')}
+                          className={`p-2 ${viewMode === 'grid' ? 'bg-saudi-green text-white' : 'text-gray-600'}`}
+                        >
+                          <Grid className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </div>
                   </div>
 
-                  {/* View Mode Toggle */}
-                  <div className="flex items-center border border-gray-300 rounded-lg">
-                    <button
-                      onClick={() => setViewMode('list')}
-                      className={`p-2 ${viewMode === 'list' ? 'bg-saudi-green text-white' : 'text-gray-600'}`}
-                    >
-                      <List className="h-4 w-4" />
-                    </button>
-                    <button
-                      onClick={() => setViewMode('grid')}
-                      className={`p-2 ${viewMode === 'grid' ? 'bg-saudi-green text-white' : 'text-gray-600'}`}
-                    >
-                      <Grid className="h-4 w-4" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Results Count and Search Info */}
-              <div className="flex items-center justify-between text-sm text-gray-600">
-                <div className="flex items-center gap-4">
-                  <div>
-                    {isLoading ? (
-                      'جاري البحث...'
-                    ) : (
-                      <>
-                        تم العثور على <span className="font-semibold text-saudi-green">{activeResults.length}</span> نتيجة
-                        {(searchQuery || initialSearchQuery) && (
-                          <span> لـ "<span className="font-medium">{searchQuery || initialSearchQuery}</span>"</span>
+                  {/* Results Count and Search Info */}
+                  <div className="flex items-center justify-between text-sm text-gray-600">
+                    <div className="flex items-center gap-4">
+                      <div>
+                        {isLoading ? (
+                          'جاري البحث...'
+                        ) : (
+                          <>
+                            تم العثور على <span className="font-semibold text-saudi-green">{activeResults.length}</span> نتيجة
+                            {(searchQuery || initialSearchQuery) && (
+                              <span> لـ "<span className="font-medium">{searchQuery || initialSearchQuery}</span>"</span>
+                            )}
+                          </>
                         )}
-                      </>
+                      </div>
+                      
+                      {activeTab === 'combined' && ragResults.length > 0 && (
+                        <div className="flex items-center gap-1 text-green-600">
+                          <Sparkles className="h-4 w-4" />
+                          <span>{ragResults.length} نتيجة ذكية</span>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {(searchQuery || initialSearchQuery) && (
+                      <div className="text-xs text-gray-500">
+                        وقت البحث: 0.{Math.floor(Math.random() * 9) + 1} ثانية
+                      </div>
                     )}
                   </div>
+
+                  {/* RAG Status */}
+                  {!ragInitialized && (
+                    <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                      <p className="text-yellow-700 text-sm">
+                        ⚠️ البحث الذكي غير متاح. تحقق من إعدادات OpenAI API.
+                      </p>
+                    </div>
+                  )}
                   
-                  {activeTab === 'combined' && ragResults.length > 0 && (
-                    <div className="flex items-center gap-1 text-green-600">
-                      <Sparkles className="h-4 w-4" />
-                      <span>{ragResults.length} نتيجة ذكية</span>
+                  {ragInitialized && uploadedFilesCount === 0 && (
+                    <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                      <p className="text-blue-700 text-sm">
+                        💡 ارفع مستندات لتفعيل البحث الذكي المدعوم بالذكاء الاصطناعي.
+                      </p>
                     </div>
                   )}
                 </div>
-                
-                {(searchQuery || initialSearchQuery) && (
-                  <div className="text-xs text-gray-500">
-                    وقت البحث: 0.{Math.floor(Math.random() * 9) + 1} ثانية
-                  </div>
-                )}
-              </div>
 
-              {/* RAG Status */}
-              {!ragInitialized && (
-                <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                  <p className="text-yellow-700 text-sm">
-                    ⚠️ البحث الذكي غير متاح. تحقق من إعدادات OpenAI API.
-                  </p>
-                </div>
-              )}
-              
-              {ragInitialized && uploadedFilesCount === 0 && (
-                <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                  <p className="text-blue-700 text-sm">
-                    💡 ارفع مستندات لتفعيل البحث الذكي المدعوم بالذكاء الاصطناعي.
-                  </p>
-                </div>
-              )}
-            </div>
-
-            {/* Search Results */}
-            <SearchResults
-              results={activeResults}
-              isLoading={isLoading}
-              viewMode={viewMode}
-              searchQuery={searchQuery || initialSearchQuery}
-              onDocumentClick={handleDocumentClick}
-            />
+                {/* Search Results */}
+                <SearchResults
+                  results={activeResults}
+                  isLoading={isLoading}
+                  viewMode={viewMode}
+                  searchQuery={searchQuery || initialSearchQuery}
+                  onDocumentClick={handleDocumentClick}
+                />
+              </>
+            )}
           </div>
         </div>
       </div>
