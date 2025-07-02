@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Search, Filter, Grid, List, Upload, Download, Eye, Share2, FileText, Calendar, User, Tag, ChevronDown, X, SortAsc, SortDesc, ArrowLeft, Mic, MicOff, Bot, Sparkles, Zap, BarChart3, Brain, Target, MessageCircle } from 'lucide-react';
+import { Search, Filter, Grid, List, Upload, Download, Eye, Share2, FileText, Calendar, User, Tag, ChevronDown, X, SortAsc, SortDesc, ArrowLeft, Mic, MicOff, Bot, Sparkles, Zap, BarChart3, Brain, Target, MessageCircle, Database } from 'lucide-react';
 import { useDebounce } from '../../hooks/useDebounce';
 import DocumentUploadModal from './DocumentUploadModal';
 import DocumentViewer from './DocumentViewer';
@@ -31,7 +31,7 @@ const EnhancedSearchInterface: React.FC<EnhancedSearchInterfaceProps> = ({ onNav
   const [documentStats, setDocumentStats] = useState<any>(null);
   const [searchTime, setSearchTime] = useState<number>(0);
   const [openaiResults, setOpenaiResults] = useState<number>(0);
-  const [localResults, setLocalResults] = useState<number>(0);
+  const [elasticsearchResults, setElasticsearchResults] = useState<number>(0);
   const [showQuestionMode, setShowQuestionMode] = useState(false);
   const [questionAnswer, setQuestionAnswer] = useState<{ answer: string; citations: string[] } | null>(null);
   
@@ -154,7 +154,7 @@ const EnhancedSearchInterface: React.FC<EnhancedSearchInterfaceProps> = ({ onNav
       setSearchResults(response.results);
       setSearchTime(response.searchTime);
       setOpenaiResults(response.openaiResults);
-      setLocalResults(response.localResults);
+      setElasticsearchResults(response.elasticsearchResults);
 
       if (query) {
         saveSearchHistory(query);
@@ -229,8 +229,8 @@ const EnhancedSearchInterface: React.FC<EnhancedSearchInterfaceProps> = ({ onNav
     return searchResults.filter(r => r.isRAGResult).length;
   };
 
-  const getLocalResultsCount = () => {
-    return searchResults.filter(r => !r.isRAGResult).length;
+  const getElasticsearchResultsCount = () => {
+    return searchResults.filter(r => r.source === 'elasticsearch').length;
   };
 
   return (
@@ -258,6 +258,10 @@ const EnhancedSearchInterface: React.FC<EnhancedSearchInterfaceProps> = ({ onNav
                   <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2">
                     البحث الذكي المتقدم
                     <span className="bg-gradient-to-r from-blue-500 to-purple-500 text-white px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1">
+                      <Database className="h-3 w-3" />
+                      ElasticSearch
+                    </span>
+                    <span className="bg-gradient-to-r from-green-500 to-blue-500 text-white px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1">
                       <Sparkles className="h-3 w-3" />
                       OpenAI RAG
                     </span>
@@ -265,10 +269,10 @@ const EnhancedSearchInterface: React.FC<EnhancedSearchInterfaceProps> = ({ onNav
                   <p className="text-sm text-gray-600">
                     {documentStats ? (
                       <>
-                        {documentStats.totalDocuments} مستند • {documentStats.ragDocuments} في النظام الذكي
+                        {documentStats.totalDocuments} مستند • {documentStats.elasticsearchDocuments} في ElasticSearch • {documentStats.ragDocuments} في OpenAI
                       </>
                     ) : (
-                      'البحث الدلالي المدعوم بـ OpenAI Assistant'
+                      'البحث المتقدم مع ElasticSearch و OpenAI Assistant'
                     )}
                   </p>
                 </div>
@@ -281,8 +285,11 @@ const EnhancedSearchInterface: React.FC<EnhancedSearchInterfaceProps> = ({ onNav
                 <div className="flex items-center gap-2 text-sm text-gray-600">
                   <Target className="h-4 w-4" />
                   <span>{searchResults.length} نتيجة</span>
+                  {searchQuery && getElasticsearchResultsCount() > 0 && (
+                    <span className="text-blue-600">• {getElasticsearchResultsCount()} من ElasticSearch</span>
+                  )}
                   {searchQuery && getRAGResultsCount() > 0 && (
-                    <span className="text-green-600">• {getRAGResultsCount()} ذكية</span>
+                    <span className="text-green-600">• {getRAGResultsCount()} من OpenAI</span>
                   )}
                 </div>
               )}
@@ -312,7 +319,7 @@ const EnhancedSearchInterface: React.FC<EnhancedSearchInterfaceProps> = ({ onNav
                         showQuestionMode
                           ? "اطرح سؤالاً عن المستندات..."
                           : documentStats?.totalDocuments > 0
-                            ? `ابحث في ${documentStats.totalDocuments} مستند بالذكاء الاصطناعي...`
+                            ? `ابحث في ${documentStats.totalDocuments} مستند بـ ElasticSearch + OpenAI...`
                             : "ابحث في المستندات... (ارفع ملفات أولاً)"
                       }
                       className="w-full pr-12 pl-4 py-4 border-0 focus:ring-0 focus:outline-none text-lg font-cairo"
@@ -336,10 +343,13 @@ const EnhancedSearchInterface: React.FC<EnhancedSearchInterfaceProps> = ({ onNav
                     </button>
                   </div>
                   
-                  {/* AI Status Indicator */}
-                  <div className="px-3 py-2 bg-gradient-to-r from-blue-50 to-purple-50 text-blue-700 text-sm flex items-center gap-1">
-                    <Brain className="h-4 w-4" />
-                    <span>{showQuestionMode ? 'سؤال ذكي' : 'بحث ذكي'}</span>
+                  {/* Search Engine Indicators */}
+                  <div className="px-3 py-2 bg-gradient-to-r from-blue-50 to-green-50 text-blue-700 text-sm flex items-center gap-2">
+                    <Database className="h-4 w-4 text-blue-600" />
+                    <span className="text-blue-600">ElasticSearch</span>
+                    <span className="text-gray-400">+</span>
+                    <Bot className="h-4 w-4 text-green-600" />
+                    <span className="text-green-600">{showQuestionMode ? 'سؤال ذكي' : 'OpenAI'}</span>
                   </div>
                   
                   {/* Voice Search Button */}
@@ -387,8 +397,9 @@ const EnhancedSearchInterface: React.FC<EnhancedSearchInterfaceProps> = ({ onNav
                       </>
                     ) : (
                       <>
+                        <Database className="h-4 w-4" />
                         <Brain className="h-5 w-5" />
-                        بحث ذكي
+                        بحث متقدم
                       </>
                     )}
                   </button>
@@ -426,8 +437,9 @@ const EnhancedSearchInterface: React.FC<EnhancedSearchInterfaceProps> = ({ onNav
                 </>
               ) : (
                 <>
-                  <Search className="h-4 w-4 text-green-500" />
-                  <span>وضع البحث: ابحث في المستندات واعثر على النتائج ذات الصلة</span>
+                  <Database className="h-4 w-4 text-blue-500" />
+                  <Brain className="h-4 w-4 text-green-500" />
+                  <span>وضع البحث: ابحث في المستندات باستخدام ElasticSearch + OpenAI</span>
                 </>
               )}
             </div>
@@ -438,7 +450,7 @@ const EnhancedSearchInterface: React.FC<EnhancedSearchInterfaceProps> = ({ onNav
                 <div className="text-center py-8 bg-blue-50 rounded-lg border border-blue-200">
                   <Upload className="h-12 w-12 text-blue-400 mx-auto mb-4" />
                   <h3 className="text-lg font-semibold text-blue-900 mb-2">لا توجد مستندات مفهرسة</h3>
-                  <p className="text-blue-700 mb-4">ابدأ برفع بعض المستندات لتتمكن من البحث الذكي فيها</p>
+                  <p className="text-blue-700 mb-4">ابدأ برفع بعض المستندات لتتمكن من البحث المتقدم فيها</p>
                   <button
                     onClick={() => setShowUploadModal(true)}
                     className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
@@ -542,7 +554,7 @@ const EnhancedSearchInterface: React.FC<EnhancedSearchInterfaceProps> = ({ onNav
                           {isLoading ? (
                             <div className="flex items-center gap-2">
                               <div className="w-5 h-5 border-2 border-saudi-green border-t-transparent rounded-full animate-spin" />
-                              <span>جاري البحث الذكي...</span>
+                              <span>جاري البحث المتقدم...</span>
                             </div>
                           ) : (
                             <>
@@ -556,16 +568,16 @@ const EnhancedSearchInterface: React.FC<EnhancedSearchInterfaceProps> = ({ onNav
                         
                         {searchQuery && searchResults.length > 0 && (
                           <div className="flex items-center gap-4 text-sm">
+                            {getElasticsearchResultsCount() > 0 && (
+                              <div className="flex items-center gap-1 text-blue-600">
+                                <Database className="h-4 w-4" />
+                                <span>{getElasticsearchResultsCount()} من ElasticSearch</span>
+                              </div>
+                            )}
                             {getRAGResultsCount() > 0 && (
                               <div className="flex items-center gap-1 text-green-600">
                                 <Brain className="h-4 w-4" />
-                                <span>{getRAGResultsCount()} نتيجة ذكية</span>
-                              </div>
-                            )}
-                            {getLocalResultsCount() > 0 && (
-                              <div className="flex items-center gap-1 text-blue-600">
-                                <Search className="h-4 w-4" />
-                                <span>{getLocalResultsCount()} نتيجة محلية</span>
+                                <span>{getRAGResultsCount()} من OpenAI</span>
                               </div>
                             )}
                           </div>
@@ -585,7 +597,7 @@ const EnhancedSearchInterface: React.FC<EnhancedSearchInterfaceProps> = ({ onNav
                             }}
                             className="text-sm border border-gray-300 rounded px-2 py-1"
                           >
-                            <option value="relevance-desc">الصلة الذكية</option>
+                            <option value="relevance-desc">الصلة المتقدمة</option>
                             <option value="date-desc">الأحدث</option>
                             <option value="date-asc">الأقدم</option>
                             <option value="title-asc">العنوان (أ-ي)</option>
@@ -618,16 +630,17 @@ const EnhancedSearchInterface: React.FC<EnhancedSearchInterfaceProps> = ({ onNav
                       <div className="flex items-center justify-between text-sm text-gray-500 pt-4 border-t border-gray-100">
                         <div className="flex items-center gap-4">
                           <span>وقت البحث: {(searchTime / 1000).toFixed(2)} ثانية</span>
+                          {elasticsearchResults > 0 && (
+                            <span className="text-blue-600">• {elasticsearchResults} نتيجة من ElasticSearch</span>
+                          )}
                           {openaiResults > 0 && (
                             <span className="text-green-600">• {openaiResults} نتيجة من OpenAI</span>
                           )}
-                          {localResults > 0 && (
-                            <span className="text-blue-600">• {localResults} نتيجة محلية</span>
-                          )}
                         </div>
                         <div className="flex items-center gap-1">
-                          <Sparkles className="h-4 w-4 text-saudi-green" />
-                          <span>مدعوم بـ OpenAI Assistant</span>
+                          <Database className="h-4 w-4 text-blue-600" />
+                          <Sparkles className="h-4 w-4 text-green-600" />
+                          <span>مدعوم بـ ElasticSearch + OpenAI</span>
                         </div>
                       </div>
                     )}

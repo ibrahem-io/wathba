@@ -1,6 +1,7 @@
-// Enhanced semantic search service that combines OpenAI Assistant search with local indexing
+// Enhanced semantic search service that combines OpenAI Assistant search with ElasticSearch
 import openaiAssistantSearchService, { AssistantSearchResult } from './openaiAssistantSearchService';
-import documentIndexingService, { IndexedDocument } from './documentIndexingService';
+import elasticsearchService from './elasticsearchService';
+import enhancedDocumentIndexingService from './enhancedDocumentIndexingService';
 
 export interface EnhancedSearchResult {
   id: string;
@@ -24,7 +25,7 @@ export interface EnhancedSearchResult {
   matchedSections: string[];
   semanticSummary?: string;
   citations?: string[];
-  source: 'openai' | 'local';
+  source: 'openai' | 'elasticsearch' | 'local';
 }
 
 export interface SearchFilters {
@@ -46,6 +47,7 @@ export interface EnhancedSearchResponse {
   totalCount: number;
   searchTime: number;
   openaiResults: number;
+  elasticsearchResults: number;
   localResults: number;
   suggestions: string[];
 }
@@ -60,17 +62,21 @@ class EnhancedSemanticSearchService {
     const startTime = Date.now();
     
     try {
-      // Perform both OpenAI Assistant search and local search in parallel
-      const [openaiResponse, localDocuments] = await Promise.all([
+      // Perform both OpenAI Assistant search and ElasticSearch in parallel
+      const [openaiResponse, elasticsearchResponse] = await Promise.all([
         this.performOpenAISearch(query),
-        this.performLocalSearch(query, filters)
+        this.performElasticSearch(query, filters)
       ]);
 
       // Combine and deduplicate results
-      const combinedResults = this.combineResults(openaiResponse.results, localDocuments, query);
+      const combinedResults = this.combineResults(
+        openaiResponse.results, 
+        elasticsearchResponse.results, 
+        query
+      );
 
-      // Apply filters
-      let filteredResults = this.applyFilters(combinedResults, filters);
+      // Apply additional filters
+      let filteredResults = this.applyAdditionalFilters(combinedResults, filters);
 
       // Apply sorting
       filteredResults = this.applySorting(filteredResults, sortBy, sortOrder);
@@ -82,24 +88,41 @@ class EnhancedSemanticSearchService {
         totalCount: filteredResults.length,
         searchTime,
         openaiResults: openaiResponse.results.length,
-        localResults: localDocuments.length,
+        elasticsearchResults: elasticsearchResponse.results.length,
+        localResults: 0, // We're not using local search anymore
         suggestions: openaiResponse.suggestions
       };
     } catch (error) {
       console.error('Error in enhanced semantic search:', error);
       
-      // Fallback to local search only
-      const localResults = await this.performLocalSearch(query, filters);
-      const searchTime = Date.now() - startTime;
-      
-      return {
-        results: localResults,
-        totalCount: localResults.length,
-        searchTime,
-        openaiResults: 0,
-        localResults: localResults.length,
-        suggestions: []
-      };
+      // Fallback to ElasticSearch only
+      try {
+        const elasticsearchResponse = await this.performElasticSearch(query, filters);
+        const searchTime = Date.now() - startTime;
+        
+        return {
+          results: elasticsearchResponse.results,
+          totalCount: elasticsearchResponse.results.length,
+          searchTime,
+          openaiResults: 0,
+          elasticsearchResults: elasticsearchResponse.results.length,
+          localResults: 0,
+          suggestions: []
+        };
+      } catch (fallbackError) {
+        console.error('ElasticSearch fallback also failed:', fallbackError);
+        
+        const searchTime = Date.now() - startTime;
+        return {
+          results: [],
+          totalCount: 0,
+          searchTime,
+          openaiResults: 0,
+          elasticsearchResults: 0,
+          localResults: 0,
+          suggestions: []
+        };
+      }
     }
   }
 
@@ -116,30 +139,41 @@ class EnhancedSemanticSearchService {
     }
   }
 
-  private async performLocalSearch(query: string, filters: SearchFilters): Promise<EnhancedSearchResult[]> {
+  private async performElasticSearch(query: string, filters: SearchFilters): Promise<{ results: EnhancedSearchResult[] }> {
     try {
-      const localResults = await documentIndexingService.searchDocuments(query, {
+      const elasticFilters = {
+        dateRange: filters.dateRange,
         fileTypes: filters.fileTypes,
+        fileSizeRange: filters.fileSizeRange,
         tags: filters.tags,
-        dateRange: filters.dateRange
-      });
+        authors: filters.authors
+      };
 
-      return localResults.map(doc => this.convertLocalToEnhanced(doc, query));
+      const response = await elasticsearchService.searchDocuments(query, elasticFilters);
+      
+      return {
+        results: response.results.map(result => ({
+          ...result,
+          source: 'elasticsearch' as const,
+          isRAGResult: false,
+          isSemanticMatch: true // ElasticSearch provides semantic-like search
+        }))
+      };
     } catch (error) {
-      console.error('Local search failed:', error);
-      return [];
+      console.error('ElasticSearch search failed:', error);
+      return { results: [] };
     }
   }
 
   private combineResults(
     openaiResults: AssistantSearchResult[], 
-    localResults: EnhancedSearchResult[], 
+    elasticsearchResults: EnhancedSearchResult[], 
     query: string
   ): EnhancedSearchResult[] {
     const combined: EnhancedSearchResult[] = [];
     const seenTitles = new Set<string>();
 
-    // Add OpenAI results first (they're typically more relevant)
+    // Add OpenAI results first (they're typically more relevant for chat-based queries)
     openaiResults.forEach(result => {
       const enhanced = this.convertOpenAIToEnhanced(result);
       if (!seenTitles.has(enhanced.title.toLowerCase())) {
@@ -148,8 +182,8 @@ class EnhancedSemanticSearchService {
       }
     });
 
-    // Add local results that don't duplicate OpenAI results
-    localResults.forEach(result => {
+    // Add ElasticSearch results that don't duplicate OpenAI results
+    elasticsearchResults.forEach(result => {
       if (!seenTitles.has(result.title.toLowerCase())) {
         combined.push(result);
         seenTitles.add(result.title.toLowerCase());
@@ -183,73 +217,11 @@ class EnhancedSemanticSearchService {
     };
   }
 
-  private convertLocalToEnhanced(doc: IndexedDocument, query: string): EnhancedSearchResult {
-    return {
-      id: doc.id,
-      title: doc.title,
-      description: doc.summary || doc.content.substring(0, 200) + '...',
-      excerpt: doc.content.substring(0, 300) + '...',
-      fileType: doc.fileType,
-      fileSize: doc.fileSize,
-      uploadDate: doc.uploadDate,
-      author: doc.author,
-      tags: doc.tags,
-      category: doc.category,
-      relevanceScore: (doc as any).relevanceScore || 50,
-      viewCount: Math.floor(Math.random() * 100) + 10,
-      content: doc.content,
-      isSemanticMatch: false,
-      isRAGResult: false,
-      matchedSections: this.extractMatchedSections(doc.content, query),
-      semanticSummary: doc.summary,
-      source: 'local'
-    };
-  }
-
-  private extractMatchedSections(content: string, query: string): string[] {
-    const sentences = content.split(/[.!?]+/).filter(s => s.trim().length > 10);
-    const queryTerms = query.toLowerCase().split(' ').filter(term => term.length > 2);
-    
-    const matchedSentences = sentences.filter(sentence => {
-      const lowerSentence = sentence.toLowerCase();
-      return queryTerms.some(term => lowerSentence.includes(term));
-    });
-
-    return matchedSentences.slice(0, 3).map(s => s.trim());
-  }
-
-  private applyFilters(results: EnhancedSearchResult[], filters: SearchFilters): EnhancedSearchResult[] {
+  private applyAdditionalFilters(results: EnhancedSearchResult[], filters: SearchFilters): EnhancedSearchResult[] {
     let filtered = results;
 
-    if (filters.fileTypes.length > 0) {
-      filtered = filtered.filter(result => filters.fileTypes.includes(result.fileType));
-    }
-
-    if (filters.tags.length > 0) {
-      filtered = filtered.filter(result => 
-        filters.tags.some(tag => result.tags.some(resultTag => resultTag.includes(tag)))
-      );
-    }
-
-    if (filters.dateRange.start) {
-      filtered = filtered.filter(result => 
-        new Date(result.uploadDate) >= new Date(filters.dateRange.start)
-      );
-    }
-
-    if (filters.dateRange.end) {
-      filtered = filtered.filter(result => 
-        new Date(result.uploadDate) <= new Date(filters.dateRange.end)
-      );
-    }
-
-    if (filters.fileSizeRange.min > 0) {
-      filtered = filtered.filter(result => result.fileSize >= filters.fileSizeRange.min * 1024 * 1024);
-    }
-
-    if (filters.fileSizeRange.max < 100) {
-      filtered = filtered.filter(result => result.fileSize <= filters.fileSizeRange.max * 1024 * 1024);
-    }
+    // Note: Most filters are already applied in ElasticSearch
+    // Here we apply any additional client-side filtering if needed
 
     if (filters.authors.length > 0) {
       filtered = filtered.filter(result => 
@@ -290,37 +262,66 @@ class EnhancedSemanticSearchService {
 
   async getDocuments(): Promise<EnhancedSearchResult[]> {
     try {
-      // Get documents from both sources
-      const [openaiStats, localDocs] = await Promise.all([
-        openaiAssistantSearchService.getDocumentStats(),
-        documentIndexingService.getAllDocuments()
-      ]);
-
-      // Convert local documents to enhanced format
-      const enhancedDocs = localDocs.map(doc => this.convertLocalToEnhanced(doc, ''));
-
-      return enhancedDocs;
+      // Get documents from ElasticSearch
+      const elasticDocs = await elasticsearchService.getAllDocuments();
+      return elasticDocs.map(doc => ({
+        ...doc,
+        source: 'elasticsearch' as const,
+        isRAGResult: false,
+        isSemanticMatch: true
+      }));
     } catch (error) {
-      console.error('Error getting documents:', error);
-      return [];
+      console.error('Error getting documents from ElasticSearch:', error);
+      
+      // Fallback to enhanced document indexing service
+      try {
+        const localDocs = await enhancedDocumentIndexingService.getAllDocuments();
+        return localDocs.map(doc => ({
+          id: doc.id,
+          title: doc.title,
+          description: doc.summary || doc.content.substring(0, 200) + '...',
+          excerpt: doc.content.substring(0, 300) + '...',
+          fileType: doc.fileType,
+          fileSize: doc.fileSize,
+          uploadDate: doc.uploadDate,
+          lastModified: doc.uploadDate,
+          author: doc.author,
+          tags: doc.tags,
+          category: doc.category,
+          relevanceScore: 100,
+          viewCount: Math.floor(Math.random() * 100) + 10,
+          content: doc.content,
+          isSemanticMatch: false,
+          isRAGResult: false,
+          matchedSections: [],
+          semanticSummary: doc.summary,
+          source: 'local' as const
+        }));
+      } catch (localError) {
+        console.error('Error getting documents from local storage:', localError);
+        return [];
+      }
     }
   }
 
   async getDocumentStats() {
     try {
-      const [openaiStats, localStats] = await Promise.all([
-        openaiAssistantSearchService.getDocumentStats(),
-        documentIndexingService.getDocumentStats()
-      ]);
+      // Get stats from ElasticSearch
+      const elasticStats = await elasticsearchService.getDocumentStats();
+      
+      // Get OpenAI stats
+      const openaiStats = await openaiAssistantSearchService.getDocumentStats();
 
       return {
-        totalDocuments: localStats.totalDocuments + openaiStats.totalDocuments,
-        localDocuments: localStats.totalDocuments,
+        totalDocuments: elasticStats.totalDocuments + openaiStats.totalDocuments,
+        localDocuments: 0, // We're not using local storage for primary search
         ragDocuments: openaiStats.totalDocuments,
-        totalSize: localStats.totalSize + openaiStats.totalSize,
-        fileTypes: localStats.fileTypes,
-        categories: localStats.categories,
-        ragEnabled: openaiStats.ragEnabled
+        elasticsearchDocuments: elasticStats.totalDocuments,
+        totalSize: elasticStats.totalSize + openaiStats.totalSize,
+        fileTypes: elasticStats.fileTypes,
+        categories: elasticStats.categories,
+        ragEnabled: openaiStats.ragEnabled,
+        elasticsearchEnabled: elasticStats.elasticsearchEnabled
       };
     } catch (error) {
       console.error('Error getting document stats:', error);
@@ -328,10 +329,12 @@ class EnhancedSemanticSearchService {
         totalDocuments: 0,
         localDocuments: 0,
         ragDocuments: 0,
+        elasticsearchDocuments: 0,
         totalSize: 0,
         fileTypes: {},
         categories: {},
-        ragEnabled: 0
+        ragEnabled: 0,
+        elasticsearchEnabled: false
       };
     }
   }
