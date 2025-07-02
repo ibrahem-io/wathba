@@ -29,8 +29,14 @@ class OpenAIService {
   private baseUrl = 'https://api.openai.com/v1';
 
   constructor() {
+    const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
+    
+    if (!apiKey) {
+      throw new Error('OpenAI API key not configured. Please add VITE_OPENAI_API_KEY to your .env file.');
+    }
+    
     this.config = {
-      apiKey: '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'
+      apiKey: apiKey
     };
   }
 
