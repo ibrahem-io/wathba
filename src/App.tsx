@@ -8,7 +8,7 @@ import DigitalLibrary from './components/DigitalLibrary';
 import NewsSection from './components/NewsSection';
 import PlatformSections from './components/PlatformSections';
 import RAGDemo from './pages/RAGDemo';
-import SearchInterface from './components/DocumentSearch/SearchInterface';
+import EnhancedSearchInterface from './components/DocumentSearch/EnhancedSearchInterface';
 
 function App() {
   const [currentPage, setCurrentPage] = useState<'home' | 'rag' | 'search'>('home');
@@ -44,7 +44,7 @@ function App() {
     return (
       <AuthProvider>
         <LanguageProvider>
-          <SearchInterface 
+          <EnhancedSearchInterface 
             onNavigateBack={navigateToHome}
             initialSearchQuery={searchQuery}
           />
@@ -85,7 +85,7 @@ function App() {
                     🔍 مكتبة البحث المتقدمة
                   </h2>
                   <p className="text-blue-100 mb-6 max-w-2xl mx-auto">
-                    ابحث في آلاف المستندات والتقارير والسياسات بتقنية البحث المتقدمة. 
+                    ابحث في آلاف المستندات والتقارير والسياسات بتقنية البحث المتقدمة والذكاء الاصطناعي. 
                     اعثر على ما تحتاجه بسرعة ودقة مع نتائج مفصلة ومراجع موثقة.
                   </p>
                   <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
@@ -97,17 +97,24 @@ function App() {
                       استكشف المكتبة
                     </button>
                     <div className="text-blue-100 text-sm">
-                      مدعوم بتقنية البحث المتقدمة والذكاء الاصطناعي
+                      مدعوم بتقنية البحث المتقدمة والذكاء الاصطناعي RAG
                     </div>
                   </div>
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-6 text-gray-700">
                   <div className="bg-gray-50 rounded-lg p-4">
+                    <div className="text-2xl mb-2">🤖</div>
+                    <h3 className="font-semibold mb-2">البحث الذكي</h3>
+                    <p className="text-sm text-gray-600">
+                      مدعوم بـ OpenAI RAG للبحث في المستندات المرفوعة
+                    </p>
+                  </div>
+                  <div className="bg-gray-50 rounded-lg p-4">
                     <div className="text-2xl mb-2">📄</div>
                     <h3 className="font-semibold mb-2">البحث النصي الكامل</h3>
                     <p className="text-sm text-gray-600">
-                      ابحث في محتوى جميع المستندات
+                      ابحث في محتوى جميع المستندات التقليدية
                     </p>
                   </div>
                   <div className="bg-gray-50 rounded-lg p-4">
@@ -118,17 +125,10 @@ function App() {
                     </p>
                   </div>
                   <div className="bg-gray-50 rounded-lg p-4">
-                    <div className="text-2xl mb-2">🏷️</div>
-                    <h3 className="font-semibold mb-2">مرشحات متقدمة</h3>
-                    <p className="text-sm text-gray-600">
-                      فلترة حسب النوع والتاريخ والحجم
-                    </p>
-                  </div>
-                  <div className="bg-gray-50 rounded-lg p-4">
                     <div className="text-2xl mb-2">📖</div>
-                    <h3 className="font-semibold mb-2">عارض مدمج</h3>
+                    <h3 className="font-semibold mb-2">عارض متطور</h3>
                     <p className="text-sm text-gray-600">
-                      اعرض المستندات مع الاستشهاد
+                      عرض وتحليل المستندات مع الاستشهاد
                     </p>
                   </div>
                 </div>

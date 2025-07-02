@@ -1,10 +1,12 @@
 import React, { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { X, Upload, FileText, CheckCircle, XCircle, AlertCircle, Plus, Trash2 } from 'lucide-react';
+import { X, Upload, FileText, CheckCircle, XCircle, AlertCircle, Plus, Trash2, Bot, Sparkles } from 'lucide-react';
+import { ragSearchService } from '../../services/ragSearchService';
 
 interface DocumentUploadModalProps {
   onClose: () => void;
   onUploadSuccess: () => void;
+  enableRAGUpload?: boolean;
 }
 
 interface UploadFile {
@@ -13,6 +15,7 @@ interface UploadFile {
   status: 'pending' | 'uploading' | 'success' | 'error';
   progress: number;
   error?: string;
+  ragFileId?: string;
   metadata: {
     title: string;
     description: string;
@@ -23,11 +26,13 @@ interface UploadFile {
 
 const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({
   onClose,
-  onUploadSuccess
+  onUploadSuccess,
+  enableRAGUpload = false
 }) => {
   const [uploadFiles, setUploadFiles] = useState<UploadFile[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [currentStep, setCurrentStep] = useState<'select' | 'metadata' | 'upload'>('select');
+  const [uploadToRAG, setUploadToRAG] = useState(enableRAGUpload);
 
   const categories = [
     'تقارير مالية',
@@ -109,24 +114,49 @@ const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({
 
   const simulateUpload = async (file: UploadFile) => {
     // Simulate upload progress
-    for (let progress = 0; progress <= 100; progress += 10) {
+    for (let progress = 0; progress <= 90; progress += 10) {
       await new Promise(resolve => setTimeout(resolve, 100));
       setUploadFiles(prev => prev.map(f => 
         f.id === file.id ? { ...f, progress, status: 'uploading' } : f
       ));
     }
 
-    // Simulate success or error
-    const success = Math.random() > 0.1; // 90% success rate
-    setUploadFiles(prev => prev.map(f => 
-      f.id === file.id 
-        ? { 
-            ...f, 
-            status: success ? 'success' : 'error',
-            error: success ? undefined : 'فشل في رفع الملف'
-          }
-        : f
-    ));
+    try {
+      let ragFileId: string | undefined;
+      
+      // Upload to RAG if enabled
+      if (uploadToRAG && enableRAGUpload) {
+        const ragResult = await ragSearchService.uploadAndIndexDocument(file.file);
+        if (ragResult.success) {
+          ragFileId = ragResult.fileId;
+        } else {
+          throw new Error(ragResult.error || 'فشل في رفع الملف للنظام الذكي');
+        }
+      }
+
+      // Complete upload
+      setUploadFiles(prev => prev.map(f => 
+        f.id === file.id 
+          ? { 
+              ...f, 
+              progress: 100,
+              status: 'success',
+              ragFileId
+            }
+          : f
+      ));
+    } catch (error) {
+      console.error('Upload failed:', error);
+      setUploadFiles(prev => prev.map(f => 
+        f.id === file.id 
+          ? { 
+              ...f, 
+              status: 'error',
+              error: error instanceof Error ? error.message : 'فشل في رفع الملف'
+            }
+          : f
+      ));
+    }
   };
 
   const handleUpload = async () => {
@@ -167,7 +197,17 @@ const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({
       <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <h2 className="text-xl font-bold text-gray-900">رفع مستندات جديدة</h2>
+          <div className="flex items-center gap-3">
+            <div className="bg-gradient-to-r from-saudi-green to-saudi-green-light text-white p-2 rounded-lg">
+              <Upload className="h-6 w-6" />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-gray-900">رفع مستندات جديدة</h2>
+              {enableRAGUpload && (
+                <p className="text-sm text-gray-600">مع دعم البحث الذكي المدعوم بالذكاء الاصطناعي</p>
+              )}
+            </div>
+          </div>
           <button
             onClick={onClose}
             className="text-gray-500 hover:text-gray-700"
@@ -175,6 +215,38 @@ const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({
             <X className="h-6 w-6" />
           </button>
         </div>
+
+        {/* RAG Upload Toggle */}
+        {enableRAGUpload && (
+          <div className="px-6 py-4 bg-gradient-to-r from-green-50 to-blue-50 border-b border-gray-200">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Bot className="h-5 w-5 text-saudi-green" />
+                <div>
+                  <h3 className="font-semibold text-gray-900">الرفع للنظام الذكي (RAG)</h3>
+                  <p className="text-sm text-gray-600">
+                    سيتم فهرسة الملفات وإتاحتها للبحث الذكي المدعوم بالذكاء الاصطناعي
+                  </p>
+                </div>
+              </div>
+              <label className="flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={uploadToRAG}
+                  onChange={(e) => setUploadToRAG(e.target.checked)}
+                  className="sr-only"
+                />
+                <div className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                  uploadToRAG ? 'bg-saudi-green' : 'bg-gray-200'
+                }`}>
+                  <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    uploadToRAG ? 'translate-x-6' : 'translate-x-1'
+                  }`} />
+                </div>
+              </label>
+            </div>
+          </div>
+        )}
 
         {/* Progress Steps */}
         <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
@@ -213,16 +285,24 @@ const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({
                 }`}
               >
                 <input {...getInputProps()} />
-                <Upload className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  {isDragActive ? 'أفلت الملفات هنا' : 'اسحب وأفلت الملفات أو انقر للاختيار'}
-                </h3>
-                <p className="text-gray-600 mb-4">
-                  يدعم: PDF، Word، Excel، PowerPoint، TXT، CSV
-                </p>
-                <p className="text-sm text-gray-500">
-                  الحد الأقصى: 50 ميجابايت لكل ملف
-                </p>
+                <div className="flex flex-col items-center">
+                  <Upload className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                  {uploadToRAG && enableRAGUpload && (
+                    <div className="flex items-center gap-2 mb-4">
+                      <Sparkles className="h-5 w-5 text-saudi-green" />
+                      <span className="text-saudi-green font-medium">سيتم رفع الملفات للنظام الذكي</span>
+                    </div>
+                  )}
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                    {isDragActive ? 'أفلت الملفات هنا' : 'اسحب وأفلت الملفات أو انقر للاختيار'}
+                  </h3>
+                  <p className="text-gray-600 mb-4">
+                    يدعم: PDF، Word، Excel، PowerPoint، TXT، CSV
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    الحد الأقصى: 50 ميجابايت لكل ملف
+                  </p>
+                </div>
               </div>
 
               {uploadFiles.length > 0 && (
@@ -254,7 +334,15 @@ const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({
 
           {currentStep === 'metadata' && (
             <div className="space-y-6">
-              <h3 className="text-lg font-semibold text-gray-900">إضافة البيانات الوصفية</h3>
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-gray-900">إضافة البيانات الوصفية</h3>
+                {uploadToRAG && enableRAGUpload && (
+                  <div className="flex items-center gap-2 text-green-600">
+                    <Bot className="h-4 w-4" />
+                    <span className="text-sm">سيتم فهرسة هذه البيانات للبحث الذكي</span>
+                  </div>
+                )}
+              </div>
               {uploadFiles.map((file) => (
                 <div key={file.id} className="border border-gray-200 rounded-lg p-4">
                   <div className="flex items-center gap-3 mb-4">
@@ -358,7 +446,15 @@ const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({
 
           {currentStep === 'upload' && (
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-gray-900">حالة الرفع</h3>
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-gray-900">حالة الرفع</h3>
+                {uploadToRAG && enableRAGUpload && (
+                  <div className="flex items-center gap-2 text-green-600">
+                    <Sparkles className="h-4 w-4" />
+                    <span className="text-sm">جاري الفهرسة للنظام الذكي</span>
+                  </div>
+                )}
+              </div>
               {uploadFiles.map((file) => (
                 <div key={file.id} className="border border-gray-200 rounded-lg p-4">
                   <div className="flex items-center justify-between mb-2">
@@ -373,6 +469,12 @@ const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({
                       {file.status === 'success' && <CheckCircle className="h-5 w-5 text-green-500" />}
                       {file.status === 'error' && <XCircle className="h-5 w-5 text-red-500" />}
                       {file.status === 'uploading' && <div className="w-5 h-5 border-2 border-saudi-green border-t-transparent rounded-full animate-spin" />}
+                      {uploadToRAG && file.ragFileId && (
+                        <div className="flex items-center gap-1 text-green-600">
+                          <Bot className="h-4 w-4" />
+                          <span className="text-xs">مفهرس</span>
+                        </div>
+                      )}
                     </div>
                   </div>
                   
@@ -394,6 +496,7 @@ const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({
                   {file.status === 'success' && (
                     <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded text-sm text-green-700">
                       تم رفع الملف بنجاح
+                      {uploadToRAG && file.ragFileId && ' وفهرسته للبحث الذكي'}
                     </div>
                   )}
                 </div>
@@ -406,6 +509,9 @@ const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({
         <div className="flex items-center justify-between p-6 border-t border-gray-200">
           <div className="text-sm text-gray-500">
             {uploadFiles.length > 0 && `${uploadFiles.length} ملف محدد`}
+            {uploadToRAG && enableRAGUpload && (
+              <span className="text-green-600"> • سيتم رفعها للنظام الذكي</span>
+            )}
           </div>
           
           <div className="flex items-center gap-3">
@@ -421,7 +527,7 @@ const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({
             {currentStep === 'select' && uploadFiles.length > 0 && (
               <button
                 onClick={() => setCurrentStep('metadata')}
-                className="px-6 py-2 bg-saudi-green text-white rounded-md hover:bg-saudi-green-dark"
+                className="px-6 py-2 bg-gradient-to-r from-saudi-green to-saudi-green-light text-white rounded-md hover:from-saudi-green-dark hover:to-saudi-green"
               >
                 التالي
               </button>
@@ -431,16 +537,26 @@ const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({
               <button
                 onClick={handleUpload}
                 disabled={isUploading}
-                className="px-6 py-2 bg-saudi-green text-white rounded-md hover:bg-saudi-green-dark disabled:opacity-50"
+                className="px-6 py-2 bg-gradient-to-r from-saudi-green to-saudi-green-light text-white rounded-md hover:from-saudi-green-dark hover:to-saudi-green disabled:opacity-50 flex items-center gap-2"
               >
-                {isUploading ? 'جاري الرفع...' : 'رفع الملفات'}
+                {isUploading ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    جاري الرفع...
+                  </>
+                ) : (
+                  <>
+                    {uploadToRAG && enableRAGUpload && <Bot className="h-4 w-4" />}
+                    رفع الملفات
+                  </>
+                )}
               </button>
             )}
             
             {currentStep === 'upload' && uploadFiles.every(f => f.status === 'success') && (
               <button
                 onClick={onClose}
-                className="px-6 py-2 bg-saudi-green text-white rounded-md hover:bg-saudi-green-dark"
+                className="px-6 py-2 bg-gradient-to-r from-saudi-green to-saudi-green-light text-white rounded-md hover:from-saudi-green-dark hover:to-saudi-green"
               >
                 إنهاء
               </button>
