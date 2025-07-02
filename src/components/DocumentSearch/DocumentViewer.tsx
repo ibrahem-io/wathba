@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { X, Download, Share2, Copy, ZoomIn, ZoomOut, Search, ChevronLeft, ChevronRight, FileText, Quote } from 'lucide-react';
-import { DocumentSearchResult } from '../../services/searchService';
+import { SemanticSearchResult } from '../../services/semanticSearchService';
 
 interface DocumentViewerProps {
-  document: DocumentSearchResult;
+  document: SemanticSearchResult;
   searchQuery: string;
   onClose: () => void;
 }
@@ -18,7 +18,7 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
   const [showCitations, setShowCitations] = useState(false);
   const [selectedCitationFormat, setSelectedCitationFormat] = useState<'apa' | 'mla' | 'chicago'>('apa');
 
-  const totalPages = 15; // Mock total pages
+  const totalPages = Math.ceil((document.content?.length || 1000) / 2000); // Estimate pages based on content
 
   const citationFormats = {
     apa: `${document.author || 'وزارة المالية'}. (${new Date(document.uploadDate).getFullYear()}). ${document.title}. وزارة المالية، المملكة العربية السعودية.`,
@@ -67,6 +67,29 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
     });
   };
 
+  // Split content into pages for viewing
+  const getPageContent = (pageNumber: number) => {
+    if (!document.content) return '';
+    
+    const wordsPerPage = 500;
+    const words = document.content.split(' ');
+    const startIndex = (pageNumber - 1) * wordsPerPage;
+    const endIndex = startIndex + wordsPerPage;
+    
+    return words.slice(startIndex, endIndex).join(' ');
+  };
+
+  // Count search term occurrences
+  const countSearchMatches = () => {
+    if (!searchQuery.trim() || !document.content) return 0;
+    
+    const regex = new RegExp(searchQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+    const matches = document.content.match(regex);
+    return matches ? matches.length : 0;
+  };
+
+  const searchMatches = countSearchMatches();
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-lg shadow-xl w-full max-w-7xl h-[90vh] flex flex-col">
@@ -83,6 +106,11 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
                 <span>{formatFileSize(document.fileSize)}</span>
                 <span>{formatDate(document.uploadDate)}</span>
                 {document.author && <span>{document.author}</span>}
+                {document.relevanceScore && (
+                  <span className="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">
+                    {document.relevanceScore}% مطابقة
+                  </span>
+                )}
               </div>
             </div>
           </div>
@@ -169,7 +197,7 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
                 البحث عن: "{searchQuery}"
               </span>
               <span className="text-sm text-saudi-green font-medium">
-                5 نتائج
+                {searchMatches} نتيجة
               </span>
             </div>
           )}
@@ -183,7 +211,7 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
               className="bg-white shadow-lg max-w-full max-h-full overflow-auto"
               style={{ transform: `scale(${zoom / 100})` }}
             >
-              {/* Mock Document Content */}
+              {/* Document Content */}
               <div className="w-[210mm] min-h-[297mm] p-8 bg-white">
                 <div className="text-center mb-8">
                   <h1 className="text-2xl font-bold text-gray-900 mb-4">
@@ -197,50 +225,72 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
                 </div>
 
                 <div className="space-y-6 text-gray-800 leading-relaxed">
-                  <div>
-                    <h2 className="text-xl font-semibold mb-4">المقدمة</h2>
-                    <p>
-                      {document.excerpt && highlightText(document.excerpt, searchQuery)}
-                    </p>
-                  </div>
-
-                  <div>
-                    <h2 className="text-xl font-semibold mb-4">الأهداف</h2>
-                    <p>
-                      تهدف هذه الوثيقة إلى توضيح السياسات والإجراءات المتعلقة بـ{' '}
-                      {highlightText('الإدارة المالية', searchQuery)} في وزارة المالية.
-                      يتضمن هذا المستند التوجيهات اللازمة لضمان الامتثال للمعايير المحاسبية
-                      والمالية المعتمدة في المملكة العربية السعودية.
-                    </p>
-                  </div>
-
-                  <div>
-                    <h2 className="text-xl font-semibold mb-4">النطاق</h2>
-                    <p>
-                      تطبق هذه السياسات على جميع الإدارات والأقسام في وزارة المالية،
-                      وتشمل جميع العمليات المالية والمحاسبية التي تتم في إطار عمل الوزارة.
-                      كما تغطي هذه الوثيقة الإجراءات المتعلقة بـ{' '}
-                      {highlightText('التخطيط المالي', searchQuery)} والرقابة المالية.
-                    </p>
-                  </div>
-
-                  <div>
-                    <h2 className="text-xl font-semibold mb-4">المسؤوليات</h2>
-                    <ul className="list-disc list-inside space-y-2">
-                      <li>إدارة المالية: مسؤولة عن تطبيق السياسات المالية</li>
-                      <li>إدارة المحاسبة: مسؤولة عن إعداد التقارير المالية</li>
-                      <li>إدارة المراجعة: مسؤولة عن مراجعة العمليات المالية</li>
-                      <li>إدارة الميزانية: مسؤولة عن إعداد ومتابعة الميزانية</li>
-                    </ul>
-                  </div>
-
-                  {/* Mock highlighted search results */}
-                  {searchQuery && (
-                    <div className="bg-yellow-50 border-r-4 border-yellow-400 p-4">
-                      <h3 className="font-semibold text-yellow-800 mb-2">نتائج البحث في هذه الصفحة:</h3>
-                      <p className="text-yellow-700">
-                        تم العثور على {highlightText('5 نتائج', searchQuery)} تطابق مصطلح البحث "{searchQuery}"
+                  {/* Document Summary */}
+                  {document.description && (
+                    <div>
+                      <h2 className="text-xl font-semibold mb-4">ملخص المستند</h2>
+                      <p className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                        {highlightText(document.description, searchQuery)}
                       </p>
+                    </div>
+                  )}
+
+                  {/* Semantic Summary */}
+                  {document.semanticSummary && (
+                    <div>
+                      <h2 className="text-xl font-semibold mb-4">التحليل الدلالي</h2>
+                      <p className="bg-green-50 p-4 rounded-lg border border-green-200">
+                        {highlightText(document.semanticSummary, searchQuery)}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Matched Sections */}
+                  {document.matchedSections && document.matchedSections.length > 0 && (
+                    <div>
+                      <h2 className="text-xl font-semibold mb-4">المقاطع المطابقة</h2>
+                      <div className="space-y-3">
+                        {document.matchedSections.map((section, index) => (
+                          <div key={index} className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+                            <p className="text-sm text-gray-700">
+                              {highlightText(section, searchQuery)}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Main Content */}
+                  <div>
+                    <h2 className="text-xl font-semibold mb-4">محتوى المستند</h2>
+                    <div className="prose prose-lg max-w-none">
+                      {document.content ? (
+                        <div className="whitespace-pre-wrap">
+                          {highlightText(getPageContent(currentPage), searchQuery)}
+                        </div>
+                      ) : (
+                        <p className="text-gray-500 italic">
+                          لم يتم استخراج محتوى نصي من هذا المستند.
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Tags */}
+                  {document.tags && document.tags.length > 0 && (
+                    <div>
+                      <h2 className="text-xl font-semibold mb-4">العلامات</h2>
+                      <div className="flex flex-wrap gap-2">
+                        {document.tags.map((tag, index) => (
+                          <span
+                            key={index}
+                            className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm"
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
                     </div>
                   )}
                 </div>
@@ -293,6 +343,13 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
                     <div><strong>تاريخ النشر:</strong> {formatDate(document.uploadDate)}</div>
                     <div><strong>نوع الملف:</strong> {document.fileType.toUpperCase()}</div>
                     <div><strong>الحجم:</strong> {formatFileSize(document.fileSize)}</div>
+                    <div><strong>التصنيف:</strong> {document.category}</div>
+                    {document.relevanceScore && (
+                      <div><strong>درجة المطابقة:</strong> {document.relevanceScore}%</div>
+                    )}
+                    {searchMatches > 0 && (
+                      <div><strong>نتائج البحث:</strong> {searchMatches} مطابقة</div>
+                    )}
                     {document.tags.length > 0 && (
                       <div>
                         <strong>العلامات:</strong>
