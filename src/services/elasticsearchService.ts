@@ -51,8 +51,7 @@ export interface SearchFilters {
 }
 
 class ElasticSearchService {
-  private baseUrl = 'https://my-elasticsearch-project-f3e988.es.us-central1.gcp.elastic.cloud:443';
-  private apiKey = 'T1B1OHpKY0JGTzVJOXhyWUYtUW86clpsb3ZJVzV0Q0dOSlBFdTFUQ3RKdw==';
+  private baseUrl = '/api/elasticsearch';
   private indexName = 'mof-documents';
 
   private async makeRequest(endpoint: string, options: RequestInit = {}) {
@@ -61,7 +60,6 @@ class ElasticSearchService {
     const response = await fetch(url, {
       ...options,
       headers: {
-        'Authorization': `ApiKey ${this.apiKey}`,
         'Content-Type': 'application/json',
         ...options.headers,
       },
