@@ -43,8 +43,7 @@ export default defineConfig({
       output: {
         manualChunks: {
           vendor: ['react', 'react-dom', 'lucide-react'],
-          elasticsearch: ['./src/services/elasticsearchService.ts'],
-          openai: ['./src/services/openaiService.ts']
+          elasticsearch: ['./src/services/elasticsearchService.ts']
         }
       }
     }

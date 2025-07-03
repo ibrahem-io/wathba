@@ -1,7 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { X, Upload, FileText, CheckCircle, XCircle, AlertCircle, Plus, Trash2, Bot, Sparkles, Database } from 'lucide-react';
-import { ragSearchService } from '../../services/ragSearchService';
+import { X, Upload, FileText, CheckCircle, XCircle, AlertCircle, Plus, Trash2, Database } from 'lucide-react';
 import enhancedDocumentIndexingService from '../../services/enhancedDocumentIndexingService';
 
 interface DocumentUploadModalProps {
@@ -16,7 +15,6 @@ interface UploadFile {
   status: 'pending' | 'uploading' | 'success' | 'error';
   progress: number;
   error?: string;
-  ragFileId?: string;
   documentId?: string;
   elasticsearchIndexed?: boolean;
   metadata: {
@@ -35,7 +33,6 @@ const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({
   const [uploadFiles, setUploadFiles] = useState<UploadFile[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [currentStep, setCurrentStep] = useState<'select' | 'metadata' | 'upload'>('select');
-  const [uploadToRAG, setUploadToRAG] = useState(enableRAGUpload);
 
   const categories = [
     'تقارير مالية',
@@ -122,8 +119,15 @@ const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({
     ));
 
     try {
-      // Index the document using the enhanced service (uploads to both OpenAI and ElasticSearch)
-      const indexResult = await enhancedDocumentIndexingService.indexDocument(file.file, file.metadata);
+      // Index the document using the enhanced service (uploads to ElasticSearch)
+      const indexResult = await enhancedDocumentIndexingService.indexDocument(file.file, {
+        filename: file.metadata.title,
+        fileType: file.file.type,
+        fileSize: file.file.size,
+        uploadedBy: 'user',
+        summary: file.metadata.description,
+        extractedText: ''
+      });
       
       if (!indexResult.success) {
         throw new Error(indexResult.error || 'فشل في فهرسة المستند');
@@ -136,8 +140,7 @@ const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({
           progress: 100,
           status: 'success',
           documentId: indexResult.documentId,
-          elasticsearchIndexed: true,
-          ragFileId: uploadToRAG ? 'uploaded' : undefined
+          elasticsearchIndexed: true
         } : f
       ));
 
@@ -201,7 +204,6 @@ const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({
               <h2 className="text-xl font-bold text-gray-900">رفع مستندات جديدة</h2>
               <p className="text-sm text-gray-600">
                 سيتم فهرسة المستندات في ElasticSearch
-                {enableRAGUpload && ' والنظام الذكي OpenAI'}
               </p>
             </div>
           </div>
@@ -228,32 +230,6 @@ const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({
                   مفعل
                 </div>
               </div>
-              
-              {/* OpenAI RAG */}
-              {enableRAGUpload && (
-                <div className="flex items-center gap-3">
-                  <Bot className="h-5 w-5 text-green-600" />
-                  <div>
-                    <h3 className="font-semibold text-gray-900">OpenAI RAG</h3>
-                    <p className="text-sm text-gray-600">محادثة ذكية مع المستندات</p>
-                  </div>
-                  <label className="flex items-center cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={uploadToRAG}
-                      onChange={(e) => setUploadToRAG(e.target.checked)}
-                      className="sr-only"
-                    />
-                    <div className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                      uploadToRAG ? 'bg-green-600' : 'bg-gray-200'
-                    }`}>
-                      <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                        uploadToRAG ? 'translate-x-6' : 'translate-x-1'
-                      }`} />
-                    </div>
-                  </label>
-                </div>
-              )}
             </div>
           </div>
         </div>
@@ -300,13 +276,6 @@ const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({
                   <div className="flex items-center gap-2 mb-4">
                     <Database className="h-5 w-5 text-blue-600" />
                     <span className="text-blue-600 font-medium">سيتم رفع الملفات إلى ElasticSearch</span>
-                    {uploadToRAG && enableRAGUpload && (
-                      <>
-                        <span className="text-gray-400">+</span>
-                        <Sparkles className="h-5 w-5 text-green-600" />
-                        <span className="text-green-600 font-medium">OpenAI</span>
-                      </>
-                    )}
                   </div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-2">
                     {isDragActive ? 'أفلت الملفات هنا' : 'اسحب وأفلت الملفات أو انقر للاختيار'}
@@ -354,13 +323,6 @@ const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({
                 <div className="flex items-center gap-2 text-green-600">
                   <Database className="h-4 w-4" />
                   <span className="text-sm">سيتم فهرسة هذه البيانات في ElasticSearch</span>
-                  {uploadToRAG && enableRAGUpload && (
-                    <>
-                      <span className="text-gray-400">+</span>
-                      <Bot className="h-4 w-4" />
-                      <span className="text-sm">OpenAI</span>
-                    </>
-                  )}
                 </div>
               </div>
               {uploadFiles.map((file) => (
@@ -471,13 +433,6 @@ const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({
                 <div className="flex items-center gap-2 text-green-600">
                   <Database className="h-4 w-4" />
                   <span className="text-sm">جاري الفهرسة في ElasticSearch</span>
-                  {uploadToRAG && enableRAGUpload && (
-                    <>
-                      <span className="text-gray-400">+</span>
-                      <Sparkles className="h-4 w-4" />
-                      <span className="text-sm">OpenAI</span>
-                    </>
-                  )}
                 </div>
               </div>
               {uploadFiles.map((file) => (
@@ -498,12 +453,6 @@ const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({
                         <div className="flex items-center gap-1 text-blue-600">
                           <Database className="h-4 w-4" />
                           <span className="text-xs">مفهرس</span>
-                        </div>
-                      )}
-                      {uploadToRAG && file.ragFileId && (
-                        <div className="flex items-center gap-1 text-green-600">
-                          <Bot className="h-4 w-4" />
-                          <span className="text-xs">OpenAI</span>
                         </div>
                       )}
                     </div>
@@ -527,7 +476,6 @@ const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({
                   {file.status === 'success' && (
                     <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded text-sm text-green-700">
                       ✅ تم رفع وفهرسة الملف بنجاح في ElasticSearch
-                      {uploadToRAG && file.ragFileId && ' وOpenAI'}
                       {file.documentId && (
                         <div className="text-xs text-gray-600 mt-1">
                           معرف المستند: {file.documentId}
@@ -547,9 +495,6 @@ const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({
             {uploadFiles.length > 0 && `${uploadFiles.length} ملف محدد`}
             {uploadFiles.length > 0 && (
               <span className="text-blue-600"> • سيتم رفعها إلى ElasticSearch</span>
-            )}
-            {uploadToRAG && enableRAGUpload && uploadFiles.length > 0 && (
-              <span className="text-green-600"> + OpenAI</span>
             )}
           </div>
           
@@ -586,7 +531,6 @@ const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({
                 ) : (
                   <>
                     <Database className="h-4 w-4" />
-                    {uploadToRAG && enableRAGUpload && <Bot className="h-4 w-4" />}
                     رفع وفهرسة الملفات
                   </>
                 )}

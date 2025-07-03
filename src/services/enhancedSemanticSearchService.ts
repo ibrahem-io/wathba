@@ -1,4 +1,4 @@
-// Enhanced semantic search service that prioritizes ElasticSearch over OpenAI Assistant search
+// Enhanced semantic search service that prioritizes ElasticSearch
 import elasticsearchService from './elasticsearchService';
 import documentIndexingService from './documentIndexingService';
 
@@ -24,7 +24,7 @@ export interface EnhancedSearchResult {
   matchedSections: string[];
   semanticSummary?: string;
   citations?: string[];
-  source: 'openai' | 'elasticsearch' | 'local';
+  source: 'elasticsearch' | 'local';
 }
 
 export interface SearchFilters {
@@ -116,7 +116,9 @@ class EnhancedSemanticSearchService {
     startTime: number
   ): Promise<EnhancedSearchResponse> {
     try {
-      // First, try ElasticSearch
+      console.log('Performing ElasticSearch search for:', query);
+      
+      // Try ElasticSearch
       const elasticsearchResponse = await this.performElasticSearch(query, filters);
       
       // If ElasticSearch returns results, use them
@@ -216,6 +218,8 @@ class EnhancedSemanticSearchService {
 
   private async performElasticSearch(query: string, filters: SearchFilters): Promise<{ results: EnhancedSearchResult[] }> {
     try {
+      console.log('Sending ElasticSearch request for:', query);
+      
       const elasticFilters = {
         dateRange: filters.dateRange,
         fileTypes: filters.fileTypes,
@@ -225,6 +229,8 @@ class EnhancedSemanticSearchService {
       };
 
       const response = await elasticsearchService.searchDocuments(query, elasticFilters);
+      
+      console.log('ElasticSearch response received:', response.results.length, 'results');
       
       return {
         results: response.results.map(result => ({
@@ -404,32 +410,22 @@ class EnhancedSemanticSearchService {
     } catch (error) {
       console.error('Error getting document stats:', error);
       return {
-        totalDocuments: 6,
+        totalDocuments: 0,
         localDocuments: 0,
         ragDocuments: 0,
-        elasticsearchDocuments: 6,
+        elasticsearchDocuments: 0,
         totalSize: 0,
-        fileTypes: {
-          'pdf': 4,
-          'excel': 1,
-          'ppt': 1
-        },
-        categories: {
-          'سياسات مالية': 1,
-          'أدلة إجرائية': 1,
-          'تقارير مالية': 2,
-          'استراتيجيات': 1,
-          'إعلانات': 1
-        },
+        fileTypes: {},
+        categories: {},
         ragEnabled: false,
-        elasticsearchEnabled: true
+        elasticsearchEnabled: false
       };
     }
   }
 
   async askQuestion(question: string): Promise<{ answer: string; citations: string[] }> {
     try {
-      // Return a mock response since OpenAI is not configured
+      // Return a mock response
       return {
         answer: `سؤالك: "${question}"\n\nنظراً لعدم توفر اتصال بـ OpenAI، لا يمكن معالجة سؤالك بشكل كامل. يمكنك استخدام وظيفة البحث العادية للعثور على المعلومات ذات الصلة في المستندات المتاحة.`,
         citations: []
@@ -439,7 +435,7 @@ class EnhancedSemanticSearchService {
       
       // Return a mock response when OpenAI fails
       return {
-        answer: `عذراً، لم أتمكن من الاتصال بخدمة OpenAI للإجابة على سؤالك: "${question}"\n\nيمكنك محاولة البحث عن المعلومات باستخدام وضع البحث العادي بدلاً من وضع الأسئلة، أو المحاولة مرة أخرى لاحقاً.`,
+        answer: `عذراً، لم أتمكن من معالجة سؤالك: "${question}"\n\nيمكنك محاولة البحث عن المعلومات باستخدام وضع البحث العادي بدلاً من وضع الأسئلة، أو المحاولة مرة أخرى لاحقاً.`,
         citations: []
       };
     }

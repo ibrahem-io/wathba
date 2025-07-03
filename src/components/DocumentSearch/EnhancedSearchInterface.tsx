@@ -31,7 +31,6 @@ const EnhancedSearchInterface: React.FC<EnhancedSearchInterfaceProps> = ({ onNav
   const [recognition, setRecognition] = useState<SpeechRecognition | null>(null);
   const [documentStats, setDocumentStats] = useState<any>({
     totalDocuments: 0,
-    ragDocuments: 0,
     elasticsearchDocuments: 0,
     fileTypes: {},
     categories: {}
@@ -44,7 +43,6 @@ const EnhancedSearchInterface: React.FC<EnhancedSearchInterfaceProps> = ({ onNav
   const [searchStrategy, setSearchStrategy] = useState<'elasticsearch' | 'openai_fallback' | 'both'>('elasticsearch');
   const [noResultsMessage, setNoResultsMessage] = useState<string | null>(null);
   const [isSearching, setIsSearching] = useState(false);
-  const [isMockMode, setIsMockMode] = useState<boolean>(true);
   
   const [filters, setFilters] = useState<ISearchFilters>({
     dateRange: { start: '', end: '' },
@@ -61,10 +59,6 @@ const EnhancedSearchInterface: React.FC<EnhancedSearchInterfaceProps> = ({ onNav
     loadSearchHistory();
     initializeSpeechRecognition();
     loadDocumentStats();
-    
-    // Check if ElasticSearch is in mock mode
-    const mockMode = elasticsearchService.isMockModeEnabled();
-    setIsMockMode(mockMode);
   }, []);
 
   useEffect(() => {
@@ -72,9 +66,6 @@ const EnhancedSearchInterface: React.FC<EnhancedSearchInterfaceProps> = ({ onNav
       performSearch();
     }
   }, [initialSearchQuery]);
-
-  // Don't trigger search on query change - only on explicit search button click
-  // This prevents multiple requests for the same query
 
   const loadDocumentStats = async () => {
     try {
@@ -84,21 +75,10 @@ const EnhancedSearchInterface: React.FC<EnhancedSearchInterfaceProps> = ({ onNav
       console.error('Error loading document stats:', error);
       // Set default stats
       setDocumentStats({
-        totalDocuments: 6,
-        ragDocuments: 0,
-        elasticsearchDocuments: 6,
-        fileTypes: {
-          'pdf': 4,
-          'excel': 1,
-          'ppt': 1
-        },
-        categories: {
-          'سياسات مالية': 1,
-          'أدلة إجرائية': 1,
-          'تقارير مالية': 2,
-          'استراتيجيات': 1,
-          'إعلانات': 1
-        }
+        totalDocuments: 0,
+        elasticsearchDocuments: 0,
+        fileTypes: {},
+        categories: {}
       });
     }
   };
@@ -193,10 +173,6 @@ const EnhancedSearchInterface: React.FC<EnhancedSearchInterfaceProps> = ({ onNav
       setSearchStrategy(response.searchStrategy || 'elasticsearch');
       setNoResultsMessage(response.noResultsMessage || null);
       
-      // Check if ElasticSearch is in mock mode
-      const mockMode = elasticsearchService.isMockModeEnabled();
-      setIsMockMode(mockMode);
-
       if (query) {
         saveSearchHistory(query);
       }
@@ -280,15 +256,6 @@ const EnhancedSearchInterface: React.FC<EnhancedSearchInterfaceProps> = ({ onNav
   };
 
   const getSearchStrategyMessage = () => {
-    if (isMockMode) {
-      return (
-        <div className="flex items-center gap-2 text-purple-600 text-sm">
-          <AlertCircle className="h-4 w-4" />
-          <span>تم استخدام بيانات محلية لعدم توفر اتصال بـ ElasticSearch</span>
-        </div>
-      );
-    }
-    
     if (searchStrategy === 'openai_fallback') {
       return (
         <div className="flex items-center gap-2 text-orange-600 text-sm">
@@ -496,16 +463,6 @@ const EnhancedSearchInterface: React.FC<EnhancedSearchInterfaceProps> = ({ onNav
                 <>
                   <Database className="h-4 w-4 text-blue-500" />
                   <span>وضع البحث: ابحث في ElasticSearch</span>
-                </>
-              )}
-              
-              {isMockMode && (
-                <>
-                  <span className="text-gray-400">|</span>
-                  <span className="text-purple-600 flex items-center gap-1">
-                    <AlertCircle className="h-4 w-4" />
-                    وضع المحاكاة مفعل (لا يوجد اتصال بـ ElasticSearch)
-                  </span>
                 </>
               )}
             </div>
