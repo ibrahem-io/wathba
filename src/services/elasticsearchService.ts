@@ -76,17 +76,8 @@ class ElasticSearchService {
 
   async initializeIndex(): Promise<boolean> {
     try {
-      // Check if index exists
-      try {
-        await this.makeRequest(`/${this.indexName}`, { method: 'HEAD' });
-        console.log('ElasticSearch index already exists');
-        return true;
-      } catch (error) {
-        // Index doesn't exist, create it
-        console.log('Creating ElasticSearch index...');
-      }
-
-      // Create index with proper mapping
+      // Create index with proper mapping - directly attempt creation
+      // and handle the case where index already exists
       const indexMapping = {
         mappings: {
           properties: {
@@ -163,12 +154,23 @@ class ElasticSearchService {
         }
       };
 
-      await this.makeRequest(`/${this.indexName}`, {
-        method: 'PUT',
-        body: JSON.stringify(indexMapping)
-      });
+      try {
+        await this.makeRequest(`/${this.indexName}`, {
+          method: 'PUT',
+          body: JSON.stringify(indexMapping)
+        });
+        console.log('ElasticSearch index created successfully');
+      } catch (error: any) {
+        // Check if the error is because index already exists
+        if (error.message.includes('resource_already_exists_exception') || 
+            error.message.includes('already exists')) {
+          console.log('ElasticSearch index already exists');
+          return true;
+        }
+        // Re-throw other errors
+        throw error;
+      }
 
-      console.log('ElasticSearch index created successfully');
       return true;
     } catch (error) {
       console.error('Failed to initialize ElasticSearch index:', error);
@@ -420,15 +422,16 @@ class ElasticSearchService {
 
   async getDocumentStats() {
     try {
-      const response = await this.makeRequest(`/${this.indexName}/_stats`);
-      const countResponse = await this.makeRequest(`/${this.indexName}/_count`);
-      
-      // Get aggregations for file types and categories
+      // Use search API with aggregations instead of _stats and _count
+      // which are not available in serverless mode
       const aggsResponse = await this.makeRequest(`/${this.indexName}/_search`, {
         method: 'POST',
         body: JSON.stringify({
           size: 0,
           aggs: {
+            total_documents: {
+              value_count: { field: '_id' }
+            },
             file_types: {
               terms: { field: 'fileType', size: 20 }
             },
@@ -454,7 +457,7 @@ class ElasticSearchService {
       });
 
       return {
-        totalDocuments: countResponse.count,
+        totalDocuments: aggsResponse.aggregations.total_documents.value || 0,
         totalSize: aggsResponse.aggregations.total_size.value || 0,
         fileTypes,
         categories,
@@ -492,7 +495,14 @@ class ElasticSearchService {
   // Health check
   async checkHealth(): Promise<boolean> {
     try {
-      await this.makeRequest('/_cluster/health');
+      // Use a simple search instead of cluster health which may not be available in serverless
+      await this.makeRequest(`/${this.indexName}/_search`, {
+        method: 'POST',
+        body: JSON.stringify({
+          size: 0,
+          query: { match_all: {} }
+        })
+      });
       return true;
     } catch (error) {
       console.error('ElasticSearch health check failed:', error);
