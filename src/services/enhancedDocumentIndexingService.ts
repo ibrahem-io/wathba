@@ -249,6 +249,7 @@ class EnhancedDocumentIndexingService {
           }
         };
 
+        console.log('ElasticSearch document to index:', elasticDoc);
         const elasticResult = await elasticsearchService.indexDocument(elasticDoc);
         if (elasticResult.success) {
           indexedDoc.elasticsearchIndexed = true;

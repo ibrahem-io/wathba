@@ -65,6 +65,12 @@ class ElasticSearchService {
     try {
       const url = `${this.baseUrl}${endpoint}`;
       
+      console.log('ElasticSearch request:', {
+        url,
+        method: options.method || 'GET',
+        body: options.body ? JSON.parse(options.body as string) : undefined
+      });
+      
       const response = await fetch(url, {
         ...options,
         headers: {
@@ -91,7 +97,9 @@ class ElasticSearchService {
         throw new Error(`ElasticSearch request failed: ${response.status} ${response.statusText}`);
       }
 
-      return response.json();
+      const responseData = await response.json();
+      console.log('ElasticSearch response:', responseData);
+      return responseData;
     } catch (error) {
       console.error('ElasticSearch request error:', error);
       this.mockMode = true; // Switch to mock mode after error
@@ -697,7 +705,7 @@ class ElasticSearchService {
         post_tags: ['</mark>']
       },
       _source: true,
-      min_score: 5.0 // Set a minimum score threshold to filter out low-relevance results
+      min_score: 1.0 // Set a minimum score threshold to filter out low-relevance results
     };
 
     return searchBody;

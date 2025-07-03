@@ -189,7 +189,10 @@ const EnhancedSearchInterface: React.FC<EnhancedSearchInterfaceProps> = ({ onNav
     setNoResultsMessage(null);
 
     try {
+      console.log('Performing search with query:', query);
       const response = await enhancedSemanticSearchService.searchDocuments(query, filters, sortBy, sortOrder);
+      console.log('Search response:', response);
+      
       setSearchResults(response.results);
       setSearchTime(response.searchTime);
       setOpenaiResults(response.openaiResults || 0);
