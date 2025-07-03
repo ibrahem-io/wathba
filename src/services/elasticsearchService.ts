@@ -57,7 +57,8 @@ class ElasticSearchService {
   private mockMode = true; // Start with mock mode by default
   private lastSearchQuery = '';
   private lastSearchTime = 0;
-  private searchThrottleMs = 500; // Minimum time between searches
+  private searchThrottleMs = 1000; // Minimum time between searches (1 second)
+  private pendingSearchRequest: Promise<any> | null = null;
 
   private async makeRequest(endpoint: string, options: RequestInit = {}) {
     // If in mock mode, return mock data instead of making actual requests
@@ -145,7 +146,7 @@ class ElasticSearchService {
         } else {
           resolve({ message: 'Mock response for ' + endpoint });
         }
-      }, 100);
+      }, 300);
     });
   }
 
@@ -502,11 +503,18 @@ class ElasticSearchService {
     }
   }
 
-  async indexDocument(index: string, id: string, document: any): Promise<{ success: boolean; error?: string }> {
+  async indexDocument(document: ElasticSearchDocument): Promise<{ success: boolean; error?: string }> {
     try {
       await this.initializeIndex();
 
-      const response = await this.makeRequest(`/${this.indexName}/_doc/${id}`, {
+      // Check if we're already in mock mode
+      if (this.mockMode) {
+        console.log('Mock mode: Simulating document indexing');
+        return { success: true };
+      }
+
+      // Only make one request to index the document
+      const response = await this.makeRequest(`/${this.indexName}/_doc/${document.id}`, {
         method: 'PUT',
         body: JSON.stringify(document)
       });
@@ -535,10 +543,12 @@ class ElasticSearchService {
     size: number = 20
   ): Promise<{ results: EnhancedSearchResult[]; totalCount: number; searchTime: number }> {
     try {
-      // Throttle searches to prevent multiple rapid requests
+      // Throttle searches to prevent multiple rapid requests for the same query
       const now = Date.now();
       if (query === this.lastSearchQuery && now - this.lastSearchTime < this.searchThrottleMs) {
-        console.log('Search throttled - using previous results');
+        console.log('Search throttled - skipping duplicate request for:', query);
+        
+        // Return empty results to indicate throttling
         return {
           results: [],
           totalCount: 0,
@@ -546,19 +556,31 @@ class ElasticSearchService {
         };
       }
       
+      // Update search tracking
       this.lastSearchQuery = query;
       this.lastSearchTime = now;
       
       await this.initializeIndex();
 
-      // Skip health check in serverless mode
+      // If we already have a pending search request, wait for it to complete
+      if (this.pendingSearchRequest) {
+        await this.pendingSearchRequest;
+      }
+
+      // Build the search query
       const searchBody = this.buildSearchQuery(query, filters, from, size);
       
+      // Create a new search request and store it
       const startTime = Date.now();
-      const response: ElasticSearchResponse = await this.makeRequest(`/${this.indexName}/_search`, {
+      this.pendingSearchRequest = this.makeRequest(`/${this.indexName}/_search`, {
         method: 'POST',
         body: JSON.stringify(searchBody)
       });
+      
+      // Wait for the search to complete
+      const response: ElasticSearchResponse = await this.pendingSearchRequest;
+      this.pendingSearchRequest = null;
+      
       const searchTime = Date.now() - startTime;
 
       const results = this.convertElasticResultsToEnhanced(response, query);
@@ -571,6 +593,7 @@ class ElasticSearchService {
     } catch (error) {
       console.error('ElasticSearch search error:', error);
       this.mockMode = true; // Switch to mock mode after search failure
+      this.pendingSearchRequest = null;
       
       // Return mock results
       const mockResponse = this.getFilteredMockResults(query);
@@ -755,7 +778,7 @@ class ElasticSearchService {
     });
   }
 
-  async deleteDocument(index: string, id: string): Promise<boolean> {
+  async deleteDocument(id: string): Promise<boolean> {
     try {
       await this.initializeIndex();
 
@@ -870,11 +893,6 @@ class ElasticSearchService {
     return !this.mockMode;
   }
 
-  // Public method to check if ElasticSearch is configured
-  isConfigured(): boolean {
-    return true; // Always return true since we have mock mode as fallback
-  }
-
   // Public method to toggle mock mode
   setMockMode(enabled: boolean): void {
     this.mockMode = enabled;
@@ -883,6 +901,11 @@ class ElasticSearchService {
   // Public method to get mock mode status
   isMockModeEnabled(): boolean {
     return this.mockMode;
+  }
+
+  // Public method to check if ElasticSearch is configured
+  isConfigured(): boolean {
+    return true; // Always return true since we have mock mode as fallback
   }
 }
 

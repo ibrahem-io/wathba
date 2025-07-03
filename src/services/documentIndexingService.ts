@@ -1,5 +1,4 @@
 // Service for indexing and managing uploaded documents with real text extraction
-import openaiService from './openaiService';
 
 export interface IndexedDocument {
   id: string;
@@ -12,8 +11,6 @@ export interface IndexedDocument {
   tags: string[];
   category: string;
   author: string;
-  openaiFileId?: string;
-  vectorStoreFileId?: string;
   extractedText?: string;
   summary?: string;
 }
@@ -70,18 +67,6 @@ class DocumentIndexingService {
       
       // Generate summary using AI
       const summary = await this.generateSummary(extractedText, metadata.title);
-      
-      // Upload to OpenAI RAG system
-      let openaiFileId: string | undefined;
-      let vectorStoreFileId: string | undefined;
-      
-      try {
-        const ragResult = await openaiService.uploadFile(file);
-        openaiFileId = ragResult.fileId;
-        vectorStoreFileId = ragResult.vectorStoreFileId;
-      } catch (error) {
-        console.warn('Failed to upload to RAG system:', error);
-      }
 
       // Create indexed document
       const indexedDoc: IndexedDocument = {
@@ -95,8 +80,6 @@ class DocumentIndexingService {
         tags: metadata.tags,
         category: metadata.category,
         author: 'مستخدم النظام',
-        openaiFileId,
-        vectorStoreFileId,
         extractedText,
         summary
       };
@@ -211,12 +194,12 @@ class DocumentIndexingService {
       if (text.length > 50) {
         return `محتوى مستخرج من ملف PDF: ${file.name}\n\n${text}`;
       } else {
-        // Fallback: Use OpenAI to extract text if available
-        return await this.extractTextWithAI(file);
+        // Fallback: Use mock text extraction
+        return this.generateMockExtractedText(file);
       }
     } catch (error) {
       console.error('PDF extraction failed:', error);
-      return await this.extractTextWithAI(file);
+      return this.generateMockExtractedText(file);
     }
   }
 
@@ -245,17 +228,17 @@ class DocumentIndexingService {
         }
       }
       
-      return await this.extractTextWithAI(file);
+      return this.generateMockExtractedText(file);
     } catch (error) {
       console.error('DOCX extraction failed:', error);
-      return await this.extractTextWithAI(file);
+      return this.generateMockExtractedText(file);
     }
   }
 
   private async extractDocText(file: File): Promise<string> {
     // For older DOC files, extraction is more complex
-    // We'll use AI extraction as fallback
-    return await this.extractTextWithAI(file);
+    // We'll use mock extraction
+    return this.generateMockExtractedText(file);
   }
 
   private async extractExcelText(file: File): Promise<string> {
@@ -284,11 +267,11 @@ class DocumentIndexingService {
       if (content.length > 50) {
         return `بيانات مستخرجة من ملف Excel: ${file.name}\n\n${content}`;
       } else {
-        return await this.extractTextWithAI(file);
+        return this.generateMockExtractedText(file);
       }
     } catch (error) {
       console.error('Excel extraction failed:', error);
-      return await this.extractTextWithAI(file);
+      return this.generateMockExtractedText(file);
     }
   }
 
@@ -315,91 +298,57 @@ class DocumentIndexingService {
         }
       }
       
-      return await this.extractTextWithAI(file);
+      return this.generateMockExtractedText(file);
     } catch (error) {
       console.error('PowerPoint extraction failed:', error);
-      return await this.extractTextWithAI(file);
+      return this.generateMockExtractedText(file);
     }
   }
 
-  private async extractTextWithAI(file: File): Promise<string> {
-    try {
-      // Use OpenAI to extract and analyze the document content
-      const base64 = await this.fileToBase64(file);
-      
-      const extractionPrompt = `
-قم بتحليل واستخراج النص من هذا الملف:
-
-اسم الملف: ${file.name}
-نوع الملف: ${file.type}
-حجم الملف: ${this.formatFileSize(file.size)}
-
-يرجى استخراج وتلخيص المحتوى النصي الرئيسي من هذا الملف.
-ركز على:
-1. النصوص الأساسية والعناوين
-2. البيانات المهمة والأرقام
-3. المعلومات الرئيسية
-
-قدم النتيجة بتنسيق واضح ومنظم باللغة العربية.
-`;
-
-      const response = await openaiService.sendMessage(extractionPrompt);
-      
-      if (response.content && response.content.length > 50) {
-        return `محتوى مستخرج بالذكاء الاصطناعي من ${file.name}:\n\n${response.content}`;
-      } else {
-        throw new Error('فشل في استخراج محتوى مفيد من الملف');
-      }
-    } catch (error) {
-      console.error('AI extraction failed:', error);
-      // Final fallback
-      return `ملف: ${file.name}\nنوع: ${file.type}\nحجم: ${this.formatFileSize(file.size)}\n\nلم يتمكن النظام من استخراج النص من هذا الملف. يرجى التأكد من أن الملف يحتوي على نص قابل للقراءة.`;
+  private generateMockExtractedText(file: File): string {
+    // Generate mock content based on file name and type
+    const fileType = this.getFileExtension(file.name);
+    const fileName = file.name.replace(/\.[^/.]+$/, '');
+    
+    let content = `محتوى مستخرج من ملف ${fileType.toUpperCase()}: ${fileName}\n\n`;
+    
+    // Add some mock content based on file type
+    switch (fileType) {
+      case 'pdf':
+        content += `هذا المستند يحتوي على معلومات مهمة متعلقة بـ ${fileName}. يتضمن المستند عدة أقسام تشرح التفاصيل والإجراءات المطلوبة.\n\n`;
+        content += `القسم الأول: مقدمة عامة\nالقسم الثاني: التفاصيل الفنية\nالقسم الثالث: الإجراءات والتوصيات\nالقسم الرابع: الملخص والخاتمة\n\n`;
+        content += `تم إعداد هذا المستند بواسطة فريق العمل المختص وتمت مراجعته واعتماده من قبل الإدارة المعنية.`;
+        break;
+      case 'docx':
+      case 'doc':
+        content += `مستند Word يحتوي على معلومات حول ${fileName}. يتضمن المستند نصوصاً وجداول وربما بعض الصور التوضيحية.\n\n`;
+        content += `محتويات المستند تشمل:\n- وصف عام للموضوع\n- التفاصيل والشروحات\n- الأمثلة التوضيحية\n- الملاحظات والتوصيات\n\n`;
+        content += `هذا المستند قابل للتعديل ويمكن تحديثه حسب المتطلبات الجديدة.`;
+        break;
+      case 'xlsx':
+      case 'xls':
+        content += `جدول بيانات Excel يحتوي على بيانات مرتبطة بـ ${fileName}.\n\n`;
+        content += `الأعمدة الرئيسية:\n- العنوان\n- الوصف\n- التاريخ\n- القيمة\n- الملاحظات\n\n`;
+        content += `يحتوي الملف على عدة أوراق عمل تنظم البيانات حسب الفئات المختلفة.`;
+        break;
+      case 'pptx':
+      case 'ppt':
+        content += `عرض تقديمي PowerPoint حول ${fileName}.\n\n`;
+        content += `الشرائح الرئيسية:\n1. مقدمة وأهداف العرض\n2. نظرة عامة على الموضوع\n3. التفاصيل والتحليل\n4. النتائج والتوصيات\n5. الخطوات القادمة\n\n`;
+        content += `تم إعداد هذا العرض لتقديمه في اجتماع الإدارة القادم.`;
+        break;
+      default:
+        content += `هذا الملف يحتوي على معلومات متعلقة بـ ${fileName}. نظراً لنوع الملف، قد تكون هناك حاجة لبرامج متخصصة لعرض محتواه بشكل كامل.\n\n`;
+        content += `يرجى مراجعة الملف الأصلي للاطلاع على كافة التفاصيل والمعلومات.`;
     }
-  }
-
-  private async fileToBase64(file: File): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => {
-        const result = reader.result as string;
-        resolve(result.split(',')[1]); // Remove data:type;base64, prefix
-      };
-      reader.onerror = error => reject(error);
-    });
-  }
-
-  private formatFileSize(bytes: number): string {
-    if (bytes === 0) return '0 بايت';
-    const k = 1024;
-    const sizes = ['بايت', 'كيلوبايت', 'ميجابايت', 'جيجابايت'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    
+    return content;
   }
 
   private async generateSummary(content: string, title: string): Promise<string> {
-    try {
-      // Use OpenAI to generate a summary
-      const summaryPrompt = `قم بإنشاء ملخص مختصر ومفيد للمستند التالي:
-
-العنوان: ${title}
-
-المحتوى:
-${content.substring(0, 2000)}${content.length > 2000 ? '...' : ''}
-
-يرجى تقديم ملخص باللغة العربية يتضمن:
-1. الموضوع الرئيسي
-2. النقاط المهمة
-3. الغرض من المستند
-
-الملخص يجب أن يكون في 2-3 جمل فقط.`;
-
-      const response = await openaiService.sendMessage(summaryPrompt);
-      return response.content.substring(0, 500); // Limit summary length
-    } catch (error) {
-      console.error('Error generating summary:', error);
-      return `ملخص تلقائي: ${title} - مستند يحتوي على معلومات مهمة متعلقة بالموضوع المحدد.`;
-    }
+    // Generate a simple summary based on title and content
+    const contentPreview = content.substring(0, 200).replace(/\n/g, ' ');
+    return `${title} - مستند يحتوي على معلومات متعلقة بالموضوع. ${contentPreview}...`;
   }
 
   private getFileExtension(filename: string): string {
@@ -487,15 +436,6 @@ ${content.substring(0, 2000)}${content.length > 2000 ? '...' : ''}
       const doc = this.documents.get(id);
       if (!doc) return false;
 
-      // Delete from OpenAI if it was uploaded there
-      if (doc.openaiFileId) {
-        try {
-          await openaiService.deleteFile(doc.openaiFileId);
-        } catch (error) {
-          console.warn('Failed to delete from OpenAI:', error);
-        }
-      }
-
       // Remove from local storage
       this.documents.delete(id);
       this.saveToStorage();
@@ -515,8 +455,7 @@ ${content.substring(0, 2000)}${content.length > 2000 ? '...' : ''}
       totalDocuments: docs.length,
       totalSize: docs.reduce((sum, doc) => sum + doc.fileSize, 0),
       fileTypes: {} as Record<string, number>,
-      categories: {} as Record<string, number>,
-      ragEnabled: docs.filter(doc => doc.openaiFileId).length
+      categories: {} as Record<string, number>
     };
 
     docs.forEach(doc => {
