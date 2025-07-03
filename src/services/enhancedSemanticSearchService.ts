@@ -1,4 +1,3 @@
-// Enhanced semantic search service that prioritizes ElasticSearch over OpenAI Assistant search
 import openaiAssistantSearchService, { AssistantSearchResult } from './openaiAssistantSearchService';
 import elasticsearchService from './elasticsearchService';
 import enhancedDocumentIndexingService from './enhancedDocumentIndexingService';
@@ -331,39 +330,13 @@ class EnhancedSemanticSearchService {
 
   async getDocuments(): Promise<EnhancedSearchResult[]> {
     try {
-      // Get documents from ElasticSearch first
+      // Get documents from ElasticSearch
       const elasticDocs = await elasticsearchService.getAllDocuments();
-      if (elasticDocs.length > 0) {
-        return elasticDocs.map(doc => ({
-          ...doc,
-          source: 'elasticsearch' as const,
-          isRAGResult: false,
-          isSemanticMatch: true
-        }));
-      }
-      
-      // Fallback to enhanced document indexing service
-      const localDocs = await enhancedDocumentIndexingService.getAllDocuments();
-      return localDocs.map(doc => ({
-        id: doc.id,
-        title: doc.title,
-        description: doc.summary || doc.content.substring(0, 200) + '...',
-        excerpt: doc.content.substring(0, 300) + '...',
-        fileType: doc.fileType,
-        fileSize: doc.fileSize,
-        uploadDate: doc.uploadDate,
-        lastModified: doc.uploadDate,
-        author: doc.author,
-        tags: doc.tags,
-        category: doc.category,
-        relevanceScore: 100,
-        viewCount: Math.floor(Math.random() * 100) + 10,
-        content: doc.content,
-        isSemanticMatch: false,
+      return elasticDocs.map(doc => ({
+        ...doc,
+        source: 'elasticsearch' as const,
         isRAGResult: false,
-        matchedSections: [],
-        semanticSummary: doc.summary,
-        source: 'local' as const
+        isSemanticMatch: true
       }));
     } catch (error) {
       console.error('Error getting documents:', error);

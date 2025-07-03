@@ -16,7 +16,6 @@ interface EnhancedSearchInterfaceProps {
 const EnhancedSearchInterface: React.FC<EnhancedSearchInterfaceProps> = ({ onNavigateBack, initialSearchQuery = '' }) => {
   const [searchQuery, setSearchQuery] = useState(initialSearchQuery);
   const [searchResults, setSearchResults] = useState<EnhancedSearchResult[]>([]);
-  const [allDocuments, setAllDocuments] = useState<EnhancedSearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
@@ -50,10 +49,9 @@ const EnhancedSearchInterface: React.FC<EnhancedSearchInterfaceProps> = ({ onNav
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
 
   useEffect(() => {
-    loadDocuments();
+    loadDocumentStats();
     loadSearchHistory();
     initializeSpeechRecognition();
-    loadDocumentStats();
     
     // Check if ElasticSearch is in mock mode
     const checkMockMode = async () => {
@@ -79,7 +77,7 @@ const EnhancedSearchInterface: React.FC<EnhancedSearchInterfaceProps> = ({ onNav
     if (debouncedSearchQuery.trim()) {
       performSearch();
     } else {
-      setSearchResults(allDocuments);
+      setSearchResults([]);
       setNoResultsMessage(null);
     }
   }, [debouncedSearchQuery, filters, sortBy, sortOrder]);
@@ -147,21 +145,6 @@ const EnhancedSearchInterface: React.FC<EnhancedSearchInterfaceProps> = ({ onNav
     } else {
       recognition.start();
       setIsListening(true);
-    }
-  };
-
-  const loadDocuments = async () => {
-    setIsLoading(true);
-    try {
-      const documents = await enhancedSemanticSearchService.getDocuments();
-      setAllDocuments(documents);
-      setSearchResults(documents);
-    } catch (error) {
-      console.error('Error loading documents:', error);
-      setAllDocuments([]);
-      setSearchResults([]);
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -259,7 +242,6 @@ const EnhancedSearchInterface: React.FC<EnhancedSearchInterfaceProps> = ({ onNav
   };
 
   const handleUploadSuccess = async () => {
-    await loadDocuments();
     await loadDocumentStats();
     setShowUploadModal(false);
   };
