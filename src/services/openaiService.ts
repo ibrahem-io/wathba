@@ -25,26 +25,41 @@ interface ChatResponse {
 }
 
 class OpenAIService {
-  private config: OpenAIConfig;
+  private config: OpenAIConfig | null = null;
   private baseUrl = 'https://api.openai.com/v1';
 
   constructor() {
+    this.initializeConfig();
+  }
+
+  private initializeConfig() {
     const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
     
-    if (!apiKey) {
-      throw new Error('OpenAI API key not configured. Please add VITE_OPENAI_API_KEY to your .env file.');
+    if (!apiKey || apiKey === 'your_openai_api_key' || apiKey.trim() === '') {
+      console.warn('OpenAI API key not configured. Please add a valid VITE_OPENAI_API_KEY to your .env file.');
+      this.config = null;
+      return;
     }
     
     this.config = {
-      apiKey: apiKey
+      apiKey: apiKey.trim()
     };
   }
 
+  private checkConfiguration(): boolean {
+    if (!this.config) {
+      throw new Error('OpenAI service not configured. Please add a valid VITE_OPENAI_API_KEY to your .env file.');
+    }
+    return true;
+  }
+
   private async makeRequest(endpoint: string, options: RequestInit = {}) {
+    this.checkConfiguration();
+    
     const response = await fetch(`${this.baseUrl}${endpoint}`, {
       ...options,
       headers: {
-        'Authorization': `Bearer ${this.config.apiKey}`,
+        'Authorization': `Bearer ${this.config!.apiKey}`,
         'Content-Type': 'application/json',
         'OpenAI-Beta': 'assistants=v2',
         ...options.headers,
@@ -61,6 +76,8 @@ class OpenAIService {
 
   async initializeAssistant(): Promise<{ assistantId: string; vectorStoreId: string }> {
     try {
+      this.checkConfiguration();
+      
       // Create vector store first
       const vectorStore = await this.makeRequest('/vector_stores', {
         method: 'POST',
@@ -134,8 +151,8 @@ You are an AI assistant specialized in Saudi Ministry of Finance. Always respond
         })
       });
 
-      this.config.assistantId = assistant.id;
-      this.config.vectorStoreId = vectorStore.id;
+      this.config!.assistantId = assistant.id;
+      this.config!.vectorStoreId = vectorStore.id;
 
       // Store in localStorage for persistence
       localStorage.setItem('openai_assistant_id', assistant.id);
@@ -152,6 +169,8 @@ You are an AI assistant specialized in Saudi Ministry of Finance. Always respond
   }
 
   async getOrCreateAssistant(): Promise<{ assistantId: string; vectorStoreId: string }> {
+    this.checkConfiguration();
+    
     // Try to get from localStorage first
     const storedAssistantId = localStorage.getItem('openai_assistant_id');
     const storedVectorStoreId = localStorage.getItem('openai_vector_store_id');
@@ -162,8 +181,8 @@ You are an AI assistant specialized in Saudi Ministry of Finance. Always respond
         await this.makeRequest(`/assistants/${storedAssistantId}`);
         await this.makeRequest(`/vector_stores/${storedVectorStoreId}`);
         
-        this.config.assistantId = storedAssistantId;
-        this.config.vectorStoreId = storedVectorStoreId;
+        this.config!.assistantId = storedAssistantId;
+        this.config!.vectorStoreId = storedVectorStoreId;
         
         return {
           assistantId: storedAssistantId,
@@ -181,6 +200,8 @@ You are an AI assistant specialized in Saudi Ministry of Finance. Always respond
 
   async uploadFile(file: File): Promise<FileUploadResult> {
     try {
+      this.checkConfiguration();
+      
       // First upload file to OpenAI
       const formData = new FormData();
       formData.append('file', file);
@@ -189,7 +210,7 @@ You are an AI assistant specialized in Saudi Ministry of Finance. Always respond
       const fileResponse = await fetch(`${this.baseUrl}/files`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${this.config.apiKey}`,
+          'Authorization': `Bearer ${this.config!.apiKey}`,
         },
         body: formData
       });
@@ -202,12 +223,12 @@ You are an AI assistant specialized in Saudi Ministry of Finance. Always respond
       const fileData = await fileResponse.json();
 
       // Ensure we have vector store
-      if (!this.config.vectorStoreId) {
+      if (!this.config!.vectorStoreId) {
         await this.getOrCreateAssistant();
       }
 
       // Add file to vector store
-      const vectorStoreFile = await this.makeRequest(`/vector_stores/${this.config.vectorStoreId}/files`, {
+      const vectorStoreFile = await this.makeRequest(`/vector_stores/${this.config!.vectorStoreId}/files`, {
         method: 'POST',
         body: JSON.stringify({
           file_id: fileData.id
@@ -228,11 +249,13 @@ You are an AI assistant specialized in Saudi Ministry of Finance. Always respond
 
   async checkFileStatus(fileId: string): Promise<'processing' | 'ready' | 'error'> {
     try {
-      if (!this.config.vectorStoreId) {
+      this.checkConfiguration();
+      
+      if (!this.config!.vectorStoreId) {
         return 'error';
       }
 
-      const file = await this.makeRequest(`/vector_stores/${this.config.vectorStoreId}/files/${fileId}`);
+      const file = await this.makeRequest(`/vector_stores/${this.config!.vectorStoreId}/files/${fileId}`);
       
       switch (file.status) {
         case 'completed':
@@ -253,8 +276,10 @@ You are an AI assistant specialized in Saudi Ministry of Finance. Always respond
 
   async sendMessage(message: string, threadId?: string): Promise<ChatResponse> {
     try {
+      this.checkConfiguration();
+      
       // Ensure assistant is initialized
-      if (!this.config.assistantId) {
+      if (!this.config!.assistantId) {
         await this.getOrCreateAssistant();
       }
 
@@ -281,7 +306,7 @@ You are an AI assistant specialized in Saudi Ministry of Finance. Always respond
       const run = await this.makeRequest(`/threads/${currentThreadId}/runs`, {
         method: 'POST',
         body: JSON.stringify({
-          assistant_id: this.config.assistantId,
+          assistant_id: this.config!.assistantId,
           instructions: `يرجى الإجابة باللغة العربية بناءً على الوثائق المتاحة. 
 
 تنسيق الإجابة:
@@ -353,11 +378,13 @@ You are an AI assistant specialized in Saudi Ministry of Finance. Always respond
 
   async listUploadedFiles(): Promise<any[]> {
     try {
-      if (!this.config.vectorStoreId) {
+      this.checkConfiguration();
+      
+      if (!this.config!.vectorStoreId) {
         return [];
       }
 
-      const files = await this.makeRequest(`/vector_stores/${this.config.vectorStoreId}/files`);
+      const files = await this.makeRequest(`/vector_stores/${this.config!.vectorStoreId}/files`);
       return files.data || [];
     } catch (error) {
       console.error('Error listing files:', error);
@@ -367,9 +394,11 @@ You are an AI assistant specialized in Saudi Ministry of Finance. Always respond
 
   async deleteFile(fileId: string): Promise<boolean> {
     try {
+      this.checkConfiguration();
+      
       // Remove from vector store
-      if (this.config.vectorStoreId) {
-        await this.makeRequest(`/vector_stores/${this.config.vectorStoreId}/files/${fileId}`, {
+      if (this.config!.vectorStoreId) {
+        await this.makeRequest(`/vector_stores/${this.config!.vectorStoreId}/files/${fileId}`, {
           method: 'DELETE'
         });
       }
@@ -384,6 +413,10 @@ You are an AI assistant specialized in Saudi Ministry of Finance. Always respond
       console.error('Error deleting file:', error);
       return false;
     }
+  }
+
+  isConfigured(): boolean {
+    return this.config !== null;
   }
 }
 

@@ -4,10 +4,10 @@
 
 [[redirects]]
   from = "/api/elasticsearch/*"
-  to = "https://my-elasticsearch-project-f3e988.es.us-central1.gcp.elastic.cloud:443/:splat"
+  to = "https://localhost:9200/:splat"
   status = 200
   force = true
-  headers = {Authorization = "ApiKey T1B1OHpKY0JGTzVJOXhyWUYtUW86clpsb3ZJVzV0Q0dOSlBFdTFUQ3RKdw=="}
+  headers = {Authorization = ""}
 
 [[redirects]]
   from = "/*"

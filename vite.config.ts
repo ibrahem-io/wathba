@@ -7,21 +7,21 @@ export default defineConfig({
   server: {
     proxy: {
       '/api/elasticsearch': {
-        target: 'https://my-elasticsearch-project-f3e988.es.us-central1.gcp.elastic.cloud:443',
+        target: process.env.VITE_ELASTIC_URL || 'https://localhost:9200',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api\/elasticsearch/, ''),
         headers: {
-          'Authorization': 'ApiKey T1B1OHpKY0JGTzVJOXhyWUYtUW86clpsb3ZJVzV0Q0dOSlBFdTFUQ3RKdw=='
+          'Authorization': process.env.VITE_ELASTIC_API_KEY ? `ApiKey ${process.env.VITE_ELASTIC_API_KEY}` : ''
         },
         configure: (proxy, _options) => {
           proxy.on('error', (err, _req, _res) => {
-            console.log('proxy error', err);
+            console.log('Elasticsearch proxy error:', err.message);
           });
           proxy.on('proxyReq', (proxyReq, req, _res) => {
-            console.log('Sending Request:', req.method, req.url);
+            console.log('Sending Request to Elasticsearch:', req.method, req.url);
           });
           proxy.on('proxyRes', (proxyRes, req, _res) => {
-            console.log('Received Response:', proxyRes.statusCode, req.url);
+            console.log('Received Response from Elasticsearch:', proxyRes.statusCode, req.url);
           });
         },
       }
