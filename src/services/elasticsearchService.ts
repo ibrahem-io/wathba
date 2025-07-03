@@ -54,7 +54,7 @@ class ElasticSearchService {
   private baseUrl = '/api/elasticsearch';
   private indexName = 'mof-documents';
   private initialized = false;
-  private mockMode = false; // Start with real mode
+  private mockMode = true; // Start with mock mode by default for Netlify
 
   private async makeRequest(endpoint: string, options: RequestInit = {}) {
     // If in mock mode, return mock data instead of making actual requests
@@ -94,6 +94,7 @@ class ElasticSearchService {
       return response.json();
     } catch (error) {
       console.error('ElasticSearch request error:', error);
+      this.mockMode = true; // Switch to mock mode after error
       throw error;
     }
   }
@@ -203,6 +204,25 @@ class ElasticSearchService {
         extractedText: 'إعلان هام حول تحديث نظام الرواتب والتغييرات المطلوبة',
         summary: 'يتضمن الإعلان تفاصيل التحديث الجديد وجدولة التطبيق والتدريب المطلوب للموظفين.',
         metadata: { department: 'إدارة الموارد البشرية', priority: 'high' }
+      },
+      {
+        id: 'mock-doc-6',
+        title: 'فاتورة LinkedIn - LNKD_INVOICE_78196333075',
+        content: 'فاتورة ضريبية من شركة LinkedIn المحدودة في أيرلندا، تتضمن تفاصيل عن المعاملة التي تمت في 28 أبريل 2025',
+        fileType: 'pdf',
+        fileSize: 105938,
+        uploadDate: '2025-07-03T05:43:15.331Z',
+        author: 'مستخدم النظام',
+        tags: ['فاتورة', 'linkedin', 'ضريبة'],
+        category: 'تقارير مالية',
+        filename: 'LNKD_INVOICE_78196333075.pdf',
+        extractedText: 'فاتورة ضريبية من شركة LinkedIn المحدودة في أيرلندا، تتضمن تفاصيل عن المعاملة التي تمت في 28 أبريل 2025',
+        summary: 'المستند عبارة عن فاتورة ضريبية من شركة LinkedIn المحدودة في أيرلندا، تتضمن تفاصيل عن المعاملة التي تمت في 28 أبريل 2025. الفاتورة تتضمن رسوم اشتراك شهري لخدمة Sales Navigator Core.',
+        metadata: { 
+          description: 'فاتورة LinkedIn',
+          originalFilename: 'LNKD_INVOICE_78196333075.pdf',
+          mimeType: 'application/pdf'
+        }
       }
     ];
 
@@ -234,7 +254,7 @@ class ElasticSearchService {
           buckets: [
             { key: 'سياسات مالية', doc_count: 1 },
             { key: 'أدلة إجرائية', doc_count: 1 },
-            { key: 'تقارير مالية', doc_count: 1 },
+            { key: 'تقارير مالية', doc_count: 2 },
             { key: 'استراتيجيات', doc_count: 1 },
             { key: 'إعلانات', doc_count: 1 }
           ]
@@ -265,6 +285,15 @@ class ElasticSearchService {
   async initializeIndex(): Promise<boolean> {
     try {
       if (this.initialized) {
+        return true;
+      }
+
+      // Check if we're on Netlify
+      const isNetlify = window.location.hostname.includes('netlify.app');
+      if (isNetlify) {
+        console.log('Running on Netlify, using mock mode for ElasticSearch');
+        this.mockMode = true;
+        this.initialized = true;
         return true;
       }
 
@@ -582,7 +611,7 @@ class ElasticSearchService {
 
       return {
         id: hit._id,
-        title: source.title,
+        title: highlights.title ? highlights.title[0] : source.title,
         description: source.summary || source.content.substring(0, 200) + '...',
         excerpt,
         fileType: source.fileType,
@@ -599,7 +628,7 @@ class ElasticSearchService {
         isSemanticMatch: true, // ElasticSearch provides semantic-like search
         isRAGResult: false, // This is ElasticSearch, not OpenAI RAG
         matchedSections: matchedSections.slice(0, 5),
-        semanticSummary: source.summary,
+        semanticSummary: highlights.summary ? highlights.summary[0] : source.summary,
         citations: [source.filename],
         source: 'elasticsearch' as any
       };
@@ -673,17 +702,17 @@ class ElasticSearchService {
       
       // Return mock stats
       return {
-        totalDocuments: 5,
+        totalDocuments: 6,
         totalSize: 24.39 * 1024 * 1024,
         fileTypes: {
-          'pdf': 3,
+          'pdf': 4,
           'excel': 1,
           'ppt': 1
         },
         categories: {
           'سياسات مالية': 1,
           'أدلة إجرائية': 1,
-          'تقارير مالية': 1,
+          'تقارير مالية': 2,
           'استراتيجيات': 1,
           'إعلانات': 1
         },

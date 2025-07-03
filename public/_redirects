@@ -1,0 +1,7 @@
+# Netlify redirects file
+
+# Redirect ElasticSearch API requests to the actual ElasticSearch server
+/api/elasticsearch/* https://my-elasticsearch-project-f3e988.es.us-central1.gcp.elastic.cloud:443/:splat 200!
+
+# Handle SPA routing
+/* /index.html 200
