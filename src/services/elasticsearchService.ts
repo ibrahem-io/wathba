@@ -111,7 +111,26 @@ class ElasticSearchService {
         } else if (endpoint === `/${this.indexName}` && options.method === 'PUT') {
           resolve({ acknowledged: true, index: this.indexName });
         } else if (endpoint.includes('/_search')) {
-          resolve(this.getMockSearchResults());
+          // Check if this is a search query with a specific term
+          let searchQuery = '';
+          if (options.body) {
+            try {
+              const body = JSON.parse(options.body as string);
+              if (body.query?.bool?.must?.[0]?.multi_match?.query) {
+                searchQuery = body.query.bool.must[0].multi_match.query.toLowerCase();
+              }
+            } catch (e) {
+              console.error('Error parsing search body:', e);
+            }
+          }
+          
+          // Filter mock results based on the search query if provided
+          if (searchQuery) {
+            const filteredResults = this.getFilteredMockResults(searchQuery);
+            resolve(filteredResults);
+          } else {
+            resolve(this.getMockSearchResults());
+          }
         } else if (endpoint === `/${this.indexName}/_stats`) {
           resolve({ indices: { [this.indexName]: { total: { docs: { count: 6 } } } } });
         } else if (endpoint === `/${this.indexName}/_count`) {
@@ -127,9 +146,139 @@ class ElasticSearchService {
     });
   }
 
+  // Filter mock results based on search query
+  private getFilteredMockResults(searchQuery: string): ElasticSearchResponse {
+    const allMockDocuments = this.getMockDocuments();
+    
+    // Filter documents that match the search query
+    const filteredDocuments = allMockDocuments.filter(doc => {
+      const searchableText = `${doc.title} ${doc.content} ${doc.tags.join(' ')} ${doc.category} ${doc.summary || ''}`.toLowerCase();
+      return searchableText.includes(searchQuery);
+    });
+    
+    // Calculate relevance scores based on match quality
+    const scoredDocuments = filteredDocuments.map(doc => {
+      let score = 0;
+      const searchableTitle = doc.title.toLowerCase();
+      const searchableContent = doc.content.toLowerCase();
+      const searchableTags = doc.tags.join(' ').toLowerCase();
+      
+      // Higher score for title matches
+      if (searchableTitle.includes(searchQuery)) {
+        score += 100;
+      }
+      
+      // Medium score for content matches
+      if (searchableContent.includes(searchQuery)) {
+        score += 50;
+      }
+      
+      // Lower score for tag matches
+      if (searchableTags.includes(searchQuery)) {
+        score += 25;
+      }
+      
+      return { doc, score };
+    });
+    
+    // Sort by score and create the response
+    scoredDocuments.sort((a, b) => b.score - a.score);
+    
+    return {
+      hits: {
+        total: {
+          value: scoredDocuments.length
+        },
+        hits: scoredDocuments.map((item, index) => ({
+          _id: item.doc.id,
+          _score: item.score,
+          _source: item.doc,
+          highlight: {
+            title: [this.highlightText(item.doc.title, searchQuery)],
+            content: [this.highlightText(item.doc.content.substring(0, 100) + '...', searchQuery)]
+          }
+        }))
+      },
+      took: 42,
+      aggregations: {
+        file_types: {
+          buckets: [
+            { key: 'pdf', doc_count: 4 },
+            { key: 'excel', doc_count: 1 },
+            { key: 'ppt', doc_count: 1 }
+          ]
+        },
+        categories: {
+          buckets: [
+            { key: 'سياسات مالية', doc_count: 1 },
+            { key: 'أدلة إجرائية', doc_count: 1 },
+            { key: 'تقارير مالية', doc_count: 2 },
+            { key: 'استراتيجيات', doc_count: 1 },
+            { key: 'إعلانات', doc_count: 1 }
+          ]
+        },
+        total_size: {
+          value: 24.39 * 1024 * 1024
+        }
+      }
+    };
+  }
+
+  // Helper to highlight search terms in text
+  private highlightText(text: string, query: string): string {
+    if (!query || !text) return text;
+    
+    const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+    return text.replace(regex, '<mark>$1</mark>');
+  }
+
   // Mock search results
   private getMockSearchResults(): ElasticSearchResponse {
-    const mockDocuments = [
+    const mockDocuments = this.getMockDocuments();
+
+    return {
+      hits: {
+        total: {
+          value: mockDocuments.length
+        },
+        hits: mockDocuments.map((doc, index) => ({
+          _id: doc.id,
+          _score: 100 - (index * 10),
+          _source: doc,
+          highlight: {
+            title: [doc.title],
+            content: [doc.content.substring(0, 100) + '...']
+          }
+        }))
+      },
+      took: 42,
+      aggregations: {
+        file_types: {
+          buckets: [
+            { key: 'pdf', doc_count: 4 },
+            { key: 'excel', doc_count: 1 },
+            { key: 'ppt', doc_count: 1 }
+          ]
+        },
+        categories: {
+          buckets: [
+            { key: 'سياسات مالية', doc_count: 1 },
+            { key: 'أدلة إجرائية', doc_count: 1 },
+            { key: 'تقارير مالية', doc_count: 2 },
+            { key: 'استراتيجيات', doc_count: 1 },
+            { key: 'إعلانات', doc_count: 1 }
+          ]
+        },
+        total_size: {
+          value: 24.39 * 1024 * 1024
+        }
+      }
+    };
+  }
+
+  // Get mock documents
+  private getMockDocuments(): ElasticSearchDocument[] {
+    return [
       {
         id: 'mock-doc-1',
         title: 'سياسة المصروفات الرأسمالية للعام المالي 2024',
@@ -225,45 +374,6 @@ class ElasticSearchService {
         }
       }
     ];
-
-    return {
-      hits: {
-        total: {
-          value: mockDocuments.length
-        },
-        hits: mockDocuments.map((doc, index) => ({
-          _id: doc.id,
-          _score: 100 - (index * 10),
-          _source: doc,
-          highlight: {
-            title: [doc.title],
-            content: [doc.content.substring(0, 100) + '...']
-          }
-        }))
-      },
-      took: 42,
-      aggregations: {
-        file_types: {
-          buckets: [
-            { key: 'pdf', doc_count: 4 },
-            { key: 'excel', doc_count: 1 },
-            { key: 'ppt', doc_count: 1 }
-          ]
-        },
-        categories: {
-          buckets: [
-            { key: 'سياسات مالية', doc_count: 1 },
-            { key: 'أدلة إجرائية', doc_count: 1 },
-            { key: 'تقارير مالية', doc_count: 2 },
-            { key: 'استراتيجيات', doc_count: 1 },
-            { key: 'إعلانات', doc_count: 1 }
-          ]
-        },
-        total_size: {
-          value: 24.39 * 1024 * 1024
-        }
-      }
-    };
   }
 
   async checkIndexExists(): Promise<boolean> {
@@ -460,7 +570,7 @@ class ElasticSearchService {
       this.mockMode = true; // Switch to mock mode after search failure
       
       // Return mock results
-      const mockResponse = this.getMockSearchResults();
+      const mockResponse = this.getFilteredMockResults(query);
       const results = this.convertElasticResultsToEnhanced(mockResponse, query);
       
       return {
@@ -495,7 +605,8 @@ class ElasticSearchService {
           ],
           type: 'best_fields',
           fuzziness: 'AUTO',
-          operator: 'or'
+          operator: 'or',
+          minimum_should_match: "70%" // Require at least 70% of terms to match
         }
       });
     } else {
@@ -585,7 +696,8 @@ class ElasticSearchService {
         pre_tags: ['<mark>'],
         post_tags: ['</mark>']
       },
-      _source: true
+      _source: true,
+      min_score: 5.0 // Set a minimum score threshold to filter out low-relevance results
     };
 
     return searchBody;

@@ -57,7 +57,7 @@ const EnhancedSearchResults: React.FC<EnhancedSearchResultsProps> = ({
     if (!query.trim() || !text) return text;
     
     // Check if text already contains <mark> tags from ElasticSearch
-    if (text.includes('<mark>')) return text;
+    if (typeof text === 'string' && text.includes('<mark>')) return text;
     
     const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
     const parts = text.split(regex);
