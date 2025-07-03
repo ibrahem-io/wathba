@@ -28,7 +28,6 @@ export interface AssistantSearchResponse {
 class OpenAIAssistantSearchService {
   private assistantId: string | null = null;
   private vectorStoreId: string | null = null;
-  private searchThreads: Map<string, string> = new Map(); // query -> threadId
 
   async initialize(): Promise<boolean> {
     try {
@@ -67,16 +66,8 @@ class OpenAIAssistantSearchService {
       // Create a search-optimized prompt for the assistant
       const searchPrompt = this.createSearchPrompt(query, limit);
 
-      // Use existing thread for this query or create new one
-      let threadId = this.searchThreads.get(query);
-      
-      // Send message to assistant with file search enabled
-      const response = await openaiService.sendMessage(searchPrompt, threadId);
-      
-      if (response.threadId) {
-        this.searchThreads.set(query, response.threadId);
-        threadId = response.threadId;
-      }
+      // Always create a new thread for each search to avoid conflicts
+      const response = await openaiService.sendMessage(searchPrompt, undefined);
 
       // Parse the assistant's response to extract search results
       const results = this.parseAssistantSearchResponse(response.content, query);
@@ -88,7 +79,7 @@ class OpenAIAssistantSearchService {
         totalCount: results.length,
         searchTime,
         suggestions: this.generateSearchSuggestions(query),
-        threadId
+        threadId: response.threadId
       };
     } catch (error) {
       console.error('OpenAI Assistant search error:', error);
@@ -244,9 +235,6 @@ class OpenAIAssistantSearchService {
       // Upload file to OpenAI and add to vector store
       const result = await openaiService.uploadFile(file);
       
-      // Clear search threads cache since we have new content
-      this.searchThreads.clear();
-      
       return {
         success: true,
         fileId: result.fileId
@@ -272,8 +260,6 @@ class OpenAIAssistantSearchService {
   async deleteFile(fileId: string): Promise<boolean> {
     try {
       const result = await openaiService.deleteFile(fileId);
-      // Clear search threads cache since content changed
-      this.searchThreads.clear();
       return result;
     } catch (error) {
       console.error('Error deleting file:', error);
