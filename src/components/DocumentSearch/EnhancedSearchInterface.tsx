@@ -83,21 +83,6 @@ const EnhancedSearchInterface: React.FC<EnhancedSearchInterfaceProps> = ({ onNav
     }
   };
 
-  const loadDocuments = async () => {
-    setIsLoading(true);
-    try {
-      const documents = await enhancedSemanticSearchService.getDocuments();
-      setAllDocuments(documents);
-      setSearchResults(documents);
-    } catch (error) {
-      console.error('Error loading documents:', error);
-      setAllDocuments([]);
-      setSearchResults([]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const initializeSpeechRecognition = () => {
     if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -137,6 +122,21 @@ const EnhancedSearchInterface: React.FC<EnhancedSearchInterfaceProps> = ({ onNav
     }
   };
 
+  const loadDocuments = async () => {
+    setIsLoading(true);
+    try {
+      const documents = await enhancedSemanticSearchService.getDocuments();
+      setAllDocuments(documents);
+      setSearchResults(documents);
+    } catch (error) {
+      console.error('Error loading documents:', error);
+      setAllDocuments([]);
+      setSearchResults([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const loadSearchHistory = () => {
     const history = localStorage.getItem('searchHistory');
     if (history) {
@@ -172,7 +172,7 @@ const EnhancedSearchInterface: React.FC<EnhancedSearchInterfaceProps> = ({ onNav
       setElasticsearchResults(response.elasticsearchResults || 0);
       setSearchStrategy(response.searchStrategy || 'elasticsearch');
       setNoResultsMessage(response.noResultsMessage || null);
-      
+
       if (query) {
         saveSearchHistory(query);
       }

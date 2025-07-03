@@ -70,6 +70,11 @@ class EnhancedSemanticSearchService {
     if (query === this.lastSearchQuery && now - this.lastSearchTime < this.searchThrottleMs) {
       console.log('Search throttled - skipping duplicate request for:', query);
       
+      // If we have a pending request, wait for it to complete
+      if (this.pendingSearchRequest) {
+        return await this.pendingSearchRequest;
+      }
+      
       // Return empty results to indicate throttling
       return {
         results: [],
@@ -86,7 +91,7 @@ class EnhancedSemanticSearchService {
     // If we already have a pending search request, wait for it to complete
     if (this.pendingSearchRequest) {
       console.log('Waiting for pending search request to complete');
-      return this.pendingSearchRequest;
+      return await this.pendingSearchRequest;
     }
     
     // Update search tracking
@@ -95,7 +100,7 @@ class EnhancedSemanticSearchService {
     
     const startTime = Date.now();
     
-    // Create a new search request
+    // Create a new search request and store it
     this.pendingSearchRequest = this.performSearch(query, filters, sortBy, sortOrder, startTime);
     
     try {
