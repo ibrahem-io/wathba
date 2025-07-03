@@ -54,7 +54,7 @@ class ElasticSearchService {
   private baseUrl = '/api/elasticsearch';
   private indexName = 'mof-documents';
   private initialized = false;
-  private mockMode = true; // Start with mock mode by default for Netlify
+  private mockMode = false; // Start with real mode by default
 
   private async makeRequest(endpoint: string, options: RequestInit = {}) {
     // If in mock mode, return mock data instead of making actual requests
@@ -113,9 +113,9 @@ class ElasticSearchService {
         } else if (endpoint.includes('/_search')) {
           resolve(this.getMockSearchResults());
         } else if (endpoint === `/${this.indexName}/_stats`) {
-          resolve({ indices: { [this.indexName]: { total: { docs: { count: 5 } } } } });
+          resolve({ indices: { [this.indexName]: { total: { docs: { count: 6 } } } } });
         } else if (endpoint === `/${this.indexName}/_count`) {
-          resolve({ count: 5 });
+          resolve({ count: 6 });
         } else if (endpoint.includes('/_doc/') && options.method === 'PUT') {
           resolve({ _index: this.indexName, _id: JSON.parse(options.body as string).id, result: 'created' });
         } else if (endpoint.includes('/_doc/') && options.method === 'DELETE') {
@@ -245,7 +245,7 @@ class ElasticSearchService {
       aggregations: {
         file_types: {
           buckets: [
-            { key: 'pdf', doc_count: 3 },
+            { key: 'pdf', doc_count: 4 },
             { key: 'excel', doc_count: 1 },
             { key: 'ppt', doc_count: 1 }
           ]
@@ -288,13 +288,18 @@ class ElasticSearchService {
         return true;
       }
 
-      // Check if we're on Netlify
-      const isNetlify = window.location.hostname.includes('netlify.app');
-      if (isNetlify) {
-        console.log('Running on Netlify, using mock mode for ElasticSearch');
-        this.mockMode = true;
-        this.initialized = true;
-        return true;
+      // Check if we're in a browser environment
+      if (typeof window !== 'undefined') {
+        // Get the API key from environment variables
+        const apiKey = import.meta.env.VITE_ELASTIC_API_KEY;
+        
+        // If no API key is provided, use mock mode
+        if (!apiKey) {
+          console.warn('No ElasticSearch API key found in environment variables, using mock mode');
+          this.mockMode = true;
+          this.initialized = true;
+          return true;
+        }
       }
 
       // Check if index exists

@@ -26,5 +26,16 @@ export default defineConfig({
         },
       }
     }
+  },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom', 'lucide-react'],
+          elasticsearch: ['./src/services/elasticsearchService.ts'],
+          openai: ['./src/services/openaiService.ts']
+        }
+      }
+    }
   }
 })

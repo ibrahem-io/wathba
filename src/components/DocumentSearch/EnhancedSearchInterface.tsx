@@ -37,7 +37,7 @@ const EnhancedSearchInterface: React.FC<EnhancedSearchInterfaceProps> = ({ onNav
   const [questionAnswer, setQuestionAnswer] = useState<{ answer: string; citations: string[] } | null>(null);
   const [searchStrategy, setSearchStrategy] = useState<'elasticsearch' | 'openai_fallback' | 'both'>('elasticsearch');
   const [noResultsMessage, setNoResultsMessage] = useState<string | null>(null);
-  const [isMockMode, setIsMockMode] = useState<boolean>(true);
+  const [isMockMode, setIsMockMode] = useState<boolean>(false);
   
   const [filters, setFilters] = useState<ISearchFilters>({
     dateRange: { start: '', end: '' },

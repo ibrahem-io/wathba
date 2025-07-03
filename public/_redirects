@@ -2,6 +2,9 @@
 
 # Redirect ElasticSearch API requests to the actual ElasticSearch server
 /api/elasticsearch/* https://my-elasticsearch-project-f3e988.es.us-central1.gcp.elastic.cloud:443/:splat 200!
+# Add authorization header to ElasticSearch requests
+/api/elasticsearch/* https://my-elasticsearch-project-f3e988.es.us-central1.gcp.elastic.cloud:443/:splat 200!
+  Authorization: ApiKey T1B1OHpKY0JGTzVJOXhyWUYtUW86clpsb3ZJVzV0Q0dOSlBFdTFUQ3RKdw==
 
 # Handle SPA routing
 /* /index.html 200
