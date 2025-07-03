@@ -38,7 +38,12 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
   };
 
   const highlightText = (text: string, query: string) => {
-    if (!query.trim()) return text;
+    if (!query.trim() || !text) return text;
+    
+    // Check if text already contains <mark> tags from ElasticSearch
+    if (typeof text === 'string' && text.includes('<mark>')) {
+      return <span dangerouslySetInnerHTML={{ __html: text }} />;
+    }
     
     const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
     const parts = text.split(regex);
@@ -240,7 +245,9 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
                     <div>
                       <h2 className="text-xl font-semibold mb-4">التحليل الدلالي</h2>
                       <p className="bg-green-50 p-4 rounded-lg border border-green-200">
-                        {highlightText(document.semanticSummary, searchQuery)}
+                        {typeof document.semanticSummary === 'string' && document.semanticSummary.includes('<mark>') 
+                          ? <span dangerouslySetInnerHTML={{ __html: document.semanticSummary }} />
+                          : highlightText(document.semanticSummary, searchQuery)}
                       </p>
                     </div>
                   )}
@@ -253,7 +260,9 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
                         {document.matchedSections.map((section, index) => (
                           <div key={index} className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
                             <p className="text-sm text-gray-700">
-                              {highlightText(section, searchQuery)}
+                              {typeof section === 'string' && section.includes('<mark>') 
+                                ? <span dangerouslySetInnerHTML={{ __html: section }} />
+                                : highlightText(section, searchQuery)}
                             </p>
                           </div>
                         ))}
@@ -267,7 +276,9 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
                     <div className="prose prose-lg max-w-none">
                       {document.content ? (
                         <div className="whitespace-pre-wrap">
-                          {highlightText(getPageContent(currentPage), searchQuery)}
+                          {typeof document.content === 'string' && document.content.includes('<mark>') 
+                            ? <span dangerouslySetInnerHTML={{ __html: getPageContent(currentPage) }} />
+                            : highlightText(getPageContent(currentPage), searchQuery)}
                         </div>
                       ) : (
                         <p className="text-gray-500 italic">

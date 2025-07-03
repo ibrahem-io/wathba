@@ -1,5 +1,5 @@
 import React from 'react';
-import { FileText, Download, Eye, Share2, Calendar, User, Tag, Star, Clock, AlertCircle, Brain, Target, Zap, Quote, Bot, Search, ExternalLink } from 'lucide-react';
+import { FileText, Download, Eye, Share2, Calendar, User, Tag, Star, Clock, AlertCircle, Brain, Target, Zap, Quote, Bot, Search, ExternalLink, Database } from 'lucide-react';
 import { EnhancedSearchResult } from '../../services/enhancedSemanticSearchService';
 
 interface EnhancedSearchResultsProps {
@@ -54,7 +54,10 @@ const EnhancedSearchResults: React.FC<EnhancedSearchResultsProps> = ({
   };
 
   const highlightText = (text: string, query: string) => {
-    if (!query.trim()) return text;
+    if (!query.trim() || !text) return text;
+    
+    // Check if text already contains <mark> tags from ElasticSearch
+    if (text.includes('<mark>')) return text;
     
     const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
     const parts = text.split(regex);
@@ -84,8 +87,8 @@ const EnhancedSearchResults: React.FC<EnhancedSearchResultsProps> = ({
     } else {
       return (
         <div className="flex items-center gap-1 text-blue-600">
-          <Search className="h-4 w-4" />
-          <span className="text-xs font-medium">بحث محلي</span>
+          <Database className="h-4 w-4" />
+          <span className="text-xs font-medium">ElasticSearch</span>
         </div>
       );
     }
@@ -94,16 +97,41 @@ const EnhancedSearchResults: React.FC<EnhancedSearchResultsProps> = ({
   if (isLoading) {
     return (
       <div className="space-y-6">
-        {[...Array(5)].map((_, index) => (
+        {[...Array(3)].map((_, index) => (
           <div key={index} className="bg-white rounded-lg border border-gray-200 p-6 animate-pulse">
-            <div className="flex items-start gap-4">
-              <div className="w-12 h-12 bg-gray-200 rounded-lg"></div>
-              <div className="flex-1">
+            <div className="flex items-start justify-between mb-4">
+              <div className="flex-1 min-w-0">
                 <div className="h-6 bg-gray-200 rounded mb-3 w-3/4"></div>
-                <div className="h-4 bg-gray-200 rounded mb-2 w-full"></div>
-                <div className="h-4 bg-gray-200 rounded mb-2 w-2/3"></div>
-                <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                <div className="flex items-center gap-4 mb-3">
+                  <div className="h-4 w-16 bg-gray-200 rounded"></div>
+                  <div className="h-4 w-4 bg-gray-200 rounded-full"></div>
+                  <div className="h-4 w-24 bg-gray-200 rounded"></div>
+                  <div className="h-4 w-4 bg-gray-200 rounded-full"></div>
+                  <div className="h-4 w-32 bg-gray-200 rounded"></div>
+                </div>
               </div>
+              <div className="flex items-center gap-3 ml-4 flex-shrink-0">
+                <div className="h-6 w-24 bg-gray-200 rounded-full"></div>
+              </div>
+            </div>
+            
+            <div className="h-16 bg-gray-200 rounded mb-4"></div>
+            
+            <div className="h-24 bg-gray-100 rounded-lg mb-4"></div>
+            
+            <div className="flex flex-wrap gap-2 mb-4">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="h-6 w-16 bg-gray-200 rounded-full"></div>
+              ))}
+            </div>
+            
+            <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+              <div className="flex items-center gap-4">
+                <div className="h-4 w-24 bg-gray-200 rounded"></div>
+                <div className="h-4 w-16 bg-gray-200 rounded"></div>
+                <div className="h-4 w-16 bg-gray-200 rounded"></div>
+              </div>
+              <div className="h-4 w-32 bg-gray-200 rounded"></div>
             </div>
           </div>
         ))}
@@ -143,7 +171,9 @@ const EnhancedSearchResults: React.FC<EnhancedSearchResultsProps> = ({
             <div className="flex items-start justify-between mb-4">
               <div className="flex-1 min-w-0">
                 <h3 className="text-xl font-semibold text-blue-600 hover:text-blue-700 transition-colors mb-2 leading-tight">
-                  {highlightText(document.title, searchQuery)}
+                  {typeof document.title === 'string' && document.title.includes('<mark>') 
+                    ? <span dangerouslySetInnerHTML={{ __html: document.title }} />
+                    : highlightText(document.title, searchQuery)}
                 </h3>
                 
                 {/* Metadata row */}
@@ -183,7 +213,9 @@ const EnhancedSearchResults: React.FC<EnhancedSearchResultsProps> = ({
             {/* Description/Excerpt */}
             {document.excerpt && (
               <p className="text-gray-700 mb-4 leading-relaxed text-base">
-                {highlightText(document.excerpt, searchQuery)}
+                {typeof document.excerpt === 'string' && document.excerpt.includes('<mark>') 
+                  ? <span dangerouslySetInnerHTML={{ __html: document.excerpt }} />
+                  : highlightText(document.excerpt, searchQuery)}
               </p>
             )}
 
@@ -215,7 +247,9 @@ const EnhancedSearchResults: React.FC<EnhancedSearchResultsProps> = ({
                       <p className={`text-sm leading-relaxed ${
                         document.isRAGResult ? 'text-green-800' : 'text-blue-800'
                       }`}>
-                        {highlightText(section.substring(0, 200) + (section.length > 200 ? '...' : ''), searchQuery)}
+                        {typeof section === 'string' && section.includes('<mark>') 
+                          ? <span dangerouslySetInnerHTML={{ __html: section }} />
+                          : highlightText(section.substring(0, 200) + (section.length > 200 ? '...' : ''), searchQuery)}
                       </p>
                     </div>
                   ))}
