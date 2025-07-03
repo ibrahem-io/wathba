@@ -54,14 +54,8 @@ class ElasticSearchService {
   private baseUrl = '/api/elasticsearch';
   private indexName = 'mof-documents';
   private initialized = false;
-  private mockMode = false; // Start with real mode by default
 
   private async makeRequest(endpoint: string, options: RequestInit = {}) {
-    // If in mock mode, return mock data instead of making actual requests
-    if (this.mockMode) {
-      return this.getMockResponse(endpoint, options);
-    }
-
     try {
       const url = `${this.baseUrl}${endpoint}`;
       
@@ -102,286 +96,8 @@ class ElasticSearchService {
       return responseData;
     } catch (error) {
       console.error('ElasticSearch request error:', error);
-      this.mockMode = true; // Switch to mock mode after error
       throw error;
     }
-  }
-
-  // Mock response generator for different endpoints
-  private getMockResponse(endpoint: string, options: RequestInit = {}): any {
-    // Simulate a small delay
-    return new Promise(resolve => {
-      setTimeout(() => {
-        if (endpoint === '/_cluster/health') {
-          resolve({ status: 'green', cluster_name: 'mock-cluster' });
-        } else if (endpoint === `/${this.indexName}` && options.method === 'HEAD') {
-          resolve(true);
-        } else if (endpoint === `/${this.indexName}` && options.method === 'PUT') {
-          resolve({ acknowledged: true, index: this.indexName });
-        } else if (endpoint.includes('/_search')) {
-          // Check if this is a search query with a specific term
-          let searchQuery = '';
-          if (options.body) {
-            try {
-              const body = JSON.parse(options.body as string);
-              if (body.query?.bool?.must?.[0]?.multi_match?.query) {
-                searchQuery = body.query.bool.must[0].multi_match.query.toLowerCase();
-              }
-            } catch (e) {
-              console.error('Error parsing search body:', e);
-            }
-          }
-          
-          // Filter mock results based on the search query if provided
-          if (searchQuery) {
-            const filteredResults = this.getFilteredMockResults(searchQuery);
-            resolve(filteredResults);
-          } else {
-            resolve(this.getMockSearchResults());
-          }
-        } else if (endpoint === `/${this.indexName}/_stats`) {
-          resolve({ indices: { [this.indexName]: { total: { docs: { count: 6 } } } } });
-        } else if (endpoint === `/${this.indexName}/_count`) {
-          resolve({ count: 6 });
-        } else if (endpoint.includes('/_doc/') && options.method === 'PUT') {
-          resolve({ _index: this.indexName, _id: JSON.parse(options.body as string).id, result: 'created' });
-        } else if (endpoint.includes('/_doc/') && options.method === 'DELETE') {
-          resolve({ _index: this.indexName, result: 'deleted' });
-        } else {
-          resolve({ message: 'Mock response for ' + endpoint });
-        }
-      }, 100);
-    });
-  }
-
-  // Filter mock results based on search query
-  private getFilteredMockResults(searchQuery: string): ElasticSearchResponse {
-    const allMockDocuments = this.getMockDocuments();
-    
-    // Filter documents that match the search query
-    const filteredDocuments = allMockDocuments.filter(doc => {
-      const searchableText = `${doc.title} ${doc.content} ${doc.tags.join(' ')} ${doc.category} ${doc.summary || ''}`.toLowerCase();
-      return searchableText.includes(searchQuery);
-    });
-    
-    // Calculate relevance scores based on match quality
-    const scoredDocuments = filteredDocuments.map(doc => {
-      let score = 0;
-      const searchableTitle = doc.title.toLowerCase();
-      const searchableContent = doc.content.toLowerCase();
-      const searchableTags = doc.tags.join(' ').toLowerCase();
-      
-      // Higher score for title matches
-      if (searchableTitle.includes(searchQuery)) {
-        score += 100;
-      }
-      
-      // Medium score for content matches
-      if (searchableContent.includes(searchQuery)) {
-        score += 50;
-      }
-      
-      // Lower score for tag matches
-      if (searchableTags.includes(searchQuery)) {
-        score += 25;
-      }
-      
-      return { doc, score };
-    });
-    
-    // Sort by score and create the response
-    scoredDocuments.sort((a, b) => b.score - a.score);
-    
-    return {
-      hits: {
-        total: {
-          value: scoredDocuments.length
-        },
-        hits: scoredDocuments.map((item, index) => ({
-          _id: item.doc.id,
-          _score: item.score,
-          _source: item.doc,
-          highlight: {
-            title: [this.highlightText(item.doc.title, searchQuery)],
-            content: [this.highlightText(item.doc.content.substring(0, 100) + '...', searchQuery)]
-          }
-        }))
-      },
-      took: 42,
-      aggregations: {
-        file_types: {
-          buckets: [
-            { key: 'pdf', doc_count: 4 },
-            { key: 'excel', doc_count: 1 },
-            { key: 'ppt', doc_count: 1 }
-          ]
-        },
-        categories: {
-          buckets: [
-            { key: 'سياسات مالية', doc_count: 1 },
-            { key: 'أدلة إجرائية', doc_count: 1 },
-            { key: 'تقارير مالية', doc_count: 2 },
-            { key: 'استراتيجيات', doc_count: 1 },
-            { key: 'إعلانات', doc_count: 1 }
-          ]
-        },
-        total_size: {
-          value: 24.39 * 1024 * 1024
-        }
-      }
-    };
-  }
-
-  // Helper to highlight search terms in text
-  private highlightText(text: string, query: string): string {
-    if (!query || !text) return text;
-    
-    const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
-    return text.replace(regex, '<mark>$1</mark>');
-  }
-
-  // Mock search results
-  private getMockSearchResults(): ElasticSearchResponse {
-    const mockDocuments = this.getMockDocuments();
-
-    return {
-      hits: {
-        total: {
-          value: mockDocuments.length
-        },
-        hits: mockDocuments.map((doc, index) => ({
-          _id: doc.id,
-          _score: 100 - (index * 10),
-          _source: doc,
-          highlight: {
-            title: [doc.title],
-            content: [doc.content.substring(0, 100) + '...']
-          }
-        }))
-      },
-      took: 42,
-      aggregations: {
-        file_types: {
-          buckets: [
-            { key: 'pdf', doc_count: 4 },
-            { key: 'excel', doc_count: 1 },
-            { key: 'ppt', doc_count: 1 }
-          ]
-        },
-        categories: {
-          buckets: [
-            { key: 'سياسات مالية', doc_count: 1 },
-            { key: 'أدلة إجرائية', doc_count: 1 },
-            { key: 'تقارير مالية', doc_count: 2 },
-            { key: 'استراتيجيات', doc_count: 1 },
-            { key: 'إعلانات', doc_count: 1 }
-          ]
-        },
-        total_size: {
-          value: 24.39 * 1024 * 1024
-        }
-      }
-    };
-  }
-
-  // Get mock documents
-  private getMockDocuments(): ElasticSearchDocument[] {
-    return [
-      {
-        id: 'mock-doc-1',
-        title: 'سياسة المصروفات الرأسمالية للعام المالي 2024',
-        content: 'دليل شامل للسياسات والإجراءات المتعلقة بالمصروفات الرأسمالية وآليات الاعتماد والمتابعة',
-        fileType: 'pdf',
-        fileSize: 2.4 * 1024 * 1024,
-        uploadDate: '2024-01-15T00:00:00Z',
-        author: 'إدارة الميزانية',
-        tags: ['سياسة', 'مصروفات رأسمالية', 'ميزانية', '2024'],
-        category: 'سياسات مالية',
-        filename: 'capital-expenditure-policy-2024.pdf',
-        extractedText: 'دليل شامل للسياسات والإجراءات المتعلقة بالمصروفات الرأسمالية وآليات الاعتماد والمتابعة',
-        summary: 'تحدد هذه السياسة الإجراءات المطلوبة لاعتماد المصروفات الرأسمالية، بما في ذلك حدود الصلاحيات ومتطلبات التوثيق والمراجعة.',
-        metadata: { department: 'إدارة الميزانية', priority: 'high' }
-      },
-      {
-        id: 'mock-doc-2',
-        title: 'دليل إجراءات المحاسبة الحكومية',
-        content: 'دليل تفصيلي لجميع الإجراءات المحاسبية المطبقة في الوزارة وفقاً للمعايير الدولية',
-        fileType: 'pdf',
-        fileSize: 5.1 * 1024 * 1024,
-        uploadDate: '2024-01-10T00:00:00Z',
-        author: 'إدارة المحاسبة',
-        tags: ['محاسبة', 'إجراءات', 'معايير دولية', 'دليل'],
-        category: 'أدلة إجرائية',
-        filename: 'government-accounting-procedures.pdf',
-        extractedText: 'دليل تفصيلي لجميع الإجراءات المحاسبية المطبقة في الوزارة وفقاً للمعايير الدولية',
-        summary: 'يغطي الدليل جميع العمليات المحاسبية من القيد إلى إعداد التقارير المالية، مع التركيز على الامتثال للمعايير الدولية.',
-        metadata: { department: 'إدارة المحاسبة', priority: 'high' }
-      },
-      {
-        id: 'mock-doc-3',
-        title: 'تقرير الأداء المالي الربعي Q4 2023',
-        content: 'تقرير شامل عن الأداء المالي للربع الأخير من عام 2023',
-        fileType: 'excel',
-        fileSize: 3.2 * 1024 * 1024,
-        uploadDate: '2024-01-01T00:00:00Z',
-        author: 'إدارة المحاسبة',
-        tags: ['تقرير', 'أداء مالي', 'ربعي', '2023'],
-        category: 'تقارير مالية',
-        filename: 'financial-performance-q4-2023.xlsx',
-        extractedText: 'تقرير شامل عن الأداء المالي للربع الأخير من عام 2023',
-        summary: 'يعرض التقرير المؤشرات المالية الرئيسية والمقارنات مع الفترات السابقة والأهداف المحددة.',
-        metadata: { department: 'إدارة المحاسبة', priority: 'high' }
-      },
-      {
-        id: 'mock-doc-4',
-        title: 'عرض تقديمي - استراتيجية التحول الرقمي',
-        content: 'عرض تقديمي شامل عن استراتيجية التحول الرقمي في وزارة المالية',
-        fileType: 'ppt',
-        fileSize: 12.8 * 1024 * 1024,
-        uploadDate: '2023-12-28T00:00:00Z',
-        author: 'إدارة التخطيط والتطوير',
-        tags: ['عرض تقديمي', 'تحول رقمي', 'استراتيجية', 'تطوير'],
-        category: 'استراتيجيات',
-        filename: 'digital-transformation-strategy.pptx',
-        extractedText: 'عرض تقديمي شامل عن استراتيجية التحول الرقمي في وزارة المالية',
-        summary: 'يستعرض العرض خطة التحول الرقمي على مدى 5 سنوات مع التركيز على الأتمتة والذكاء الاصطناعي.',
-        metadata: { department: 'إدارة التخطيط والتطوير', priority: 'medium' }
-      },
-      {
-        id: 'mock-doc-5',
-        title: 'إعلان - تحديث نظام الرواتب',
-        content: 'إعلان هام حول تحديث نظام الرواتب والتغييرات المطلوبة',
-        fileType: 'pdf',
-        fileSize: 890 * 1024,
-        uploadDate: '2023-12-25T00:00:00Z',
-        author: 'إدارة الموارد البشرية',
-        tags: ['إعلان', 'نظام رواتب', 'تحديث', 'موارد بشرية'],
-        category: 'إعلانات',
-        filename: 'payroll-system-update.pdf',
-        extractedText: 'إعلان هام حول تحديث نظام الرواتب والتغييرات المطلوبة',
-        summary: 'يتضمن الإعلان تفاصيل التحديث الجديد وجدولة التطبيق والتدريب المطلوب للموظفين.',
-        metadata: { department: 'إدارة الموارد البشرية', priority: 'high' }
-      },
-      {
-        id: 'mock-doc-6',
-        title: 'فاتورة LinkedIn - LNKD_INVOICE_78196333075',
-        content: 'فاتورة ضريبية من شركة LinkedIn المحدودة في أيرلندا، تتضمن تفاصيل عن المعاملة التي تمت في 28 أبريل 2025',
-        fileType: 'pdf',
-        fileSize: 105938,
-        uploadDate: '2025-07-03T05:43:15.331Z',
-        author: 'مستخدم النظام',
-        tags: ['فاتورة', 'linkedin', 'ضريبة'],
-        category: 'تقارير مالية',
-        filename: 'LNKD_INVOICE_78196333075.pdf',
-        extractedText: 'فاتورة ضريبية من شركة LinkedIn المحدودة في أيرلندا، تتضمن تفاصيل عن المعاملة التي تمت في 28 أبريل 2025',
-        summary: 'المستند عبارة عن فاتورة ضريبية من شركة LinkedIn المحدودة في أيرلندا، تتضمن تفاصيل عن المعاملة التي تمت في 28 أبريل 2025. الفاتورة تتضمن رسوم اشتراك شهري لخدمة Sales Navigator Core.',
-        metadata: { 
-          description: 'فاتورة LinkedIn',
-          originalFilename: 'LNKD_INVOICE_78196333075.pdf',
-          mimeType: 'application/pdf'
-        }
-      }
-    ];
   }
 
   async checkIndexExists(): Promise<boolean> {
@@ -390,8 +106,7 @@ class ElasticSearchService {
       return await this.makeRequest(`/${this.indexName}`, { method: 'HEAD' }) as boolean;
     } catch (error) {
       console.error('Index check failed:', error);
-      this.mockMode = true; // Switch to mock mode after failure
-      return true; // Pretend index exists in mock mode
+      throw error;
     }
   }
 
@@ -404,20 +119,6 @@ class ElasticSearchService {
     try {
       if (this.initialized) {
         return true;
-      }
-
-      // Check if we're in a browser environment
-      if (typeof window !== 'undefined') {
-        // Get the API key from environment variables
-        const apiKey = import.meta.env.VITE_ELASTIC_API_KEY;
-        
-        // If no API key is provided, use mock mode
-        if (!apiKey) {
-          console.warn('No ElasticSearch API key found in environment variables, using mock mode');
-          this.mockMode = true;
-          this.initialized = true;
-          return true;
-        }
       }
 
       // Check if index exists
@@ -515,9 +216,7 @@ class ElasticSearchService {
       return true;
     } catch (error) {
       console.error('Failed to initialize ElasticSearch index:', error);
-      this.mockMode = true; // Switch to mock mode after initialization failure
-      this.initialized = true; // Consider it initialized in mock mode
-      return true; // Return true since we're falling back to mock mode
+      throw error;
     }
   }
 
@@ -575,17 +274,7 @@ class ElasticSearchService {
       };
     } catch (error) {
       console.error('ElasticSearch search error:', error);
-      this.mockMode = true; // Switch to mock mode after search failure
-      
-      // Return mock results
-      const mockResponse = this.getFilteredMockResults(query);
-      const results = this.convertElasticResultsToEnhanced(mockResponse, query);
-      
-      return {
-        results,
-        totalCount: results.length,
-        searchTime: 42
-      };
+      throw error;
     }
   }
 
@@ -823,26 +512,7 @@ class ElasticSearchService {
       };
     } catch (error) {
       console.error('Error getting ElasticSearch stats:', error);
-      this.mockMode = true; // Switch to mock mode after stats failure
-      
-      // Return mock stats
-      return {
-        totalDocuments: 6,
-        totalSize: 24.39 * 1024 * 1024,
-        fileTypes: {
-          'pdf': 4,
-          'excel': 1,
-          'ppt': 1
-        },
-        categories: {
-          'سياسات مالية': 1,
-          'أدلة إجرائية': 1,
-          'تقارير مالية': 2,
-          'استراتيجيات': 1,
-          'إعلانات': 1
-        },
-        elasticsearchEnabled: true
-      };
+      throw error;
     }
   }
 
@@ -862,27 +532,18 @@ class ElasticSearchService {
       return response.results;
     } catch (error) {
       console.error('Error getting all documents from ElasticSearch:', error);
-      this.mockMode = true; // Switch to mock mode after failure
-      
-      // Return mock results
-      const mockResponse = this.getMockSearchResults();
-      return this.convertElasticResultsToEnhanced(mockResponse, '');
+      throw error;
     }
   }
 
   // Public method to check if ElasticSearch is available
   isElasticSearchAvailable(): boolean {
-    return !this.mockMode;
-  }
-
-  // Public method to toggle mock mode
-  setMockMode(enabled: boolean): void {
-    this.mockMode = enabled;
+    return true;
   }
 
   // Public method to get mock mode status
   isMockModeEnabled(): boolean {
-    return this.mockMode;
+    return false;
   }
 }
 

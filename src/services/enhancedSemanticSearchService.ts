@@ -1,3 +1,4 @@
+// Enhanced semantic search service that prioritizes ElasticSearch over OpenAI Assistant search
 import openaiAssistantSearchService, { AssistantSearchResult } from './openaiAssistantSearchService';
 import elasticsearchService from './elasticsearchService';
 import enhancedDocumentIndexingService from './enhancedDocumentIndexingService';
@@ -64,6 +65,7 @@ class EnhancedSemanticSearchService {
     
     try {
       // First, try ElasticSearch
+      console.log('Performing search with query:', query);
       const elasticsearchResponse = await this.performElasticSearch(query, filters);
       
       // If ElasticSearch returns results, use them
@@ -184,7 +186,7 @@ class EnhancedSemanticSearchService {
       };
     } catch (error) {
       console.error('ElasticSearch search failed:', error);
-      return { results: [] };
+      throw error;
     }
   }
 
@@ -197,7 +199,7 @@ class EnhancedSemanticSearchService {
       };
     } catch (error) {
       console.error('OpenAI search failed:', error);
-      return { results: [], suggestions: [] };
+      throw error;
     }
   }
 
@@ -232,7 +234,7 @@ class EnhancedSemanticSearchService {
       }));
     } catch (error) {
       console.error('Local search failed:', error);
-      return [];
+      throw error;
     }
   }
 
@@ -340,7 +342,7 @@ class EnhancedSemanticSearchService {
       }));
     } catch (error) {
       console.error('Error getting documents:', error);
-      return [];
+      throw error;
     }
   }
 
@@ -365,27 +367,7 @@ class EnhancedSemanticSearchService {
       };
     } catch (error) {
       console.error('Error getting document stats:', error);
-      return {
-        totalDocuments: 6,
-        localDocuments: 0,
-        ragDocuments: 0,
-        elasticsearchDocuments: 6,
-        totalSize: 0,
-        fileTypes: {
-          'pdf': 4,
-          'excel': 1,
-          'ppt': 1
-        },
-        categories: {
-          'سياسات مالية': 1,
-          'أدلة إجرائية': 1,
-          'تقارير مالية': 2,
-          'استراتيجيات': 1,
-          'إعلانات': 1
-        },
-        ragEnabled: 0,
-        elasticsearchEnabled: true
-      };
+      throw error;
     }
   }
 
@@ -398,12 +380,7 @@ class EnhancedSemanticSearchService {
       };
     } catch (error) {
       console.error('Error asking question:', error);
-      
-      // Return a mock response when OpenAI fails
-      return {
-        answer: `عذراً، لم أتمكن من الاتصال بخدمة OpenAI للإجابة على سؤالك: "${question}"\n\nيمكنك محاولة البحث عن المعلومات باستخدام وضع البحث العادي بدلاً من وضع الأسئلة، أو المحاولة مرة أخرى لاحقاً.`,
-        citations: []
-      };
+      throw error;
     }
   }
 }
