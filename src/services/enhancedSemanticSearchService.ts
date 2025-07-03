@@ -351,24 +351,14 @@ class EnhancedSemanticSearchService {
     } catch (error) {
       console.error('Error getting document stats:', error);
       return {
-        totalDocuments: 6,
+        totalDocuments: 0,
         localDocuments: 0,
         ragDocuments: 0,
-        elasticsearchDocuments: 6,
+        elasticsearchDocuments: 0,
         totalSize: 0,
-        fileTypes: {
-          'pdf': 4,
-          'excel': 1,
-          'ppt': 1
-        },
-        categories: {
-          'سياسات مالية': 1,
-          'أدلة إجرائية': 1,
-          'تقارير مالية': 2,
-          'استراتيجيات': 1,
-          'إعلانات': 1
-        },
-        ragEnabled: 0,
+        fileTypes: {},
+        categories: {},
+        ragEnabled: false,
         elasticsearchEnabled: true
       };
     }

@@ -42,6 +42,7 @@ const EnhancedSearchInterface: React.FC<EnhancedSearchInterfaceProps> = ({ onNav
   const [questionAnswer, setQuestionAnswer] = useState<{ answer: string; citations: string[] } | null>(null);
   const [searchStrategy, setSearchStrategy] = useState<'elasticsearch' | 'openai_fallback' | 'both'>('elasticsearch');
   const [noResultsMessage, setNoResultsMessage] = useState<string | null>(null);
+  const [isSearching, setIsSearching] = useState(false);
   
   const [filters, setFilters] = useState<ISearchFilters>({
     dateRange: { start: '', end: '' },
@@ -66,9 +67,9 @@ const EnhancedSearchInterface: React.FC<EnhancedSearchInterfaceProps> = ({ onNav
   }, [initialSearchQuery]);
 
   useEffect(() => {
-    if (debouncedSearchQuery.trim()) {
+    if (debouncedSearchQuery.trim() && !isSearching) {
       performSearch();
-    } else {
+    } else if (!debouncedSearchQuery.trim()) {
       setSearchResults([]);
       setNoResultsMessage(null);
     }
@@ -147,9 +148,10 @@ const EnhancedSearchInterface: React.FC<EnhancedSearchInterfaceProps> = ({ onNav
 
   const performSearch = async () => {
     const query = searchQuery || initialSearchQuery;
-    if (!query.trim()) return;
+    if (!query.trim() || isSearching) return;
 
     setIsLoading(true);
+    setIsSearching(true);
     setQuestionAnswer(null);
     setNoResultsMessage(null);
 
@@ -164,7 +166,7 @@ const EnhancedSearchInterface: React.FC<EnhancedSearchInterfaceProps> = ({ onNav
       setElasticsearchResults(response.elasticsearchResults || 0);
       setSearchStrategy(response.searchStrategy || 'elasticsearch');
       setNoResultsMessage(response.noResultsMessage || null);
-      
+
       if (query) {
         saveSearchHistory(query);
       }
@@ -174,14 +176,16 @@ const EnhancedSearchInterface: React.FC<EnhancedSearchInterfaceProps> = ({ onNav
       setSearchResults([]);
     } finally {
       setIsLoading(false);
+      setIsSearching(false);
     }
   };
 
   const handleAskQuestion = async () => {
     const query = searchQuery || initialSearchQuery;
-    if (!query.trim()) return;
+    if (!query.trim() || isSearching) return;
 
     setIsLoading(true);
+    setIsSearching(true);
     setQuestionAnswer(null);
 
     try {
@@ -199,12 +203,13 @@ const EnhancedSearchInterface: React.FC<EnhancedSearchInterfaceProps> = ({ onNav
       });
     } finally {
       setIsLoading(false);
+      setIsSearching(false);
     }
   };
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (searchQuery.trim()) {
+    if (searchQuery.trim() && !isSearching) {
       if (showQuestionMode) {
         handleAskQuestion();
       } else {
@@ -337,7 +342,7 @@ const EnhancedSearchInterface: React.FC<EnhancedSearchInterfaceProps> = ({ onNav
                         showQuestionMode
                           ? "اطرح سؤالاً عن المستندات..."
                           : documentStats?.totalDocuments > 0
-                            ? `ابحث في ${documentStats.totalDocuments} مستند بـ ElasticSearch أولاً...`
+                            ? `ابحث في ${documentStats.totalDocuments} مستند بـ ElasticSearch...`
                             : "ابحث في المستندات... (ارفع ملفات أولاً)"
                       }
                       className="w-full pr-12 pl-4 py-4 border-0 focus:ring-0 focus:outline-none text-lg font-cairo"
@@ -400,7 +405,7 @@ const EnhancedSearchInterface: React.FC<EnhancedSearchInterfaceProps> = ({ onNav
                   {/* Search/Ask Button */}
                   <button
                     type="submit"
-                    disabled={isLoading}
+                    disabled={isLoading || !searchQuery.trim() || isSearching}
                     className="bg-gradient-to-r from-saudi-green to-saudi-green-light text-white px-6 py-4 hover:from-saudi-green-dark hover:to-saudi-green transition-all flex items-center gap-2 font-cairo font-semibold disabled:opacity-50"
                   >
                     {isLoading ? (
@@ -456,6 +461,12 @@ const EnhancedSearchInterface: React.FC<EnhancedSearchInterfaceProps> = ({ onNav
                   <span>وضع البحث: ابحث في ElasticSearch</span>
                 </>
               )}
+              
+              <span className="text-gray-400">|</span>
+              <span className="text-purple-600 flex items-center gap-1">
+                <AlertCircle className="h-4 w-4" />
+                وضع المحاكاة مفعل (لا يوجد اتصال بـ ElasticSearch)
+              </span>
             </div>
 
             {/* Quick Search Terms */}
@@ -519,174 +530,170 @@ const EnhancedSearchInterface: React.FC<EnhancedSearchInterfaceProps> = ({ onNav
 
           {/* Results Area */}
           <div className="flex-1 min-w-0">
-            {documentStats?.totalDocuments > 0 && (
-              <>
-                {/* Question Answer Display */}
-                {showQuestionMode && questionAnswer && (
-                  <div className="bg-white rounded-lg border border-gray-200 p-6 mb-6">
-                    <div className="flex items-center gap-2 mb-4">
-                      <MessageCircle className="h-6 w-6 text-blue-600" />
-                      <h3 className="text-lg font-semibold text-gray-900">إجابة السؤال</h3>
+            {/* Question Answer Display */}
+            {showQuestionMode && questionAnswer && (
+              <div className="bg-white rounded-lg border border-gray-200 p-6 mb-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <MessageCircle className="h-6 w-6 text-blue-600" />
+                  <h3 className="text-lg font-semibold text-gray-900">إجابة السؤال</h3>
+                </div>
+                
+                <div className="prose prose-lg max-w-none">
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                    <p className="text-blue-800 font-medium mb-2">السؤال:</p>
+                    <p className="text-blue-700">"{searchQuery}"</p>
+                  </div>
+                  
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                    <p className="text-green-800 font-medium mb-2">الإجابة:</p>
+                    <div className="text-green-700 whitespace-pre-wrap leading-relaxed">
+                      {questionAnswer.answer}
                     </div>
                     
-                    <div className="prose prose-lg max-w-none">
-                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-                        <p className="text-blue-800 font-medium mb-2">السؤال:</p>
-                        <p className="text-blue-700">"{searchQuery}"</p>
-                      </div>
-                      
-                      <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                        <p className="text-green-800 font-medium mb-2">الإجابة:</p>
-                        <div className="text-green-700 whitespace-pre-wrap leading-relaxed">
-                          {questionAnswer.answer}
-                        </div>
-                        
-                        {questionAnswer.citations.length > 0 && (
-                          <div className="mt-4 pt-4 border-t border-green-200">
-                            <p className="text-green-800 font-medium mb-2">المراجع:</p>
-                            <div className="space-y-1">
-                              {questionAnswer.citations.map((citation, index) => (
-                                <div
-                                  key={index}
-                                  className="text-xs bg-white text-green-800 px-3 py-2 rounded border border-green-300"
-                                >
-                                  📄 {citation}
-                                </div>
-                              ))}
+                    {questionAnswer.citations.length > 0 && (
+                      <div className="mt-4 pt-4 border-t border-green-200">
+                        <p className="text-green-800 font-medium mb-2">المراجع:</p>
+                        <div className="space-y-1">
+                          {questionAnswer.citations.map((citation, index) => (
+                            <div
+                              key={index}
+                              className="text-xs bg-white text-green-800 px-3 py-2 rounded border border-green-300"
+                            >
+                              📄 {citation}
                             </div>
-                          </div>
-                        )}
+                          ))}
+                        </div>
                       </div>
-                    </div>
+                    )}
                   </div>
-                )}
+                </div>
+              </div>
+            )}
 
-                {/* Search Results Header (only in search mode) */}
-                {!showQuestionMode && (
-                  <div className="bg-white rounded-lg border border-gray-200 p-6 mb-6">
-                    {/* Results Info */}
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center gap-4">
-                        <div className="text-lg">
-                          {isLoading ? (
-                            <div className="flex items-center gap-2">
-                              <div className="w-5 h-5 border-2 border-saudi-green border-t-transparent rounded-full animate-spin" />
-                              <span>جاري البحث المتقدم...</span>
-                            </div>
-                          ) : (
-                            <>
-                              تم العثور على <span className="font-semibold text-saudi-green">{searchResults.length}</span> نتيجة
-                              {(searchQuery || initialSearchQuery) && (
-                                <span> لـ "<span className="font-medium">{searchQuery || initialSearchQuery}</span>"</span>
-                              )}
-                            </>
-                          )}
-                        </div>
-                        
-                        {searchQuery && searchResults.length > 0 && (
-                          <div className="flex items-center gap-4 text-sm">
-                            {getElasticsearchResultsCount() > 0 && (
-                              <div className="flex items-center gap-1 text-blue-600">
-                                <Database className="h-4 w-4" />
-                                <span>{getElasticsearchResultsCount()} من ElasticSearch</span>
-                              </div>
-                            )}
-                            {getRAGResultsCount() > 0 && (
-                              <div className="flex items-center gap-1 text-green-600">
-                                <Brain className="h-4 w-4" />
-                                <span>{getRAGResultsCount()} من OpenAI</span>
-                              </div>
-                            )}
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="flex items-center gap-4">
-                        {/* Sort Options */}
+            {/* Search Results Header (only in search mode) */}
+            {!showQuestionMode && (
+              <div className="bg-white rounded-lg border border-gray-200 p-6 mb-6">
+                {/* Results Info */}
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-4">
+                    <div className="text-lg">
+                      {isLoading ? (
                         <div className="flex items-center gap-2">
-                          <span className="text-sm text-gray-600">ترتيب:</span>
-                          <select
-                            value={`${sortBy}-${sortOrder}`}
-                            onChange={(e) => {
-                              const [sort, order] = e.target.value.split('-');
-                              setSortBy(sort as any);
-                              setSortOrder(order as any);
-                            }}
-                            className="text-sm border border-gray-300 rounded px-2 py-1"
-                          >
-                            <option value="relevance-desc">الصلة المتقدمة</option>
-                            <option value="date-desc">الأحدث</option>
-                            <option value="date-asc">الأقدم</option>
-                            <option value="title-asc">العنوان (أ-ي)</option>
-                            <option value="title-desc">العنوان (ي-أ)</option>
-                            <option value="size-desc">الحجم (الأكبر)</option>
-                            <option value="size-asc">الحجم (الأصغر)</option>
-                          </select>
+                          <div className="w-5 h-5 border-2 border-saudi-green border-t-transparent rounded-full animate-spin" />
+                          <span>جاري البحث المتقدم...</span>
                         </div>
-
-                        {/* View Mode Toggle */}
-                        <div className="flex items-center border border-gray-300 rounded-lg">
-                          <button
-                            onClick={() => setViewMode('list')}
-                            className={`p-2 ${viewMode === 'list' ? 'bg-saudi-green text-white' : 'text-gray-600'}`}
-                          >
-                            <List className="h-4 w-4" />
-                          </button>
-                          <button
-                            onClick={() => setViewMode('grid')}
-                            className={`p-2 ${viewMode === 'grid' ? 'bg-saudi-green text-white' : 'text-gray-600'}`}
-                          >
-                            <Grid className="h-4 w-4" />
-                          </button>
-                        </div>
-                      </div>
+                      ) : (
+                        <>
+                          تم العثور على <span className="font-semibold text-saudi-green">{searchResults.length}</span> نتيجة
+                          {(searchQuery || initialSearchQuery) && (
+                            <span> لـ "<span className="font-medium">{searchQuery || initialSearchQuery}</span>"</span>
+                          )}
+                        </>
+                      )}
                     </div>
-
-                    {/* Search Strategy Message */}
-                    {getSearchStrategyMessage()}
-
-                    {/* No Results Message */}
-                    {noResultsMessage && searchResults.length === 0 && !isLoading && (
-                      <div className="mt-4 p-4 bg-orange-50 border border-orange-200 rounded-lg">
-                        <div className="flex items-center gap-2 text-orange-800">
-                          <AlertCircle className="h-5 w-5" />
-                          <span className="font-medium">{noResultsMessage}</span>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Search Performance Info */}
-                    {(searchQuery || initialSearchQuery) && searchTime > 0 && !showQuestionMode && (
-                      <div className="flex items-center justify-between text-sm text-gray-500 pt-4 border-t border-gray-100">
-                        <div className="flex items-center gap-4">
-                          <span>وقت البحث: {(searchTime / 1000).toFixed(2)} ثانية</span>
-                          {elasticsearchResults > 0 && (
-                            <span className="text-blue-600">• {elasticsearchResults} نتيجة من ElasticSearch</span>
-                          )}
-                          {openaiResults > 0 && (
-                            <span className="text-green-600">• {openaiResults} نتيجة من OpenAI</span>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Database className="h-4 w-4 text-blue-600" />
-                          <span>ElasticSearch</span>
-                        </div>
+                    
+                    {searchQuery && searchResults.length > 0 && (
+                      <div className="flex items-center gap-4 text-sm">
+                        {getElasticsearchResultsCount() > 0 && (
+                          <div className="flex items-center gap-1 text-blue-600">
+                            <Database className="h-4 w-4" />
+                            <span>{getElasticsearchResultsCount()} من ElasticSearch</span>
+                          </div>
+                        )}
+                        {getRAGResultsCount() > 0 && (
+                          <div className="flex items-center gap-1 text-green-600">
+                            <Brain className="h-4 w-4" />
+                            <span>{getRAGResultsCount()} من OpenAI</span>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
+
+                  <div className="flex items-center gap-4">
+                    {/* Sort Options */}
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-gray-600">ترتيب:</span>
+                      <select
+                        value={`${sortBy}-${sortOrder}`}
+                        onChange={(e) => {
+                          const [sort, order] = e.target.value.split('-');
+                          setSortBy(sort as any);
+                          setSortOrder(order as any);
+                        }}
+                        className="text-sm border border-gray-300 rounded px-2 py-1"
+                      >
+                        <option value="relevance-desc">الصلة المتقدمة</option>
+                        <option value="date-desc">الأحدث</option>
+                        <option value="date-asc">الأقدم</option>
+                        <option value="title-asc">العنوان (أ-ي)</option>
+                        <option value="title-desc">العنوان (ي-أ)</option>
+                        <option value="size-desc">الحجم (الأكبر)</option>
+                        <option value="size-asc">الحجم (الأصغر)</option>
+                      </select>
+                    </div>
+
+                    {/* View Mode Toggle */}
+                    <div className="flex items-center border border-gray-300 rounded-lg">
+                      <button
+                        onClick={() => setViewMode('list')}
+                        className={`p-2 ${viewMode === 'list' ? 'bg-saudi-green text-white' : 'text-gray-600'}`}
+                      >
+                        <List className="h-4 w-4" />
+                      </button>
+                      <button
+                        onClick={() => setViewMode('grid')}
+                        className={`p-2 ${viewMode === 'grid' ? 'bg-saudi-green text-white' : 'text-gray-600'}`}
+                      >
+                        <Grid className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Search Strategy Message */}
+                {getSearchStrategyMessage()}
+
+                {/* No Results Message */}
+                {noResultsMessage && searchResults.length === 0 && !isLoading && (
+                  <div className="mt-4 p-4 bg-orange-50 border border-orange-200 rounded-lg">
+                    <div className="flex items-center gap-2 text-orange-800">
+                      <AlertCircle className="h-5 w-5" />
+                      <span className="font-medium">{noResultsMessage}</span>
+                    </div>
+                  </div>
                 )}
 
-                {/* Enhanced Search Results (only in search mode) */}
-                {!showQuestionMode && (
-                  <EnhancedSearchResults
-                    results={searchResults}
-                    isLoading={isLoading}
-                    viewMode={viewMode}
-                    searchQuery={searchQuery || initialSearchQuery}
-                    onDocumentClick={handleDocumentClick}
-                  />
+                {/* Search Performance Info */}
+                {(searchQuery || initialSearchQuery) && searchTime > 0 && !showQuestionMode && (
+                  <div className="flex items-center justify-between text-sm text-gray-500 pt-4 border-t border-gray-100">
+                    <div className="flex items-center gap-4">
+                      <span>وقت البحث: {(searchTime / 1000).toFixed(2)} ثانية</span>
+                      {elasticsearchResults > 0 && (
+                        <span className="text-blue-600">• {elasticsearchResults} نتيجة من ElasticSearch</span>
+                      )}
+                      {openaiResults > 0 && (
+                        <span className="text-green-600">• {openaiResults} نتيجة من OpenAI</span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Database className="h-4 w-4 text-blue-600" />
+                      <span>ElasticSearch</span>
+                    </div>
+                  </div>
                 )}
-              </>
+              </div>
+            )}
+
+            {/* Enhanced Search Results (only in search mode) */}
+            {!showQuestionMode && (
+              <EnhancedSearchResults
+                results={searchResults}
+                isLoading={isLoading}
+                viewMode={viewMode}
+                searchQuery={searchQuery || initialSearchQuery}
+                onDocumentClick={handleDocumentClick}
+              />
             )}
           </div>
         </div>
