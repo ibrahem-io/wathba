@@ -54,8 +54,7 @@ class ElasticSearchService {
   private baseUrl = '/api/elasticsearch';
   private indexName = 'mof-documents';
   private initialized = false;
-  private isAvailable = false;
-  private mockMode = true; // Always use mock mode to avoid errors
+  private mockMode = true; // Use mock mode by default to avoid errors
 
   private async makeRequest(endpoint: string, options: RequestInit = {}) {
     // If in mock mode, return mock data instead of making actual requests
@@ -87,20 +86,14 @@ class ElasticSearchService {
       }
 
       if (!response.ok) {
-        let errorText = 'Unknown error';
-        try {
-          const errorData = await response.json();
-          errorText = errorData.error?.reason || errorData.message || response.statusText;
-        } catch {
-          errorText = response.statusText;
-        }
-        throw new Error(`ElasticSearch request failed: ${response.status} ${errorText}`);
+        const errorText = await response.text();
+        console.error('ElasticSearch error:', errorText);
+        throw new Error(`ElasticSearch request failed: ${response.status} ${response.statusText}`);
       }
 
       return response.json();
     } catch (error) {
-      console.warn('ElasticSearch request error:', error);
-      this.isAvailable = false;
+      console.error('ElasticSearch request error:', error);
       this.mockMode = true; // Switch to mock mode after an error
       throw error;
     }
@@ -254,38 +247,15 @@ class ElasticSearchService {
     };
   }
 
-  async checkConnection(): Promise<boolean> {
-    if (this.mockMode) {
-      this.isAvailable = true;
-      return true;
-    }
-
-    try {
-      const health = await this.makeRequest('/_cluster/health');
-      this.isAvailable = true;
-      return true;
-    } catch (error) {
-      console.warn('ElasticSearch connection check failed:', error);
-      this.isAvailable = false;
-      this.mockMode = true; // Switch to mock mode after connection failure
-      return false;
-    }
-  }
-
   async checkIndexExists(): Promise<boolean> {
     if (this.mockMode) {
       return true;
     }
 
     try {
-      if (!this.isAvailable) {
-        await this.checkConnection();
-      }
-      if (!this.isAvailable) return false;
-      
       return await this.makeRequest(`/${this.indexName}`, { method: 'HEAD' }) as boolean;
     } catch (error) {
-      console.warn('Index check failed:', error);
+      console.error('Index check failed:', error);
       this.mockMode = true; // Switch to mock mode after failure
       return false;
     }
@@ -293,17 +263,14 @@ class ElasticSearchService {
 
   async checkHealth(): Promise<boolean> {
     if (this.mockMode) {
-      this.isAvailable = true;
       return true;
     }
 
     try {
       const health = await this.makeRequest('/_cluster/health');
-      this.isAvailable = health.status === 'green' || health.status === 'yellow';
-      return this.isAvailable;
+      return health.status === 'green' || health.status === 'yellow';
     } catch (error) {
-      console.warn('ElasticSearch health check failed:', error);
-      this.isAvailable = false;
+      console.error('ElasticSearch health check failed:', error);
       this.mockMode = true; // Switch to mock mode after health check failure
       return false;
     }
@@ -315,17 +282,10 @@ class ElasticSearchService {
         return true;
       }
 
-      // First check if ElasticSearch is available
-      const isConnected = await this.checkConnection();
-      if (!isConnected && !this.mockMode) {
-        console.warn('ElasticSearch is not available, switching to mock mode');
-        this.mockMode = true;
-      }
-
+      // In mock mode, just mark as initialized
       if (this.mockMode) {
         console.log('Using mock ElasticSearch mode');
         this.initialized = true;
-        this.isAvailable = true;
         return true;
       }
 
@@ -423,8 +383,7 @@ class ElasticSearchService {
       this.initialized = true;
       return true;
     } catch (error) {
-      console.warn('Failed to initialize ElasticSearch index:', error);
-      this.isAvailable = false;
+      console.error('Failed to initialize ElasticSearch index:', error);
       this.mockMode = true; // Switch to mock mode after initialization failure
       this.initialized = true; // Consider it initialized in mock mode
       return true; // Return true since we're falling back to mock mode
@@ -433,21 +392,12 @@ class ElasticSearchService {
 
   async indexDocument(document: ElasticSearchDocument): Promise<{ success: boolean; error?: string }> {
     try {
+      await this.initializeIndex();
+
       if (this.mockMode) {
         console.log('Mock mode: Document indexed successfully');
         return { success: true };
       }
-
-      if (!this.isAvailable) {
-        const connected = await this.checkConnection();
-        if (!connected) {
-          console.warn('ElasticSearch service unavailable, switching to mock mode');
-          this.mockMode = true;
-          return { success: true }; // Pretend success in mock mode
-        }
-      }
-
-      await this.initializeIndex();
 
       const response = await this.makeRequest(`/${this.indexName}/_doc/${document.id}`, {
         method: 'PUT',
@@ -457,7 +407,7 @@ class ElasticSearchService {
       console.log('Document indexed successfully:', response);
       return { success: true };
     } catch (error) {
-      console.warn('Error indexing document:', error);
+      console.error('Error indexing document:', error);
       this.mockMode = true; // Switch to mock mode after indexing failure
       return { 
         success: true, // Pretend success in mock mode
@@ -479,6 +429,8 @@ class ElasticSearchService {
     size: number = 20
   ): Promise<{ results: EnhancedSearchResult[]; totalCount: number; searchTime: number }> {
     try {
+      await this.initializeIndex();
+
       if (this.mockMode) {
         console.log('Using mock search results');
         const mockResponse = this.getMockSearchResults();
@@ -524,17 +476,6 @@ class ElasticSearchService {
         };
       }
 
-      if (!this.isAvailable) {
-        const connected = await this.checkConnection();
-        if (!connected) {
-          console.warn('ElasticSearch not available, returning mock results');
-          this.mockMode = true;
-          return this.searchDocuments(query, filters, from, size); // Recursively call with mock mode enabled
-        }
-      }
-
-      await this.initializeIndex();
-
       const searchBody = this.buildSearchQuery(query, filters, from, size);
       
       const startTime = Date.now();
@@ -552,7 +493,7 @@ class ElasticSearchService {
         searchTime
       };
     } catch (error) {
-      console.warn('ElasticSearch search error:', error);
+      console.error('ElasticSearch search error:', error);
       this.mockMode = true; // Switch to mock mode after search failure
       
       // Return mock results
@@ -737,15 +678,12 @@ class ElasticSearchService {
   }
 
   async deleteDocument(id: string): Promise<boolean> {
-    if (this.mockMode) {
-      console.log('Mock mode: Document deleted successfully');
-      return true;
-    }
-
     try {
-      if (!this.isAvailable) {
-        console.warn('ElasticSearch not available for document deletion');
-        return false;
+      await this.initializeIndex();
+
+      if (this.mockMode) {
+        console.log('Mock mode: Document deleted successfully');
+        return true;
       }
 
       await this.makeRequest(`/${this.indexName}/_doc/${id}`, {
@@ -753,39 +691,33 @@ class ElasticSearchService {
       });
       return true;
     } catch (error) {
-      console.warn('Error deleting document from ElasticSearch:', error);
+      console.error('Error deleting document from ElasticSearch:', error);
       return false;
     }
   }
 
   async getDocumentStats() {
-    if (this.mockMode) {
-      return {
-        totalDocuments: 5,
-        totalSize: 24.39 * 1024 * 1024,
-        fileTypes: {
-          'pdf': 3,
-          'excel': 1,
-          'ppt': 1
-        },
-        categories: {
-          'سياسات مالية': 1,
-          'أدلة إجرائية': 1,
-          'تقارير مالية': 1,
-          'استراتيجيات': 1,
-          'إعلانات': 1
-        },
-        elasticsearchEnabled: true
-      };
-    }
-
     try {
-      if (!this.isAvailable) {
-        const connected = await this.checkConnection();
-        if (!connected) {
-          this.mockMode = true;
-          return this.getDocumentStats(); // Recursively call with mock mode enabled
-        }
+      await this.initializeIndex();
+
+      if (this.mockMode) {
+        return {
+          totalDocuments: 5,
+          totalSize: 24.39 * 1024 * 1024,
+          fileTypes: {
+            'pdf': 3,
+            'excel': 1,
+            'ppt': 1
+          },
+          categories: {
+            'سياسات مالية': 1,
+            'أدلة إجرائية': 1,
+            'تقارير مالية': 1,
+            'استراتيجيات': 1,
+            'إعلانات': 1
+          },
+          elasticsearchEnabled: true
+        };
       }
 
       const response = await this.makeRequest(`/${this.indexName}/_stats`);
@@ -829,25 +761,37 @@ class ElasticSearchService {
         elasticsearchEnabled: true
       };
     } catch (error) {
-      console.warn('Error getting ElasticSearch stats:', error);
-      this.mockMode = true;
-      return this.getDocumentStats(); // Recursively call with mock mode enabled
+      console.error('Error getting ElasticSearch stats:', error);
+      this.mockMode = true; // Switch to mock mode after stats failure
+      
+      // Return mock stats
+      return {
+        totalDocuments: 5,
+        totalSize: 24.39 * 1024 * 1024,
+        fileTypes: {
+          'pdf': 3,
+          'excel': 1,
+          'ppt': 1
+        },
+        categories: {
+          'سياسات مالية': 1,
+          'أدلة إجرائية': 1,
+          'تقارير مالية': 1,
+          'استراتيجيات': 1,
+          'إعلانات': 1
+        },
+        elasticsearchEnabled: true
+      };
     }
   }
 
   async getAllDocuments(): Promise<EnhancedSearchResult[]> {
-    if (this.mockMode) {
-      const mockResponse = this.getMockSearchResults();
-      return this.convertElasticResultsToEnhanced(mockResponse, '');
-    }
-
     try {
-      if (!this.isAvailable) {
-        const connected = await this.checkConnection();
-        if (!connected) {
-          this.mockMode = true;
-          return this.getAllDocuments(); // Recursively call with mock mode enabled
-        }
+      await this.initializeIndex();
+
+      if (this.mockMode) {
+        const mockResponse = this.getMockSearchResults();
+        return this.convertElasticResultsToEnhanced(mockResponse, '');
       }
 
       const response = await this.searchDocuments('', {
@@ -860,24 +804,23 @@ class ElasticSearchService {
 
       return response.results;
     } catch (error) {
-      console.warn('Error getting all documents from ElasticSearch:', error);
-      this.mockMode = true;
-      return this.getAllDocuments(); // Recursively call with mock mode enabled
+      console.error('Error getting all documents from ElasticSearch:', error);
+      this.mockMode = true; // Switch to mock mode after failure
+      
+      // Return mock results
+      const mockResponse = this.getMockSearchResults();
+      return this.convertElasticResultsToEnhanced(mockResponse, '');
     }
   }
 
   // Public method to check if ElasticSearch is available
   isElasticSearchAvailable(): boolean {
-    return this.isAvailable || this.mockMode;
+    return !this.mockMode;
   }
 
   // Public method to toggle mock mode
   setMockMode(enabled: boolean): void {
     this.mockMode = enabled;
-    if (enabled) {
-      this.isAvailable = true;
-      this.initialized = true;
-    }
   }
 
   // Public method to get mock mode status

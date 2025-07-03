@@ -478,6 +478,14 @@ const EnhancedSearchInterface: React.FC<EnhancedSearchInterfaceProps> = ({ onNav
                   )}
                 </div>
               )}
+              
+              {usingMockData && (
+                <>
+                  <span className="text-gray-400">|</span>
+                  <AlertCircle className="h-4 w-4 text-blue-500" />
+                  <span className="text-blue-500">وضع العرض التجريبي</span>
+                </>
+              )}
               <button
                 onClick={() => setShowUploadModal(true)}
                 className="bg-gradient-to-r from-saudi-green to-saudi-green-light text-white px-4 py-2 rounded-lg hover:from-saudi-green-dark hover:to-saudi-green transition-all shadow-lg flex items-center gap-2"
@@ -625,14 +633,6 @@ const EnhancedSearchInterface: React.FC<EnhancedSearchInterfaceProps> = ({ onNav
                   <Database className="h-4 w-4 text-blue-500" />
                   <Brain className="h-4 w-4 text-green-500" />
                   <span>وضع البحث: ابحث أولاً في ElasticSearch، ثم OpenAI عند عدم وجود نتائج</span>
-                </>
-              )}
-              
-              {usingMockData && (
-                <>
-                  <span className="text-gray-400">|</span>
-                  <AlertCircle className="h-4 w-4 text-blue-500" />
-                  <span className="text-blue-500">وضع العرض التجريبي</span>
                 </>
               )}
             </div>

@@ -23,9 +23,9 @@ export interface IndexedDocument {
 class EnhancedDocumentIndexingService {
   private documents: Map<string, IndexedDocument> = new Map();
   private isInitialized = false;
-  private readonly MAX_STORAGE_SIZE = 50 * 1024 * 1024; // 50MB limit
-  private readonly MAX_CONTENT_LENGTH = 10000; // Limit content length per document
-  private readonly MAX_DOCUMENTS = 50; // Maximum number of documents to store locally
+  private readonly MAX_STORAGE_SIZE = 5 * 1024 * 1024; // 5MB limit for localStorage
+  private readonly MAX_CONTENT_LENGTH = 5000; // Limit content length per document
+  private readonly MAX_DOCUMENTS = 20; // Maximum number of documents to store locally
 
   async initialize() {
     if (this.isInitialized) return;
@@ -132,7 +132,7 @@ class EnhancedDocumentIndexingService {
       console.error('Failed to save to localStorage:', error);
       // Try to save minimal data
       try {
-        const minimalDocs = Array.from(this.documents.values()).slice(-10).map(doc => ({
+        const minimalDocs = Array.from(this.documents.values()).slice(-5).map(doc => ({
           id: doc.id,
           title: doc.title,
           fileType: doc.fileType,
@@ -152,9 +152,9 @@ class EnhancedDocumentIndexingService {
     const docs = Array.from(this.documents.values());
     docs.sort((a, b) => new Date(a.uploadDate).getTime() - new Date(b.uploadDate).getTime());
     
-    // Keep only the 20 most recent documents
-    const docsToKeep = docs.slice(-20);
-    const docsToRemove = docs.slice(0, -20);
+    // Keep only the most recent documents
+    const docsToKeep = docs.slice(-10);
+    const docsToRemove = docs.slice(0, -10);
     
     // Remove old documents
     docsToRemove.forEach(doc => {
