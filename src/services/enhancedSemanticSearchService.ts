@@ -1,4 +1,4 @@
-// Enhanced semantic search service that combines OpenAI Assistant search with ElasticSearch
+// Enhanced semantic search service that prioritizes ElasticSearch over OpenAI Assistant search
 import openaiAssistantSearchService, { AssistantSearchResult } from './openaiAssistantSearchService';
 import elasticsearchService from './elasticsearchService';
 import enhancedDocumentIndexingService from './enhancedDocumentIndexingService';
@@ -50,6 +50,8 @@ export interface EnhancedSearchResponse {
   elasticsearchResults: number;
   localResults: number;
   suggestions: string[];
+  searchStrategy: 'elasticsearch' | 'openai_fallback' | 'both';
+  noResultsMessage?: string;
 }
 
 class EnhancedSemanticSearchService {
@@ -62,55 +64,88 @@ class EnhancedSemanticSearchService {
     const startTime = Date.now();
     
     try {
-      // Perform both OpenAI Assistant search and ElasticSearch in parallel
-      const [openaiResponse, elasticsearchResponse] = await Promise.all([
-        this.performOpenAISearch(query),
-        this.performElasticSearch(query, filters)
-      ]);
-
-      // Combine and deduplicate results
-      const combinedResults = this.combineResults(
-        openaiResponse.results, 
-        elasticsearchResponse.results, 
-        query
-      );
-
-      // Apply additional filters
-      let filteredResults = this.applyAdditionalFilters(combinedResults, filters);
-
-      // Apply sorting
-      filteredResults = this.applySorting(filteredResults, sortBy, sortOrder);
-
-      const searchTime = Date.now() - startTime;
-
-      return {
-        results: filteredResults,
-        totalCount: filteredResults.length,
-        searchTime,
-        openaiResults: openaiResponse.results.length,
-        elasticsearchResults: elasticsearchResponse.results.length,
-        localResults: 0, // We're not using local search anymore
-        suggestions: openaiResponse.suggestions
-      };
-    } catch (error) {
-      console.error('Error in enhanced semantic search:', error);
+      // First, try ElasticSearch
+      const elasticsearchResponse = await this.performElasticSearch(query, filters);
       
-      // Fallback to ElasticSearch only
-      try {
-        const elasticsearchResponse = await this.performElasticSearch(query, filters);
+      // If ElasticSearch returns results, use them
+      if (elasticsearchResponse.results.length > 0) {
+        const filteredResults = this.applyAdditionalFilters(elasticsearchResponse.results, filters);
+        const sortedResults = this.applySorting(filteredResults, sortBy, sortOrder);
+        
         const searchTime = Date.now() - startTime;
         
         return {
-          results: elasticsearchResponse.results,
-          totalCount: elasticsearchResponse.results.length,
+          results: sortedResults,
+          totalCount: sortedResults.length,
           searchTime,
           openaiResults: 0,
-          elasticsearchResults: elasticsearchResponse.results.length,
+          elasticsearchResults: sortedResults.length,
           localResults: 0,
-          suggestions: []
+          suggestions: this.generateElasticSearchSuggestions(query),
+          searchStrategy: 'elasticsearch'
         };
-      } catch (fallbackError) {
-        console.error('ElasticSearch fallback also failed:', fallbackError);
+      }
+      
+      // If no ElasticSearch results, try OpenAI as fallback
+      console.log('No ElasticSearch results found, trying OpenAI search...');
+      const openaiResponse = await this.performOpenAISearch(query);
+      
+      if (openaiResponse.results.length > 0) {
+        const enhancedResults = openaiResponse.results.map(result => this.convertOpenAIToEnhanced(result));
+        const filteredResults = this.applyAdditionalFilters(enhancedResults, filters);
+        const sortedResults = this.applySorting(filteredResults, sortBy, sortOrder);
+        
+        const searchTime = Date.now() - startTime;
+        
+        return {
+          results: sortedResults,
+          totalCount: sortedResults.length,
+          searchTime,
+          openaiResults: sortedResults.length,
+          elasticsearchResults: 0,
+          localResults: 0,
+          suggestions: openaiResponse.suggestions,
+          searchStrategy: 'openai_fallback',
+          noResultsMessage: 'لم يتم العثور على نتائج في البحث التقليدي، تم استخدام البحث الذكي بدلاً من ذلك.'
+        };
+      }
+      
+      // If both searches return no results
+      const searchTime = Date.now() - startTime;
+      
+      return {
+        results: [],
+        totalCount: 0,
+        searchTime,
+        openaiResults: 0,
+        elasticsearchResults: 0,
+        localResults: 0,
+        suggestions: this.generateSearchSuggestions(query),
+        searchStrategy: 'both',
+        noResultsMessage: 'لم يتم العثور على نتائج في كل من البحث التقليدي والبحث الذكي. جرب مصطلحات بحث مختلفة.'
+      };
+      
+    } catch (error) {
+      console.error('Error in enhanced semantic search:', error);
+      
+      // Fallback to local search if both external services fail
+      try {
+        const localResults = await this.performLocalSearch(query, filters);
+        const searchTime = Date.now() - startTime;
+        
+        return {
+          results: localResults,
+          totalCount: localResults.length,
+          searchTime,
+          openaiResults: 0,
+          elasticsearchResults: 0,
+          localResults: localResults.length,
+          suggestions: this.generateSearchSuggestions(query),
+          searchStrategy: 'elasticsearch',
+          noResultsMessage: localResults.length === 0 ? 'حدث خطأ في خدمات البحث الخارجية. تم استخدام البحث المحلي.' : undefined
+        };
+      } catch (localError) {
+        console.error('Local search fallback also failed:', localError);
         
         const searchTime = Date.now() - startTime;
         return {
@@ -120,22 +155,11 @@ class EnhancedSemanticSearchService {
           openaiResults: 0,
           elasticsearchResults: 0,
           localResults: 0,
-          suggestions: []
+          suggestions: [],
+          searchStrategy: 'elasticsearch',
+          noResultsMessage: 'حدث خطأ في جميع خدمات البحث. يرجى المحاولة مرة أخرى لاحقاً.'
         };
       }
-    }
-  }
-
-  private async performOpenAISearch(query: string): Promise<{ results: AssistantSearchResult[]; suggestions: string[] }> {
-    try {
-      const response = await openaiAssistantSearchService.searchDocuments(query, 10);
-      return {
-        results: response.results,
-        suggestions: response.suggestions
-      };
-    } catch (error) {
-      console.error('OpenAI search failed:', error);
-      return { results: [], suggestions: [] };
     }
   }
 
@@ -165,32 +189,52 @@ class EnhancedSemanticSearchService {
     }
   }
 
-  private combineResults(
-    openaiResults: AssistantSearchResult[], 
-    elasticsearchResults: EnhancedSearchResult[], 
-    query: string
-  ): EnhancedSearchResult[] {
-    const combined: EnhancedSearchResult[] = [];
-    const seenTitles = new Set<string>();
+  private async performOpenAISearch(query: string): Promise<{ results: AssistantSearchResult[]; suggestions: string[] }> {
+    try {
+      const response = await openaiAssistantSearchService.searchDocuments(query, 10);
+      return {
+        results: response.results,
+        suggestions: response.suggestions
+      };
+    } catch (error) {
+      console.error('OpenAI search failed:', error);
+      return { results: [], suggestions: [] };
+    }
+  }
 
-    // Add OpenAI results first (they're typically more relevant for chat-based queries)
-    openaiResults.forEach(result => {
-      const enhanced = this.convertOpenAIToEnhanced(result);
-      if (!seenTitles.has(enhanced.title.toLowerCase())) {
-        combined.push(enhanced);
-        seenTitles.add(enhanced.title.toLowerCase());
-      }
-    });
-
-    // Add ElasticSearch results that don't duplicate OpenAI results
-    elasticsearchResults.forEach(result => {
-      if (!seenTitles.has(result.title.toLowerCase())) {
-        combined.push(result);
-        seenTitles.add(result.title.toLowerCase());
-      }
-    });
-
-    return combined;
+  private async performLocalSearch(query: string, filters: SearchFilters): Promise<EnhancedSearchResult[]> {
+    try {
+      const localDocs = await enhancedDocumentIndexingService.searchDocuments(query, {
+        fileTypes: filters.fileTypes,
+        tags: filters.tags,
+        dateRange: filters.dateRange
+      });
+      
+      return localDocs.map(doc => ({
+        id: doc.id,
+        title: doc.title,
+        description: doc.summary || doc.content.substring(0, 200) + '...',
+        excerpt: doc.content.substring(0, 300) + '...',
+        fileType: doc.fileType,
+        fileSize: doc.fileSize,
+        uploadDate: doc.uploadDate,
+        lastModified: doc.uploadDate,
+        author: doc.author,
+        tags: doc.tags,
+        category: doc.category,
+        relevanceScore: (doc as any).relevanceScore || 50,
+        viewCount: Math.floor(Math.random() * 100) + 10,
+        content: doc.content,
+        isSemanticMatch: false,
+        isRAGResult: false,
+        matchedSections: [],
+        semanticSummary: doc.summary,
+        source: 'local' as const
+      }));
+    } catch (error) {
+      console.error('Local search failed:', error);
+      return [];
+    }
   }
 
   private convertOpenAIToEnhanced(result: AssistantSearchResult): EnhancedSearchResult {
@@ -238,9 +282,9 @@ class EnhancedSemanticSearchService {
       
       switch (sortBy) {
         case 'relevance':
-          // Prioritize OpenAI results, then by relevance score
-          if (a.isRAGResult && !b.isRAGResult) comparison = -1;
-          else if (!a.isRAGResult && b.isRAGResult) comparison = 1;
+          // Prioritize ElasticSearch results, then by relevance score
+          if (a.source === 'elasticsearch' && b.source !== 'elasticsearch') comparison = -1;
+          else if (a.source !== 'elasticsearch' && b.source === 'elasticsearch') comparison = 1;
           else comparison = b.relevanceScore - a.relevanceScore;
           break;
         case 'date':
@@ -260,53 +304,76 @@ class EnhancedSemanticSearchService {
     });
   }
 
+  private generateElasticSearchSuggestions(query: string): string[] {
+    const suggestions = [
+      `${query} في التقارير`,
+      `سياسة ${query}`,
+      `إجراءات ${query}`,
+      `معايير ${query}`,
+      `دليل ${query}`
+    ];
+    
+    return suggestions.slice(0, 4);
+  }
+
+  private generateSearchSuggestions(query: string): string[] {
+    const suggestions = [
+      `${query} 2024`,
+      `تقرير ${query}`,
+      `سياسة ${query}`,
+      `إجراءات ${query}`,
+      `معايير ${query}`,
+      `دليل ${query}`
+    ];
+    
+    return suggestions.slice(0, 5);
+  }
+
   async getDocuments(): Promise<EnhancedSearchResult[]> {
     try {
-      // Get documents from ElasticSearch
+      // Get documents from ElasticSearch first
       const elasticDocs = await elasticsearchService.getAllDocuments();
-      return elasticDocs.map(doc => ({
-        ...doc,
-        source: 'elasticsearch' as const,
-        isRAGResult: false,
-        isSemanticMatch: true
-      }));
-    } catch (error) {
-      console.error('Error getting documents from ElasticSearch:', error);
+      if (elasticDocs.length > 0) {
+        return elasticDocs.map(doc => ({
+          ...doc,
+          source: 'elasticsearch' as const,
+          isRAGResult: false,
+          isSemanticMatch: true
+        }));
+      }
       
       // Fallback to enhanced document indexing service
-      try {
-        const localDocs = await enhancedDocumentIndexingService.getAllDocuments();
-        return localDocs.map(doc => ({
-          id: doc.id,
-          title: doc.title,
-          description: doc.summary || doc.content.substring(0, 200) + '...',
-          excerpt: doc.content.substring(0, 300) + '...',
-          fileType: doc.fileType,
-          fileSize: doc.fileSize,
-          uploadDate: doc.uploadDate,
-          lastModified: doc.uploadDate,
-          author: doc.author,
-          tags: doc.tags,
-          category: doc.category,
-          relevanceScore: 100,
-          viewCount: Math.floor(Math.random() * 100) + 10,
-          content: doc.content,
-          isSemanticMatch: false,
-          isRAGResult: false,
-          matchedSections: [],
-          semanticSummary: doc.summary,
-          source: 'local' as const
-        }));
-      } catch (localError) {
-        console.error('Error getting documents from local storage:', localError);
-        return [];
-      }
+      const localDocs = await enhancedDocumentIndexingService.getAllDocuments();
+      return localDocs.map(doc => ({
+        id: doc.id,
+        title: doc.title,
+        description: doc.summary || doc.content.substring(0, 200) + '...',
+        excerpt: doc.content.substring(0, 300) + '...',
+        fileType: doc.fileType,
+        fileSize: doc.fileSize,
+        uploadDate: doc.uploadDate,
+        lastModified: doc.uploadDate,
+        author: doc.author,
+        tags: doc.tags,
+        category: doc.category,
+        relevanceScore: 100,
+        viewCount: Math.floor(Math.random() * 100) + 10,
+        content: doc.content,
+        isSemanticMatch: false,
+        isRAGResult: false,
+        matchedSections: [],
+        semanticSummary: doc.summary,
+        source: 'local' as const
+      }));
+    } catch (error) {
+      console.error('Error getting documents:', error);
+      return [];
     }
   }
 
   async getDocumentStats() {
     try {
-      // Get stats from ElasticSearch
+      // Get stats from ElasticSearch first
       const elasticStats = await elasticsearchService.getDocumentStats();
       
       // Get OpenAI stats
