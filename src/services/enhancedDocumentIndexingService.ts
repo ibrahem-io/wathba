@@ -23,6 +23,8 @@ export interface IndexedDocument {
 class EnhancedDocumentIndexingService {
   private documents: Map<string, IndexedDocument> = new Map();
   private isInitialized = false;
+  private readonly MAX_STORAGE_SIZE = 50 * 1024 * 1024; // 50MB limit
+  private readonly MAX_CONTENT_LENGTH = 10000; // Limit content length per document
 
   async initialize() {
     if (this.isInitialized) return;
@@ -42,18 +44,116 @@ class EnhancedDocumentIndexingService {
   }
 
   private async loadStoredDocuments() {
-    // Load from localStorage for public mode
-    const storedDocs = localStorage.getItem('indexedDocuments');
-    if (storedDocs) {
-      const docs: IndexedDocument[] = JSON.parse(storedDocs);
-      docs.forEach(doc => this.documents.set(doc.id, doc));
+    try {
+      // Load from localStorage for public mode
+      const storedDocs = localStorage.getItem('indexedDocuments');
+      if (storedDocs) {
+        const docs: IndexedDocument[] = JSON.parse(storedDocs);
+        docs.forEach(doc => {
+          // Truncate content if too long to save space
+          if (doc.content && doc.content.length > this.MAX_CONTENT_LENGTH) {
+            doc.content = doc.content.substring(0, this.MAX_CONTENT_LENGTH) + '...';
+          }
+          this.documents.set(doc.id, doc);
+        });
+      }
+    } catch (error) {
+      console.warn('Failed to load stored documents, starting fresh:', error);
+      // Clear corrupted data
+      localStorage.removeItem('indexedDocuments');
     }
   }
 
   private saveToStorage() {
-    // Save to localStorage for public mode
+    try {
+      // Save to localStorage for public mode with size management
+      const docs = Array.from(this.documents.values());
+      
+      // Truncate content to save space
+      const compactDocs = docs.map(doc => ({
+        ...doc,
+        content: doc.content.length > this.MAX_CONTENT_LENGTH 
+          ? doc.content.substring(0, this.MAX_CONTENT_LENGTH) + '...'
+          : doc.content,
+        extractedText: undefined // Remove extracted text to save space
+      }));
+
+      const dataString = JSON.stringify(compactDocs);
+      
+      // Check if data size exceeds limit
+      if (dataString.length > this.MAX_STORAGE_SIZE) {
+        console.warn('Storage size limit exceeded, cleaning up old documents');
+        this.cleanupOldDocuments();
+        
+        // Try again with cleaned up data
+        const cleanedDocs = Array.from(this.documents.values()).map(doc => ({
+          ...doc,
+          content: doc.content.length > this.MAX_CONTENT_LENGTH 
+            ? doc.content.substring(0, this.MAX_CONTENT_LENGTH) + '...'
+            : doc.content,
+          extractedText: undefined
+        }));
+        
+        const cleanedDataString = JSON.stringify(cleanedDocs);
+        
+        if (cleanedDataString.length > this.MAX_STORAGE_SIZE) {
+          console.warn('Still too large after cleanup, storing only metadata');
+          // Store only essential metadata
+          const metadataOnly = cleanedDocs.map(doc => ({
+            id: doc.id,
+            filename: doc.filename,
+            title: doc.title,
+            fileType: doc.fileType,
+            fileSize: doc.fileSize,
+            uploadDate: doc.uploadDate,
+            tags: doc.tags,
+            category: doc.category,
+            author: doc.author,
+            summary: doc.summary,
+            content: doc.summary || doc.title, // Use summary as content fallback
+            elasticsearchIndexed: doc.elasticsearchIndexed
+          }));
+          localStorage.setItem('indexedDocuments', JSON.stringify(metadataOnly));
+        } else {
+          localStorage.setItem('indexedDocuments', cleanedDataString);
+        }
+      } else {
+        localStorage.setItem('indexedDocuments', dataString);
+      }
+    } catch (error) {
+      console.error('Failed to save to localStorage:', error);
+      // Try to save minimal data
+      try {
+        const minimalDocs = Array.from(this.documents.values()).slice(-10).map(doc => ({
+          id: doc.id,
+          title: doc.title,
+          fileType: doc.fileType,
+          uploadDate: doc.uploadDate,
+          summary: doc.summary || doc.title
+        }));
+        localStorage.setItem('indexedDocuments', JSON.stringify(minimalDocs));
+      } catch (finalError) {
+        console.error('Failed to save even minimal data, clearing storage:', finalError);
+        localStorage.removeItem('indexedDocuments');
+      }
+    }
+  }
+
+  private cleanupOldDocuments() {
+    // Remove oldest documents to free up space
     const docs = Array.from(this.documents.values());
-    localStorage.setItem('indexedDocuments', JSON.stringify(docs));
+    docs.sort((a, b) => new Date(a.uploadDate).getTime() - new Date(b.uploadDate).getTime());
+    
+    // Keep only the 20 most recent documents
+    const docsToKeep = docs.slice(-20);
+    const docsToRemove = docs.slice(0, -20);
+    
+    // Remove old documents
+    docsToRemove.forEach(doc => {
+      this.documents.delete(doc.id);
+    });
+    
+    console.log(`Cleaned up ${docsToRemove.length} old documents, keeping ${docsToKeep.length} recent ones`);
   }
 
   async indexDocument(
@@ -77,8 +177,13 @@ class EnhancedDocumentIndexingService {
         throw new Error('فشل في استخراج النص من الملف أو الملف فارغ');
       }
       
+      // Truncate content to prevent storage issues
+      const truncatedContent = extractedText.length > this.MAX_CONTENT_LENGTH 
+        ? extractedText.substring(0, this.MAX_CONTENT_LENGTH) + '...'
+        : extractedText;
+      
       // Generate summary using AI
-      const summary = await this.generateSummary(extractedText, metadata.title);
+      const summary = await this.generateSummary(truncatedContent, metadata.title);
       
       // Upload to OpenAI RAG system
       let openaiFileId: string | undefined;
@@ -99,7 +204,7 @@ class EnhancedDocumentIndexingService {
         id: documentId,
         filename: file.name,
         title: metadata.title,
-        content: extractedText,
+        content: truncatedContent,
         fileType: this.getFileExtension(file.name),
         fileSize: file.size,
         uploadDate: new Date().toISOString(),
@@ -108,7 +213,7 @@ class EnhancedDocumentIndexingService {
         author: 'مستخدم النظام',
         openaiFileId,
         vectorStoreFileId,
-        extractedText,
+        extractedText: undefined, // Don't store extracted text separately to save space
         summary,
         elasticsearchIndexed: false
       };
@@ -119,7 +224,7 @@ class EnhancedDocumentIndexingService {
         const elasticDoc: ElasticSearchDocument = {
           id: documentId,
           title: metadata.title,
-          content: extractedText,
+          content: truncatedContent,
           fileType: this.getFileExtension(file.name),
           fileSize: file.size,
           uploadDate: new Date().toISOString(),
@@ -127,7 +232,7 @@ class EnhancedDocumentIndexingService {
           tags: metadata.tags,
           category: metadata.category,
           filename: file.name,
-          extractedText,
+          extractedText: truncatedContent,
           summary,
           metadata: {
             description: metadata.description,
@@ -213,12 +318,12 @@ class EnhancedDocumentIndexingService {
     
     let content = `جدول بيانات CSV:\n\nالعناوين: ${headers.join(' | ')}\n\n`;
     
-    rows.slice(0, 50).forEach((row, index) => { // Limit to first 50 rows
+    rows.slice(0, 20).forEach((row, index) => { // Limit to first 20 rows to save space
       content += `الصف ${index + 1}: ${row.join(' | ')}\n`;
     });
     
-    if (rows.length > 50) {
-      content += `\n... و ${rows.length - 50} صف إضافي`;
+    if (rows.length > 20) {
+      content += `\n... و ${rows.length - 20} صف إضافي`;
     }
     
     return content;
@@ -234,7 +339,7 @@ class EnhancedDocumentIndexingService {
       const decoder = new TextDecoder('utf-8', { fatal: false });
       
       // Simple text extraction - look for readable text patterns
-      for (let i = 0; i < uint8Array.length - 10; i++) {
+      for (let i = 0; i < Math.min(uint8Array.length - 10, 100000); i++) { // Limit processing to save memory
         const chunk = uint8Array.slice(i, i + 100);
         const decoded = decoder.decode(chunk);
         
@@ -251,7 +356,7 @@ class EnhancedDocumentIndexingService {
                  .trim();
       
       if (text.length > 50) {
-        return `محتوى مستخرج من ملف PDF: ${file.name}\n\n${text}`;
+        return `محتوى مستخرج من ملف PDF: ${file.name}\n\n${text.substring(0, this.MAX_CONTENT_LENGTH)}`;
       } else {
         // Fallback: Use OpenAI to extract text if available
         return await this.extractTextWithAI(file);
@@ -282,7 +387,7 @@ class EnhancedDocumentIndexingService {
           .trim();
         
         if (extractedText.length > 50) {
-          return `محتوى مستخرج من مستند Word: ${file.name}\n\n${extractedText}`;
+          return `محتوى مستخرج من مستند Word: ${file.name}\n\n${extractedText.substring(0, this.MAX_CONTENT_LENGTH)}`;
         }
       }
       
@@ -308,7 +413,7 @@ class EnhancedDocumentIndexingService {
       let content = '';
       
       // Look for text patterns in the file
-      for (let i = 0; i < uint8Array.length - 10; i++) {
+      for (let i = 0; i < Math.min(uint8Array.length - 10, 50000); i++) { // Limit processing
         const chunk = uint8Array.slice(i, i + 50);
         const decoded = decoder.decode(chunk);
         
@@ -322,7 +427,7 @@ class EnhancedDocumentIndexingService {
       content = content.replace(/\s+/g, ' ').trim();
       
       if (content.length > 50) {
-        return `بيانات مستخرجة من ملف Excel: ${file.name}\n\n${content}`;
+        return `بيانات مستخرجة من ملف Excel: ${file.name}\n\n${content.substring(0, this.MAX_CONTENT_LENGTH)}`;
       } else {
         return await this.extractTextWithAI(file);
       }
@@ -351,7 +456,7 @@ class EnhancedDocumentIndexingService {
           .trim();
         
         if (extractedText.length > 50) {
-          return `محتوى مستخرج من عرض PowerPoint: ${file.name}\n\n${extractedText}`;
+          return `محتوى مستخرج من عرض PowerPoint: ${file.name}\n\n${extractedText.substring(0, this.MAX_CONTENT_LENGTH)}`;
         }
       }
       
@@ -365,8 +470,6 @@ class EnhancedDocumentIndexingService {
   private async extractTextWithAI(file: File): Promise<string> {
     try {
       // Use OpenAI to extract and analyze the document content
-      const base64 = await this.fileToBase64(file);
-      
       const extractionPrompt = `
 قم بتحليل واستخراج النص من هذا الملف:
 
@@ -380,13 +483,13 @@ class EnhancedDocumentIndexingService {
 2. البيانات المهمة والأرقام
 3. المعلومات الرئيسية
 
-قدم النتيجة بتنسيق واضح ومنظم باللغة العربية.
+قدم النتيجة بتنسيق واضح ومنظم باللغة العربية في حدود 500 كلمة.
 `;
 
       const response = await openaiService.sendMessage(extractionPrompt);
       
       if (response.content && response.content.length > 50) {
-        return `محتوى مستخرج بالذكاء الاصطناعي من ${file.name}:\n\n${response.content}`;
+        return `محتوى مستخرج بالذكاء الاصطناعي من ${file.name}:\n\n${response.content.substring(0, this.MAX_CONTENT_LENGTH)}`;
       } else {
         throw new Error('فشل في استخراج محتوى مفيد من الملف');
       }
@@ -395,18 +498,6 @@ class EnhancedDocumentIndexingService {
       // Final fallback
       return `ملف: ${file.name}\nنوع: ${file.type}\nحجم: ${this.formatFileSize(file.size)}\n\nلم يتمكن النظام من استخراج النص من هذا الملف. يرجى التأكد من أن الملف يحتوي على نص قابل للقراءة.`;
     }
-  }
-
-  private async fileToBase64(file: File): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => {
-        const result = reader.result as string;
-        resolve(result.split(',')[1]); // Remove data:type;base64, prefix
-      };
-      reader.onerror = error => reject(error);
-    });
   }
 
   private formatFileSize(bytes: number): string {
@@ -425,7 +516,7 @@ class EnhancedDocumentIndexingService {
 العنوان: ${title}
 
 المحتوى:
-${content.substring(0, 2000)}${content.length > 2000 ? '...' : ''}
+${content.substring(0, 1000)}${content.length > 1000 ? '...' : ''}
 
 يرجى تقديم ملخص باللغة العربية يتضمن:
 1. الموضوع الرئيسي
@@ -435,7 +526,7 @@ ${content.substring(0, 2000)}${content.length > 2000 ? '...' : ''}
 الملخص يجب أن يكون في 2-3 جمل فقط.`;
 
       const response = await openaiService.sendMessage(summaryPrompt);
-      return response.content.substring(0, 500); // Limit summary length
+      return response.content.substring(0, 300); // Limit summary length
     } catch (error) {
       console.error('Error generating summary:', error);
       return `ملخص تلقائي: ${title} - مستند يحتوي على معلومات مهمة متعلقة بالموضوع المحدد.`;
@@ -642,6 +733,34 @@ ${content.substring(0, 2000)}${content.length > 2000 ? '...' : ''}
       });
 
       return stats;
+    }
+  }
+
+  // Method to clear storage if needed
+  async clearStorage(): Promise<void> {
+    try {
+      localStorage.removeItem('indexedDocuments');
+      this.documents.clear();
+      console.log('Storage cleared successfully');
+    } catch (error) {
+      console.error('Failed to clear storage:', error);
+    }
+  }
+
+  // Method to get storage usage info
+  getStorageInfo(): { used: number; limit: number; percentage: number } {
+    try {
+      const data = localStorage.getItem('indexedDocuments') || '';
+      const used = new Blob([data]).size;
+      const percentage = (used / this.MAX_STORAGE_SIZE) * 100;
+      
+      return {
+        used,
+        limit: this.MAX_STORAGE_SIZE,
+        percentage: Math.round(percentage)
+      };
+    } catch (error) {
+      return { used: 0, limit: this.MAX_STORAGE_SIZE, percentage: 0 };
     }
   }
 }
