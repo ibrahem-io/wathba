@@ -53,28 +53,56 @@ export interface SearchFilters {
 class ElasticSearchService {
   private baseUrl = '/api/elasticsearch';
   private indexName = 'mof-documents';
+  private initialized = false;
 
   private async makeRequest(endpoint: string, options: RequestInit = {}) {
-    const url = `${this.baseUrl}${endpoint}`;
-    
-    const response = await fetch(url, {
-      ...options,
-      headers: {
-        'Content-Type': 'application/json',
-        ...options.headers,
-      },
-    });
+    try {
+      const url = `${this.baseUrl}${endpoint}`;
+      
+      const response = await fetch(url, {
+        ...options,
+        headers: {
+          'Content-Type': 'application/json',
+          ...options.headers,
+        },
+      });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('ElasticSearch error:', errorText);
-      throw new Error(`ElasticSearch request failed: ${response.status} ${response.statusText}`);
+      // For HEAD requests, just return the status
+      if (options.method === 'HEAD') {
+        return response.ok;
+      }
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('ElasticSearch error:', errorText);
+        throw new Error(`ElasticSearch request failed: ${response.status} ${response.statusText}`);
+      }
+
+      const responseText = await response.text();
+      return responseText ? JSON.parse(responseText) : {};
+    } catch (error) {
+      console.error('Request error:', error);
+      throw error;
     }
+  }
 
-    return response.json();
+  async checkIndexExists(): Promise<boolean> {
+    try {
+      const exists = await this.makeRequest(`/${this.indexName}`, {
+        method: 'HEAD'
+      });
+      return exists === true;
+    } catch (error) {
+      return false;
+    }
   }
 
   async initializeIndex(): Promise<boolean> {
+    // Skip if already initialized
+    if (this.initialized) {
+      return true;
+    }
+
     try {
       // Create index with proper mapping - directly attempt creation
       // and handle the case where index already exists
@@ -139,7 +167,8 @@ class ElasticSearchService {
                 keyword: { type: 'keyword' }
               }
             },
-            metadata: { type: 'object' }
+            metadata: { type: 'object' },
+            document_id: { type: 'keyword' }
           }
         },
         settings: {
@@ -165,12 +194,13 @@ class ElasticSearchService {
         if (error.message.includes('resource_already_exists_exception') || 
             error.message.includes('already exists')) {
           console.log('ElasticSearch index already exists');
-          return true;
+        } else {
+          // Re-throw other errors
+          throw error;
         }
-        // Re-throw other errors
-        throw error;
       }
-
+      
+      this.initialized = true;
       return true;
     } catch (error) {
       console.error('Failed to initialize ElasticSearch index:', error);
@@ -182,9 +212,20 @@ class ElasticSearchService {
     try {
       await this.initializeIndex();
 
+      // Add document_id field to ensure we don't rely on _id for queries
+      const docToIndex = {
+        ...document,
+        document_id: document.id
+      };
+
       const response = await this.makeRequest(`/${this.indexName}/_doc/${document.id}`, {
         method: 'PUT',
-        body: JSON.stringify(document)
+        body: JSON.stringify(docToIndex)
+      });
+
+      // Refresh the index to make document immediately searchable
+      await this.makeRequest(`/${this.indexName}/_refresh`, {
+        method: 'POST'
       });
 
       console.log('Document indexed successfully:', response);
@@ -360,6 +401,10 @@ class ElasticSearchService {
   }
 
   private convertElasticResultsToEnhanced(response: ElasticSearchResponse, query: string): EnhancedSearchResult[] {
+    if (!response.hits || !response.hits.hits) {
+      return [];
+    }
+    
     return response.hits.hits.map(hit => {
       const source = hit._source;
       const highlights = hit.highlight || {};
@@ -367,7 +412,9 @@ class ElasticSearchService {
       // Extract highlighted sections
       const matchedSections: string[] = [];
       Object.values(highlights).forEach(highlightArray => {
-        matchedSections.push(...highlightArray.map(h => h.replace(/<\/?mark>/g, '')));
+        if (Array.isArray(highlightArray)) {
+          matchedSections.push(...highlightArray.map(h => h.replace(/<\/?mark>/g, '')));
+        }
       });
 
       // Calculate relevance score (ElasticSearch score normalized to 0-100)
@@ -375,7 +422,7 @@ class ElasticSearchService {
       const relevanceScore = Math.round((hit._score / maxScore) * 100);
 
       // Create excerpt from highlighted content or original content
-      let excerpt = source.summary || source.content.substring(0, 300) + '...';
+      let excerpt = source.summary || source.content?.substring(0, 300) + '...';
       if (highlights.content && highlights.content.length > 0) {
         excerpt = highlights.content[0];
       } else if (highlights.extractedText && highlights.extractedText.length > 0) {
@@ -385,7 +432,7 @@ class ElasticSearchService {
       return {
         id: hit._id,
         title: source.title,
-        description: source.summary || source.content.substring(0, 200) + '...',
+        description: source.summary || source.content?.substring(0, 200) + '...',
         excerpt,
         fileType: source.fileType,
         fileSize: source.fileSize,
@@ -413,6 +460,12 @@ class ElasticSearchService {
       await this.makeRequest(`/${this.indexName}/_doc/${id}`, {
         method: 'DELETE'
       });
+      
+      // Refresh the index
+      await this.makeRequest(`/${this.indexName}/_refresh`, {
+        method: 'POST'
+      });
+      
       return true;
     } catch (error) {
       console.error('Error deleting document from ElasticSearch:', error);
@@ -422,7 +475,11 @@ class ElasticSearchService {
 
   async getDocumentStats() {
     try {
-      // Use search API with aggregations instead of _stats and _count
+      if (!this.initialized) {
+        await this.initializeIndex();
+      }
+
+      // Use search with aggregations instead of _stats and _count
       // which are not available in serverless mode
       const aggsResponse = await this.makeRequest(`/${this.indexName}/_search`, {
         method: 'POST',
@@ -430,7 +487,9 @@ class ElasticSearchService {
           size: 0,
           aggs: {
             total_documents: {
-              value_count: { field: '_id' }
+              value_count: { 
+                field: 'document_id' 
+              }
             },
             file_types: {
               terms: { field: 'fileType', size: 20 }
@@ -448,17 +507,21 @@ class ElasticSearchService {
       const fileTypes: Record<string, number> = {};
       const categories: Record<string, number> = {};
 
-      aggsResponse.aggregations.file_types.buckets.forEach((bucket: any) => {
-        fileTypes[bucket.key] = bucket.doc_count;
-      });
+      if (aggsResponse.aggregations?.file_types?.buckets) {
+        aggsResponse.aggregations.file_types.buckets.forEach((bucket: any) => {
+          fileTypes[bucket.key] = bucket.doc_count;
+        });
+      }
 
-      aggsResponse.aggregations.categories.buckets.forEach((bucket: any) => {
-        categories[bucket.key] = bucket.doc_count;
-      });
+      if (aggsResponse.aggregations?.categories?.buckets) {
+        aggsResponse.aggregations.categories.buckets.forEach((bucket: any) => {
+          categories[bucket.key] = bucket.doc_count;
+        });
+      }
 
       return {
-        totalDocuments: aggsResponse.aggregations.total_documents.value || 0,
-        totalSize: aggsResponse.aggregations.total_size.value || 0,
+        totalDocuments: aggsResponse.aggregations?.total_documents?.value || 0,
+        totalSize: aggsResponse.aggregations?.total_size?.value || 0,
         fileTypes,
         categories,
         elasticsearchEnabled: true
@@ -477,15 +540,49 @@ class ElasticSearchService {
 
   async getAllDocuments(): Promise<EnhancedSearchResult[]> {
     try {
-      const response = await this.searchDocuments('', {
-        dateRange: { start: '', end: '' },
-        fileTypes: [],
-        fileSizeRange: { min: 0, max: 100 },
-        tags: [],
-        authors: []
-      }, 0, 1000); // Get up to 1000 documents
+      if (!this.initialized) {
+        await this.initializeIndex();
+      }
+      
+      const response = await this.makeRequest(`/${this.indexName}/_search`, {
+        method: 'POST',
+        body: JSON.stringify({
+          query: { match_all: {} },
+          size: 100,
+          sort: [{ uploadDate: { order: 'desc' } }]
+        })
+      });
 
-      return response.results;
+      if (!response.hits || !response.hits.hits) {
+        return [];
+      }
+
+      return response.hits.hits.map((hit: any) => {
+        const source = hit._source;
+        return {
+          id: hit._id,
+          title: source.title,
+          description: source.summary || source.content?.substring(0, 200) + '...',
+          excerpt: source.content?.substring(0, 300) + '...',
+          fileType: source.fileType,
+          fileSize: source.fileSize,
+          uploadDate: source.uploadDate,
+          lastModified: source.uploadDate,
+          author: source.author,
+          tags: source.tags || [],
+          category: source.category,
+          relevanceScore: 100,
+          viewCount: Math.floor(Math.random() * 100) + 10,
+          downloadCount: Math.floor(Math.random() * 50) + 5,
+          content: source.content,
+          isSemanticMatch: true,
+          isRAGResult: false,
+          matchedSections: [],
+          semanticSummary: source.summary,
+          citations: [source.filename],
+          source: 'elasticsearch' as any
+        };
+      });
     } catch (error) {
       console.error('Error getting all documents from ElasticSearch:', error);
       return [];
