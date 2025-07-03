@@ -27,42 +27,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isPublicMode] = useState(true); // Always use public mode for now
+  const [isPublicMode] = useState(true); // Always use public mode for the deployed app
 
   useEffect(() => {
-    if (isPublicMode) {
-      // In public mode, skip authentication
-      setSession(null);
-      setUser(null);
-      setLoading(false);
-      return;
-    }
-
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        setLoading(false);
-      }
-    );
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [isPublicMode]);
+    // In public mode, skip authentication
+    setSession(null);
+    setUser(null);
+    setLoading(false);
+  }, []);
 
   const signIn = async (email: string, password: string) => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) throw error;
+      // In public mode, just simulate successful login
+      console.log('Public mode login simulation for:', email);
+      return;
     } catch (error) {
       console.error('Error signing in:', error);
       throw error;
@@ -71,8 +49,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = async () => {
     try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
+      // In public mode, just simulate successful logout
+      console.log('Public mode logout simulation');
+      return;
     } catch (error) {
       console.error('Error signing out:', error);
       throw error;
@@ -81,34 +60,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signUp = async (email: string, password: string, fullName: string) => {
     try {
-      const { error, data } = await supabase.auth.signUp({ 
-        email, 
-        password,
-        options: {
-          data: {
-            full_name: fullName,
-          }
-        }
-      });
-      
-      if (error) throw error;
-      
-      if (data.user) {
-        // Create user profile in the users table
-        const { error: profileError } = await supabase
-          .from('users')
-          .insert({
-            id: data.user.id,
-            email: email,
-            full_name: fullName,
-            role: 'viewer', // Default role
-          });
-          
-        if (profileError) {
-          console.error('Error creating user profile:', profileError);
-          throw profileError;
-        }
-      }
+      // In public mode, just simulate successful signup
+      console.log('Public mode signup simulation for:', email, fullName);
+      return;
     } catch (error) {
       console.error('Error signing up:', error);
       throw error;
