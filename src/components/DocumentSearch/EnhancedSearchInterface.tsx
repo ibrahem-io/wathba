@@ -6,6 +6,7 @@ import DocumentViewer from './DocumentViewer';
 import SearchFilters from './SearchFilters';
 import EnhancedSearchResults from './EnhancedSearchResults';
 import { enhancedSemanticSearchService, EnhancedSearchResult, SearchFilters as ISearchFilters } from '../../services/enhancedSemanticSearchService';
+import elasticsearchService from '../../services/elasticsearchService';
 
 interface EnhancedSearchInterfaceProps {
   onNavigateBack?: () => void;
@@ -36,7 +37,6 @@ const EnhancedSearchInterface: React.FC<EnhancedSearchInterfaceProps> = ({ onNav
   const [questionAnswer, setQuestionAnswer] = useState<{ answer: string; citations: string[] } | null>(null);
   const [searchStrategy, setSearchStrategy] = useState<'elasticsearch' | 'openai_fallback' | 'both'>('elasticsearch');
   const [noResultsMessage, setNoResultsMessage] = useState<string | null>(null);
-  const [usingMockData, setUsingMockData] = useState(false);
   
   const [filters, setFilters] = useState<ISearchFilters>({
     dateRange: { start: '', end: '' },
@@ -74,25 +74,15 @@ const EnhancedSearchInterface: React.FC<EnhancedSearchInterfaceProps> = ({ onNav
     try {
       const stats = await enhancedSemanticSearchService.getDocumentStats();
       setDocumentStats(stats);
-      
-      // Check if we're using mock data
-      if (stats.elasticsearchEnabled) {
-        setUsingMockData(true);
-      }
     } catch (error) {
       console.error('Error loading document stats:', error);
-      setUsingMockData(true);
-      
       // Set default stats
       setDocumentStats({
-        totalDocuments: 5,
+        totalDocuments: 0,
         ragDocuments: 0,
-        elasticsearchDocuments: 5,
-        fileTypes: {
-          'pdf': 3,
-          'excel': 1,
-          'ppt': 1
-        }
+        elasticsearchDocuments: 0,
+        fileTypes: {},
+        categories: {}
       });
     }
   };
@@ -142,126 +132,11 @@ const EnhancedSearchInterface: React.FC<EnhancedSearchInterfaceProps> = ({ onNav
       const documents = await enhancedSemanticSearchService.getDocuments();
       setAllDocuments(documents);
       setSearchResults(documents);
-      
-      // Check if we're using mock data
-      if (documents.length > 0 && documents[0].source === 'elasticsearch') {
-        setUsingMockData(true);
-      }
     } catch (error) {
       console.error('Error loading documents:', error);
-      // Set mock data
-      setUsingMockData(true);
-      const mockDocuments = generateMockDocuments();
-      setAllDocuments(mockDocuments);
-      setSearchResults(mockDocuments);
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const generateMockDocuments = (): EnhancedSearchResult[] => {
-    return [
-      {
-        id: 'mock-doc-1',
-        title: 'سياسة المصروفات الرأسمالية للعام المالي 2024',
-        description: 'دليل شامل للسياسات والإجراءات المتعلقة بالمصروفات الرأسمالية وآليات الاعتماد والمتابعة',
-        excerpt: 'دليل شامل للسياسات والإجراءات المتعلقة بالمصروفات الرأسمالية وآليات الاعتماد والمتابعة',
-        fileType: 'pdf',
-        fileSize: 2.4 * 1024 * 1024,
-        uploadDate: '2024-01-15T00:00:00Z',
-        author: 'إدارة الميزانية',
-        tags: ['سياسة', 'مصروفات رأسمالية', 'ميزانية', '2024'],
-        category: 'سياسات مالية',
-        relevanceScore: 95,
-        viewCount: 120,
-        content: 'دليل شامل للسياسات والإجراءات المتعلقة بالمصروفات الرأسمالية وآليات الاعتماد والمتابعة',
-        isSemanticMatch: true,
-        isRAGResult: false,
-        matchedSections: ['دليل شامل للسياسات والإجراءات المتعلقة بالمصروفات الرأسمالية'],
-        semanticSummary: 'تحدد هذه السياسة الإجراءات المطلوبة لاعتماد المصروفات الرأسمالية، بما في ذلك حدود الصلاحيات ومتطلبات التوثيق والمراجعة.',
-        source: 'elasticsearch'
-      },
-      {
-        id: 'mock-doc-2',
-        title: 'دليل إجراءات المحاسبة الحكومية',
-        description: 'دليل تفصيلي لجميع الإجراءات المحاسبية المطبقة في الوزارة وفقاً للمعايير الدولية',
-        excerpt: 'دليل تفصيلي لجميع الإجراءات المحاسبية المطبقة في الوزارة وفقاً للمعايير الدولية',
-        fileType: 'pdf',
-        fileSize: 5.1 * 1024 * 1024,
-        uploadDate: '2024-01-10T00:00:00Z',
-        author: 'إدارة المحاسبة',
-        tags: ['محاسبة', 'إجراءات', 'معايير دولية', 'دليل'],
-        category: 'أدلة إجرائية',
-        relevanceScore: 85,
-        viewCount: 95,
-        content: 'دليل تفصيلي لجميع الإجراءات المحاسبية المطبقة في الوزارة وفقاً للمعايير الدولية',
-        isSemanticMatch: true,
-        isRAGResult: false,
-        matchedSections: ['دليل تفصيلي لجميع الإجراءات المحاسبية المطبقة في الوزارة'],
-        semanticSummary: 'يغطي الدليل جميع العمليات المحاسبية من القيد إلى إعداد التقارير المالية، مع التركيز على الامتثال للمعايير الدولية.',
-        source: 'elasticsearch'
-      },
-      {
-        id: 'mock-doc-3',
-        title: 'تقرير الأداء المالي الربعي Q4 2023',
-        description: 'تقرير شامل عن الأداء المالي للربع الأخير من عام 2023',
-        excerpt: 'تقرير شامل عن الأداء المالي للربع الأخير من عام 2023',
-        fileType: 'excel',
-        fileSize: 3.2 * 1024 * 1024,
-        uploadDate: '2024-01-01T00:00:00Z',
-        author: 'إدارة المحاسبة',
-        tags: ['تقرير', 'أداء مالي', 'ربعي', '2023'],
-        category: 'تقارير مالية',
-        relevanceScore: 75,
-        viewCount: 65,
-        content: 'تقرير شامل عن الأداء المالي للربع الأخير من عام 2023',
-        isSemanticMatch: true,
-        isRAGResult: false,
-        matchedSections: ['تقرير شامل عن الأداء المالي للربع الأخير من عام 2023'],
-        semanticSummary: 'يعرض التقرير المؤشرات المالية الرئيسية والمقارنات مع الفترات السابقة والأهداف المحددة.',
-        source: 'elasticsearch'
-      },
-      {
-        id: 'mock-doc-4',
-        title: 'عرض تقديمي - استراتيجية التحول الرقمي',
-        description: 'عرض تقديمي شامل عن استراتيجية التحول الرقمي في وزارة المالية',
-        excerpt: 'عرض تقديمي شامل عن استراتيجية التحول الرقمي في وزارة المالية',
-        fileType: 'ppt',
-        fileSize: 12.8 * 1024 * 1024,
-        uploadDate: '2023-12-28T00:00:00Z',
-        author: 'إدارة التخطيط والتطوير',
-        tags: ['عرض تقديمي', 'تحول رقمي', 'استراتيجية', 'تطوير'],
-        category: 'استراتيجيات',
-        relevanceScore: 65,
-        viewCount: 45,
-        content: 'عرض تقديمي شامل عن استراتيجية التحول الرقمي في وزارة المالية',
-        isSemanticMatch: true,
-        isRAGResult: false,
-        matchedSections: ['عرض تقديمي شامل عن استراتيجية التحول الرقمي في وزارة المالية'],
-        semanticSummary: 'يستعرض العرض خطة التحول الرقمي على مدى 5 سنوات مع التركيز على الأتمتة والذكاء الاصطناعي.',
-        source: 'elasticsearch'
-      },
-      {
-        id: 'mock-doc-5',
-        title: 'إعلان - تحديث نظام الرواتب',
-        description: 'إعلان هام حول تحديث نظام الرواتب والتغييرات المطلوبة',
-        excerpt: 'إعلان هام حول تحديث نظام الرواتب والتغييرات المطلوبة',
-        fileType: 'pdf',
-        fileSize: 890 * 1024,
-        uploadDate: '2023-12-25T00:00:00Z',
-        author: 'إدارة الموارد البشرية',
-        tags: ['إعلان', 'نظام رواتب', 'تحديث', 'موارد بشرية'],
-        category: 'إعلانات',
-        relevanceScore: 55,
-        viewCount: 85,
-        content: 'إعلان هام حول تحديث نظام الرواتب والتغييرات المطلوبة',
-        isSemanticMatch: true,
-        isRAGResult: false,
-        matchedSections: ['إعلان هام حول تحديث نظام الرواتب والتغييرات المطلوبة'],
-        semanticSummary: 'يتضمن الإعلان تفاصيل التحديث الجديد وجدولة التطبيق والتدريب المطلوب للموظفين.',
-        source: 'elasticsearch'
-      }
-    ];
   };
 
   const loadSearchHistory = () => {
@@ -295,11 +170,6 @@ const EnhancedSearchInterface: React.FC<EnhancedSearchInterfaceProps> = ({ onNav
       setElasticsearchResults(response.elasticsearchResults);
       setSearchStrategy(response.searchStrategy);
       setNoResultsMessage(response.noResultsMessage || null);
-      
-      // Check if we're using mock data
-      if (response.results.length > 0 && response.results[0].source === 'elasticsearch') {
-        setUsingMockData(true);
-      }
 
       if (query) {
         saveSearchHistory(query);
@@ -307,15 +177,6 @@ const EnhancedSearchInterface: React.FC<EnhancedSearchInterfaceProps> = ({ onNav
     } catch (error) {
       console.error('Error searching documents:', error);
       setNoResultsMessage('حدث خطأ أثناء البحث. يرجى المحاولة مرة أخرى.');
-      
-      // Fallback to mock results
-      setUsingMockData(true);
-      const mockResults = generateMockDocuments().filter(doc => 
-        doc.title.includes(query) || 
-        doc.content.includes(query) || 
-        doc.tags.some(tag => tag.includes(query))
-      );
-      setSearchResults(mockResults);
     } finally {
       setIsLoading(false);
     }
@@ -389,15 +250,6 @@ const EnhancedSearchInterface: React.FC<EnhancedSearchInterfaceProps> = ({ onNav
   };
 
   const getSearchStrategyMessage = () => {
-    if (usingMockData) {
-      return (
-        <div className="flex items-center gap-2 text-blue-600 text-sm">
-          <AlertCircle className="h-4 w-4" />
-          <span>تم استخدام بيانات تجريبية لعرض واجهة البحث</span>
-        </div>
-      );
-    }
-    
     if (searchStrategy === 'openai_fallback') {
       return (
         <div className="flex items-center gap-2 text-orange-600 text-sm">
@@ -443,21 +295,12 @@ const EnhancedSearchInterface: React.FC<EnhancedSearchInterfaceProps> = ({ onNav
                     </span>
                   </h1>
                   <p className="text-sm text-gray-600">
-                    {usingMockData ? (
-                      <span className="flex items-center gap-1">
-                        <AlertCircle className="h-3 w-3 text-blue-500" />
-                        وضع العرض التجريبي - {documentStats?.totalDocuments || 5} مستند تجريبي
-                      </span>
-                    ) : (
+                    {documentStats ? (
                       <>
-                        {documentStats ? (
-                          <>
-                            {documentStats.totalDocuments} مستند • {documentStats.elasticsearchDocuments} في ElasticSearch • {documentStats.ragDocuments} في OpenAI
-                          </>
-                        ) : (
-                          'البحث المتقدم مع ElasticSearch و OpenAI Assistant'
-                        )}
+                        {documentStats.totalDocuments} مستند • {documentStats.elasticsearchDocuments} في ElasticSearch • {documentStats.ragDocuments} في OpenAI
                       </>
+                    ) : (
+                      'البحث المتقدم مع ElasticSearch و OpenAI Assistant'
                     )}
                   </p>
                 </div>
@@ -477,14 +320,6 @@ const EnhancedSearchInterface: React.FC<EnhancedSearchInterfaceProps> = ({ onNav
                     <span className="text-green-600">• {getRAGResultsCount()} من OpenAI</span>
                   )}
                 </div>
-              )}
-              
-              {usingMockData && (
-                <>
-                  <span className="text-gray-400">|</span>
-                  <AlertCircle className="h-4 w-4 text-blue-500" />
-                  <span className="text-blue-500">وضع العرض التجريبي</span>
-                </>
               )}
               <button
                 onClick={() => setShowUploadModal(true)}
@@ -639,7 +474,7 @@ const EnhancedSearchInterface: React.FC<EnhancedSearchInterfaceProps> = ({ onNav
 
             {/* Quick Search Terms */}
             <div className="mt-4 space-y-3">
-              {documentStats?.totalDocuments === 0 && !usingMockData ? (
+              {documentStats?.totalDocuments === 0 ? (
                 <div className="text-center py-8 bg-blue-50 rounded-lg border border-blue-200">
                   <Upload className="h-12 w-12 text-blue-400 mx-auto mb-4" />
                   <h3 className="text-lg font-semibold text-blue-900 mb-2">لا توجد مستندات مفهرسة</h3>
@@ -698,7 +533,7 @@ const EnhancedSearchInterface: React.FC<EnhancedSearchInterfaceProps> = ({ onNav
 
           {/* Results Area */}
           <div className="flex-1 min-w-0">
-            {(documentStats?.totalDocuments > 0 || usingMockData) && (
+            {documentStats?.totalDocuments > 0 && (
               <>
                 {/* Question Answer Display */}
                 {showQuestionMode && questionAnswer && (

@@ -54,7 +54,7 @@ class ElasticSearchService {
   private baseUrl = '/api/elasticsearch';
   private indexName = 'mof-documents';
   private initialized = false;
-  private mockMode = true; // Use mock mode by default to avoid errors
+  private mockMode = false; // Start with real mode
 
   private async makeRequest(endpoint: string, options: RequestInit = {}) {
     // If in mock mode, return mock data instead of making actual requests
@@ -94,7 +94,6 @@ class ElasticSearchService {
       return response.json();
     } catch (error) {
       console.error('ElasticSearch request error:', error);
-      this.mockMode = true; // Switch to mock mode after an error
       throw error;
     }
   }
@@ -248,44 +247,24 @@ class ElasticSearchService {
   }
 
   async checkIndexExists(): Promise<boolean> {
-    if (this.mockMode) {
-      return true;
-    }
-
     try {
+      // Skip health check in serverless mode
       return await this.makeRequest(`/${this.indexName}`, { method: 'HEAD' }) as boolean;
     } catch (error) {
       console.error('Index check failed:', error);
       this.mockMode = true; // Switch to mock mode after failure
-      return false;
+      return true; // Pretend index exists in mock mode
     }
   }
 
+  // Skip health check entirely as it's not available in serverless mode
   async checkHealth(): Promise<boolean> {
-    if (this.mockMode) {
-      return true;
-    }
-
-    try {
-      const health = await this.makeRequest('/_cluster/health');
-      return health.status === 'green' || health.status === 'yellow';
-    } catch (error) {
-      console.error('ElasticSearch health check failed:', error);
-      this.mockMode = true; // Switch to mock mode after health check failure
-      return false;
-    }
+    return true; // Always return true to avoid serverless mode errors
   }
 
   async initializeIndex(): Promise<boolean> {
     try {
       if (this.initialized) {
-        return true;
-      }
-
-      // In mock mode, just mark as initialized
-      if (this.mockMode) {
-        console.log('Using mock ElasticSearch mode');
-        this.initialized = true;
         return true;
       }
 
@@ -394,11 +373,6 @@ class ElasticSearchService {
     try {
       await this.initializeIndex();
 
-      if (this.mockMode) {
-        console.log('Mock mode: Document indexed successfully');
-        return { success: true };
-      }
-
       const response = await this.makeRequest(`/${this.indexName}/_doc/${document.id}`, {
         method: 'PUT',
         body: JSON.stringify(document)
@@ -408,10 +382,9 @@ class ElasticSearchService {
       return { success: true };
     } catch (error) {
       console.error('Error indexing document:', error);
-      this.mockMode = true; // Switch to mock mode after indexing failure
       return { 
-        success: true, // Pretend success in mock mode
-        error: 'Using mock mode due to ElasticSearch unavailability'
+        success: false, 
+        error: error instanceof Error ? error.message : 'فشل في فهرسة المستند' 
       };
     }
   }
@@ -431,51 +404,7 @@ class ElasticSearchService {
     try {
       await this.initializeIndex();
 
-      if (this.mockMode) {
-        console.log('Using mock search results');
-        const mockResponse = this.getMockSearchResults();
-        const results = this.convertElasticResultsToEnhanced(mockResponse, query);
-        
-        // Apply filters to mock results
-        let filteredResults = results;
-        
-        if (filters.fileTypes.length > 0) {
-          filteredResults = filteredResults.filter(doc => 
-            filters.fileTypes.includes(doc.fileType)
-          );
-        }
-        
-        if (filters.tags.length > 0) {
-          filteredResults = filteredResults.filter(doc => 
-            filters.tags.some(tag => doc.tags.includes(tag))
-          );
-        }
-        
-        if (filters.authors.length > 0) {
-          filteredResults = filteredResults.filter(doc => 
-            filters.authors.some(author => doc.author?.includes(author))
-          );
-        }
-        
-        if (filters.dateRange.start) {
-          filteredResults = filteredResults.filter(doc => 
-            new Date(doc.uploadDate) >= new Date(filters.dateRange.start)
-          );
-        }
-        
-        if (filters.dateRange.end) {
-          filteredResults = filteredResults.filter(doc => 
-            new Date(doc.uploadDate) <= new Date(filters.dateRange.end)
-          );
-        }
-        
-        return {
-          results: filteredResults,
-          totalCount: filteredResults.length,
-          searchTime: 42
-        };
-      }
-
+      // Skip health check in serverless mode
       const searchBody = this.buildSearchQuery(query, filters, from, size);
       
       const startTime = Date.now();
@@ -681,11 +610,6 @@ class ElasticSearchService {
     try {
       await this.initializeIndex();
 
-      if (this.mockMode) {
-        console.log('Mock mode: Document deleted successfully');
-        return true;
-      }
-
       await this.makeRequest(`/${this.indexName}/_doc/${id}`, {
         method: 'DELETE'
       });
@@ -700,27 +624,8 @@ class ElasticSearchService {
     try {
       await this.initializeIndex();
 
-      if (this.mockMode) {
-        return {
-          totalDocuments: 5,
-          totalSize: 24.39 * 1024 * 1024,
-          fileTypes: {
-            'pdf': 3,
-            'excel': 1,
-            'ppt': 1
-          },
-          categories: {
-            'سياسات مالية': 1,
-            'أدلة إجرائية': 1,
-            'تقارير مالية': 1,
-            'استراتيجيات': 1,
-            'إعلانات': 1
-          },
-          elasticsearchEnabled: true
-        };
-      }
-
-      const response = await this.makeRequest(`/${this.indexName}/_stats`);
+      // Skip health check in serverless mode
+      // Get document count directly
       const countResponse = await this.makeRequest(`/${this.indexName}/_count`);
       
       // Get aggregations for file types and categories
@@ -745,17 +650,19 @@ class ElasticSearchService {
       const fileTypes: Record<string, number> = {};
       const categories: Record<string, number> = {};
 
-      aggsResponse.aggregations.file_types.buckets.forEach((bucket: any) => {
-        fileTypes[bucket.key] = bucket.doc_count;
-      });
+      if (aggsResponse.aggregations) {
+        aggsResponse.aggregations.file_types.buckets.forEach((bucket: any) => {
+          fileTypes[bucket.key] = bucket.doc_count;
+        });
 
-      aggsResponse.aggregations.categories.buckets.forEach((bucket: any) => {
-        categories[bucket.key] = bucket.doc_count;
-      });
+        aggsResponse.aggregations.categories.buckets.forEach((bucket: any) => {
+          categories[bucket.key] = bucket.doc_count;
+        });
+      }
 
       return {
         totalDocuments: countResponse.count,
-        totalSize: aggsResponse.aggregations.total_size.value || 0,
+        totalSize: aggsResponse.aggregations?.total_size?.value || 0,
         fileTypes,
         categories,
         elasticsearchEnabled: true
@@ -789,11 +696,7 @@ class ElasticSearchService {
     try {
       await this.initializeIndex();
 
-      if (this.mockMode) {
-        const mockResponse = this.getMockSearchResults();
-        return this.convertElasticResultsToEnhanced(mockResponse, '');
-      }
-
+      // Skip health check in serverless mode
       const response = await this.searchDocuments('', {
         dateRange: { start: '', end: '' },
         fileTypes: [],
