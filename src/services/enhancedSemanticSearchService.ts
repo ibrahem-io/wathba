@@ -17,6 +17,14 @@ interface SearchOptions {
   useOpenAI?: boolean;
   useSemantic?: boolean;
   maxResults?: number;
+  filters?: any;
+}
+
+interface DocumentStats {
+  totalDocuments: number;
+  totalSize: number;
+  fileTypes: { [key: string]: number };
+  recentUploads: number;
 }
 
 class EnhancedSemanticSearchService {
@@ -25,7 +33,8 @@ class EnhancedSemanticSearchService {
       useElasticsearch = true,
       useOpenAI = true,
       useSemantic = true,
-      maxResults = 20
+      maxResults = 20,
+      filters = {}
     } = options;
 
     const results: SearchResult[] = [];
@@ -56,7 +65,7 @@ class EnhancedSemanticSearchService {
     // Semantic search
     if (useSemantic) {
       try {
-        const semanticResults = await this.performSemanticSearch(query);
+        const semanticResults = await this.performSemanticSearch(query, filters);
         results.push(...semanticResults);
       } catch (error) {
         console.error('Semantic search failed:', error);
@@ -108,8 +117,8 @@ class EnhancedSemanticSearchService {
     }));
   }
 
-  private async performSemanticSearch(query: string): Promise<SearchResult[]> {
-    const results = await semanticSearchService.searchDocuments(query);
+  private async performSemanticSearch(query: string, filters: any = {}): Promise<SearchResult[]> {
+    const results = await semanticSearchService.searchDocuments(query, filters);
     return results.map(result => ({
       ...result,
       source: 'semantic' as const
@@ -138,6 +147,22 @@ class EnhancedSemanticSearchService {
       openai: openaiAssistantSearchService.isConfigured(),
       semantic: true // Semantic search is always available as it uses Supabase
     };
+  }
+
+  async getDocumentStats(): Promise<DocumentStats> {
+    try {
+      // Delegate to semantic search service for document stats
+      return await semanticSearchService.getDocumentStats();
+    } catch (error) {
+      console.error('Error getting document stats:', error);
+      // Return default stats if there's an error
+      return {
+        totalDocuments: 0,
+        totalSize: 0,
+        fileTypes: {},
+        recentUploads: 0
+      };
+    }
   }
 }
 
