@@ -24,19 +24,24 @@ class EnhancedDocumentIndexingService {
     let documentId: string | undefined;
 
     try {
-      // 1. Store document in Supabase
-      const supabaseResult = await this.storeInSupabase(file, metadata);
-      if (supabaseResult.success) {
-        documentId = supabaseResult.documentId;
-      } else {
-        errors.push('Failed to store in Supabase');
+      // 1. Store document in Supabase (skip in public mode to avoid RLS issues)
+      try {
+        const supabaseResult = await this.storeInSupabase(file, metadata);
+        if (supabaseResult.success) {
+          documentId = supabaseResult.documentId;
+        } else {
+          console.warn('Supabase storage skipped in public mode');
+        }
+      } catch (error) {
+        console.warn('Supabase storage failed, continuing with other indexing methods:', error);
+        errors.push('Supabase storage failed');
       }
 
       // 2. Extract text content
       const textContent = await this.extractTextContent(file);
       
-      // 3. Index in Elasticsearch (if configured)
-      if (elasticsearchService.isConfigured()) {
+      // 3. Index in Elasticsearch (if available)
+      if (elasticsearchService.isElasticSearchAvailable()) {
         try {
           const elasticResult = await this.indexInElasticsearch(documentId || 'temp', {
             ...metadata,
@@ -61,7 +66,7 @@ class EnhancedDocumentIndexingService {
         }
       }
 
-      // 5. Generate embeddings and store in Supabase for semantic search
+      // 5. Generate embeddings and store in Supabase for semantic search (skip in public mode)
       try {
         await this.generateAndStoreEmbeddings(documentId || 'temp', textContent);
       } catch (error) {
@@ -85,6 +90,14 @@ class EnhancedDocumentIndexingService {
 
   private async storeInSupabase(file: File, metadata: DocumentMetadata): Promise<{ success: boolean; documentId?: string }> {
     try {
+      // Check if we're in public mode by checking if user is authenticated
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        console.log('No authenticated user, skipping Supabase storage');
+        return { success: false };
+      }
+
       // Upload file to Supabase Storage
       const fileExt = file.name.split('.').pop();
       const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
@@ -108,7 +121,7 @@ class EnhancedDocumentIndexingService {
           file_type: metadata.fileType,
           file_size: metadata.fileSize,
           folder_id: metadata.folderId,
-          uploaded_by: metadata.uploadedBy,
+          uploaded_by: user.id,
           extracted_text: metadata.extractedText,
           content_summary: metadata.summary
         })
@@ -129,15 +142,18 @@ class EnhancedDocumentIndexingService {
 
   private async indexInElasticsearch(documentId: string, document: any): Promise<{ success: boolean }> {
     try {
-      const result = await elasticsearchService.indexDocument('mof-documents', documentId, {
+      const result = await elasticsearchService.indexDocument({
+        id: documentId,
         title: document.filename,
         content: document.content || '',
         filename: document.filename,
-        file_type: document.fileType,
-        file_size: document.fileSize,
-        uploaded_by: document.uploadedBy,
-        folder_id: document.folderId,
-        created_at: new Date().toISOString(),
+        fileType: document.fileType,
+        fileSize: document.fileSize,
+        uploadDate: new Date().toISOString(),
+        author: document.uploadedBy,
+        tags: [],
+        category: 'مستندات مرفوعة',
+        extractedText: document.content || '',
         metadata: {
           summary: document.summary
         }
@@ -179,20 +195,27 @@ class EnhancedDocumentIndexingService {
     try {
       const errors: string[] = [];
 
-      // Delete from Supabase
-      const { error: supabaseError } = await supabase
-        .from('documents')
-        .delete()
-        .eq('id', documentId);
+      // Delete from Supabase (only if authenticated)
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { error: supabaseError } = await supabase
+            .from('documents')
+            .delete()
+            .eq('id', documentId);
 
-      if (supabaseError) {
-        errors.push('Failed to delete from Supabase');
+          if (supabaseError) {
+            errors.push('Failed to delete from Supabase');
+          }
+        }
+      } catch (error) {
+        console.warn('Supabase deletion failed:', error);
       }
 
-      // Delete from Elasticsearch (if configured)
-      if (elasticsearchService.isConfigured()) {
+      // Delete from Elasticsearch (if available)
+      if (elasticsearchService.isElasticSearchAvailable()) {
         try {
-          await elasticsearchService.deleteDocument('mof-documents', documentId);
+          await elasticsearchService.deleteDocument(documentId);
         } catch (error) {
           errors.push('Failed to delete from Elasticsearch');
         }
@@ -210,9 +233,11 @@ class EnhancedDocumentIndexingService {
     elasticsearch: boolean;
     openai: boolean;
   }> {
+    const { data: { user } } = await supabase.auth.getUser();
+    
     return {
-      supabase: true, // Always available
-      elasticsearch: elasticsearchService.isConfigured(),
+      supabase: !!user, // Only available if authenticated
+      elasticsearch: elasticsearchService.isElasticSearchAvailable(),
       openai: openaiService.isConfigured()
     };
   }
