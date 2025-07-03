@@ -25,6 +25,7 @@ class EnhancedDocumentIndexingService {
   private isInitialized = false;
   private readonly MAX_STORAGE_SIZE = 50 * 1024 * 1024; // 50MB limit
   private readonly MAX_CONTENT_LENGTH = 10000; // Limit content length per document
+  private readonly MAX_DOCUMENTS = 50; // Maximum number of documents to store locally
 
   async initialize() {
     if (this.isInitialized) return;
@@ -40,6 +41,8 @@ class EnhancedDocumentIndexingService {
       console.log('Enhanced document indexing service initialized');
     } catch (error) {
       console.error('Failed to initialize enhanced document indexing service:', error);
+      // Still mark as initialized to avoid repeated initialization attempts
+      this.isInitialized = true;
     }
   }
 
@@ -66,6 +69,11 @@ class EnhancedDocumentIndexingService {
 
   private saveToStorage() {
     try {
+      // Check if we have too many documents
+      if (this.documents.size > this.MAX_DOCUMENTS) {
+        this.cleanupOldDocuments();
+      }
+      
       // Save to localStorage for public mode with size management
       const docs = Array.from(this.documents.values());
       
@@ -577,7 +585,7 @@ ${content.substring(0, 1000)}${content.length > 1000 ? '...' : ''}
         relevanceScore: result.relevanceScore
       } as any));
     } catch (error) {
-      console.error('ElasticSearch search failed, falling back to local search:', error);
+      console.warn('ElasticSearch search failed, falling back to local search:', error);
       
       // Fallback to local search
       let results = Array.from(this.documents.values());
@@ -664,7 +672,7 @@ ${content.substring(0, 1000)}${content.length > 1000 ? '...' : ''}
         elasticsearchIndexed: true
       } as IndexedDocument));
     } catch (error) {
-      console.error('Failed to get documents from ElasticSearch, using local storage:', error);
+      console.warn('Failed to get documents from ElasticSearch, using local storage:', error);
       return Array.from(this.documents.values()).sort((a, b) => 
         new Date(b.uploadDate).getTime() - new Date(a.uploadDate).getTime()
       );
@@ -713,7 +721,7 @@ ${content.substring(0, 1000)}${content.length > 1000 ? '...' : ''}
       const elasticStats = await elasticsearchService.getDocumentStats();
       return elasticStats;
     } catch (error) {
-      console.error('Failed to get stats from ElasticSearch, using local data:', error);
+      console.warn('Failed to get stats from ElasticSearch, using local data:', error);
       
       // Fallback to local stats
       const docs = Array.from(this.documents.values());
