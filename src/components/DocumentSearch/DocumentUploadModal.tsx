@@ -119,7 +119,7 @@ const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({
     ));
 
     try {
-      // Index the document using the enhanced service (uploads to ElasticSearch)
+      // Index the document using the enhanced service
       const indexResult = await enhancedDocumentIndexingService.indexDocument(file.file, {
         filename: file.metadata.title,
         fileType: file.file.type,
@@ -130,7 +130,7 @@ const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({
       });
       
       if (!indexResult.success) {
-        throw new Error(indexResult.error || 'فشل في فهرسة المستند');
+        throw new Error(indexResult.errors?.join(', ') || 'فشل في فهرسة المستند');
       }
 
       // Update progress
