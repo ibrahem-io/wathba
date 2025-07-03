@@ -148,3 +148,5 @@ export async function debugElasticSearch() {
     console.error('Debug error:', error);
   }
 }
+
+export { testElasticSearch }
