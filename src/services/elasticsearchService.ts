@@ -54,6 +54,7 @@ class ElasticSearchService {
   private baseUrl = '/api/elasticsearch';
   private indexName = 'mof-documents';
   private initialized = false;
+  private isAvailable = false;
 
   private async makeRequest(endpoint: string, options: RequestInit = {}) {
     try {
@@ -72,23 +73,54 @@ class ElasticSearchService {
         return response.ok;
       }
 
+      // Check if response is HTML (error page) instead of JSON
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('text/html')) {
+        console.warn('ElasticSearch returned HTML instead of JSON - service may be unavailable');
+        throw new Error('ElasticSearch service unavailable - received HTML response');
+      }
+
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error('ElasticSearch error:', errorText);
-        throw new Error(`ElasticSearch request failed: ${response.status} ${response.statusText}`);
+        let errorText = 'Unknown error';
+        try {
+          const errorData = await response.json();
+          errorText = errorData.error?.reason || errorData.message || response.statusText;
+        } catch {
+          errorText = response.statusText;
+        }
+        throw new Error(`ElasticSearch request failed: ${response.status} ${errorText}`);
       }
 
       return response.json();
     } catch (error) {
       console.error('ElasticSearch request error:', error);
+      this.isAvailable = false;
       throw error;
+    }
+  }
+
+  async checkConnection(): Promise<boolean> {
+    try {
+      const health = await this.makeRequest('/_cluster/health');
+      this.isAvailable = true;
+      return true;
+    } catch (error) {
+      console.warn('ElasticSearch connection check failed:', error);
+      this.isAvailable = false;
+      return false;
     }
   }
 
   async checkIndexExists(): Promise<boolean> {
     try {
+      if (!this.isAvailable) {
+        await this.checkConnection();
+      }
+      if (!this.isAvailable) return false;
+      
       return await this.makeRequest(`/${this.indexName}`, { method: 'HEAD' }) as boolean;
     } catch (error) {
+      console.warn('Index check failed:', error);
       return false;
     }
   }
@@ -96,9 +128,11 @@ class ElasticSearchService {
   async checkHealth(): Promise<boolean> {
     try {
       const health = await this.makeRequest('/_cluster/health');
-      return health.status === 'green' || health.status === 'yellow';
+      this.isAvailable = health.status === 'green' || health.status === 'yellow';
+      return this.isAvailable;
     } catch (error) {
-      console.error('ElasticSearch health check failed:', error);
+      console.warn('ElasticSearch health check failed:', error);
+      this.isAvailable = false;
       return false;
     }
   }
@@ -107,6 +141,13 @@ class ElasticSearchService {
     try {
       if (this.initialized) {
         return true;
+      }
+
+      // First check if ElasticSearch is available
+      const isConnected = await this.checkConnection();
+      if (!isConnected) {
+        console.warn('ElasticSearch is not available, skipping index initialization');
+        return false;
       }
 
       // Check if index exists
@@ -203,13 +244,24 @@ class ElasticSearchService {
       this.initialized = true;
       return true;
     } catch (error) {
-      console.error('Failed to initialize ElasticSearch index:', error);
+      console.warn('Failed to initialize ElasticSearch index:', error);
+      this.isAvailable = false;
       return false;
     }
   }
 
   async indexDocument(document: ElasticSearchDocument): Promise<{ success: boolean; error?: string }> {
     try {
+      if (!this.isAvailable) {
+        const connected = await this.checkConnection();
+        if (!connected) {
+          return { 
+            success: false, 
+            error: 'ElasticSearch service is not available' 
+          };
+        }
+      }
+
       await this.initializeIndex();
 
       const response = await this.makeRequest(`/${this.indexName}/_doc/${document.id}`, {
@@ -220,7 +272,7 @@ class ElasticSearchService {
       console.log('Document indexed successfully:', response);
       return { success: true };
     } catch (error) {
-      console.error('Error indexing document:', error);
+      console.warn('Error indexing document:', error);
       return { 
         success: false, 
         error: error instanceof Error ? error.message : 'فشل في فهرسة المستند' 
@@ -241,6 +293,18 @@ class ElasticSearchService {
     size: number = 20
   ): Promise<{ results: EnhancedSearchResult[]; totalCount: number; searchTime: number }> {
     try {
+      if (!this.isAvailable) {
+        const connected = await this.checkConnection();
+        if (!connected) {
+          console.warn('ElasticSearch not available, returning empty results');
+          return {
+            results: [],
+            totalCount: 0,
+            searchTime: 0
+          };
+        }
+      }
+
       await this.initializeIndex();
 
       const searchBody = this.buildSearchQuery(query, filters, from, size);
@@ -260,7 +324,7 @@ class ElasticSearchService {
         searchTime
       };
     } catch (error) {
-      console.error('ElasticSearch search error:', error);
+      console.warn('ElasticSearch search error:', error);
       return {
         results: [],
         totalCount: 0,
@@ -440,18 +504,36 @@ class ElasticSearchService {
 
   async deleteDocument(id: string): Promise<boolean> {
     try {
+      if (!this.isAvailable) {
+        console.warn('ElasticSearch not available for document deletion');
+        return false;
+      }
+
       await this.makeRequest(`/${this.indexName}/_doc/${id}`, {
         method: 'DELETE'
       });
       return true;
     } catch (error) {
-      console.error('Error deleting document from ElasticSearch:', error);
+      console.warn('Error deleting document from ElasticSearch:', error);
       return false;
     }
   }
 
   async getDocumentStats() {
     try {
+      if (!this.isAvailable) {
+        const connected = await this.checkConnection();
+        if (!connected) {
+          return {
+            totalDocuments: 0,
+            totalSize: 0,
+            fileTypes: {},
+            categories: {},
+            elasticsearchEnabled: false
+          };
+        }
+      }
+
       const response = await this.makeRequest(`/${this.indexName}/_stats`);
       const countResponse = await this.makeRequest(`/${this.indexName}/_count`);
       
@@ -493,7 +575,7 @@ class ElasticSearchService {
         elasticsearchEnabled: true
       };
     } catch (error) {
-      console.error('Error getting ElasticSearch stats:', error);
+      console.warn('Error getting ElasticSearch stats:', error);
       return {
         totalDocuments: 0,
         totalSize: 0,
@@ -506,6 +588,13 @@ class ElasticSearchService {
 
   async getAllDocuments(): Promise<EnhancedSearchResult[]> {
     try {
+      if (!this.isAvailable) {
+        const connected = await this.checkConnection();
+        if (!connected) {
+          return [];
+        }
+      }
+
       const response = await this.searchDocuments('', {
         dateRange: { start: '', end: '' },
         fileTypes: [],
@@ -516,9 +605,14 @@ class ElasticSearchService {
 
       return response.results;
     } catch (error) {
-      console.error('Error getting all documents from ElasticSearch:', error);
+      console.warn('Error getting all documents from ElasticSearch:', error);
       return [];
     }
+  }
+
+  // Public method to check if ElasticSearch is available
+  isElasticSearchAvailable(): boolean {
+    return this.isAvailable;
   }
 }
 
