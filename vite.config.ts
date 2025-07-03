@@ -7,11 +7,11 @@ export default defineConfig({
   server: {
     proxy: {
       '/api/elasticsearch': {
-        target: process.env.VITE_ELASTIC_URL || 'https://localhost:9200',
+        target: 'https://my-elasticsearch-project-f3e988.es.us-central1.gcp.elastic.cloud:443',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api\/elasticsearch/, ''),
         headers: {
-          'Authorization': process.env.VITE_ELASTIC_API_KEY ? `ApiKey ${process.env.VITE_ELASTIC_API_KEY}` : ''
+          'Authorization': `ApiKey T1B1OHpKY0JGTzVJOXhyWUYtUW86clpsb3ZJVzV0Q0dOSlBFdTFUQ3RKdw==`
         },
         configure: (proxy, _options) => {
           proxy.on('error', (err, _req, _res) => {
@@ -22,6 +22,17 @@ export default defineConfig({
           });
           proxy.on('proxyRes', (proxyRes, req, _res) => {
             console.log('Received Response from Elasticsearch:', proxyRes.statusCode, req.url);
+            
+            // Add CORS headers to the response
+            _res.setHeader('Access-Control-Allow-Origin', '*');
+            _res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+            _res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+            
+            // Handle preflight requests
+            if (req.method === 'OPTIONS') {
+              _res.statusCode = 200;
+              _res.end();
+            }
           });
         },
       }
